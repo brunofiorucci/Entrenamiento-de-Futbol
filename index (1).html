@@ -1,0 +1,3877 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>ARQUERO+ — Entrenamiento de Fútbol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Firebase (login con Google + guardado en la nube). Ver instrucciones de configuración al final del <script> principal. -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --bg:#0E2A1C;
+    --bg-2:#0B2116;
+    --surface:#153623;
+    --surface-2:#1D452C;
+    --line:rgba(243,241,231,0.10);
+    --line-strong:rgba(243,241,231,0.22);
+    --chalk:#F3F1E7;
+    --chalk-dim:rgba(243,241,231,0.58);
+    --chalk-faint:rgba(243,241,231,0.34);
+    --accent:#FF6B35;
+    --accent-dim:rgba(255,107,53,0.18);
+    --save:#8FEA6B;
+    --save-dim:rgba(143,234,107,0.16);
+    --miss:#E4483B;
+    --miss-dim:rgba(228,72,59,0.16);
+    --radius:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,0.05), transparent 60%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    color:var(--chalk);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+  }
+  .app{
+    width:100%;
+    max-width:480px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+  }
+  h1,h2,h3{font-family:'Oswald', sans-serif; text-transform:uppercase; letter-spacing:0.02em; margin:0;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+
+  /* ---------- Header ---------- */
+  header.top{
+    padding:22px 20px 14px;
+    display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{
+    width:34px;height:34px; border-radius:8px;
+    border:2px solid var(--chalk);
+    position:relative;
+    flex-shrink:0;
+  }
+  .brand-mark::before{
+    content:"";
+    position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--chalk); transform:translateX(-50%);
+  }
+  .brand-mark::after{
+    content:"";
+    position:absolute; top:50%; left:0; right:0; height:1px; background:var(--chalk); transform:translateY(-50%);
+  }
+  .brand-text h1{font-size:19px; color:var(--chalk); line-height:1;}
+  .brand-text span{font-size:10.5px; color:var(--chalk-dim); letter-spacing:0.12em; font-family:'IBM Plex Mono',monospace;}
+  .streak-pill{
+    display:flex; align-items:center; gap:6px;
+    background:var(--surface); border:1px solid var(--line-strong);
+    padding:6px 12px; border-radius:999px;
+    font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--accent);
+  }
+  .header-right{display:flex; align-items:center; gap:8px;}
+
+  /* ---------- Auth widget ---------- */
+  .auth-btn{
+    display:flex; align-items:center; gap:6px;
+    background:var(--surface); border:1px solid var(--line-strong);
+    padding:6px 12px 6px 6px; border-radius:999px; cursor:pointer;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--chalk-dim);
+  }
+  .auth-btn svg{width:16px; height:16px; flex-shrink:0;}
+  .auth-avatar{
+    width:30px; height:30px; border-radius:50%; cursor:pointer; flex-shrink:0;
+    border:1.5px solid var(--line-strong); object-fit:cover;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:#1A1207; font-family:'Oswald',sans-serif; font-weight:700; font-size:12px;
+  }
+  .cloud-flag{
+    font-size:9px; font-family:'IBM Plex Mono',monospace; letter-spacing:0.08em;
+    color:var(--chalk-faint); text-align:center; padding:6px 0 0;
+  }
+  .cloud-flag.on{color:var(--save);}
+  .auth-menu-bg{
+    position:fixed; inset:0; z-index:60; display:none;
+    background:rgba(6,16,10,0.72); align-items:flex-end; justify-content:center;
+  }
+  .auth-menu-bg.open{display:flex;}
+  .auth-menu{
+    width:100%; max-width:480px; background:var(--surface-2);
+    border-radius:20px 20px 0 0; padding:22px 20px calc(24px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line-strong);
+  }
+  .auth-menu-user{display:flex; align-items:center; gap:12px; margin-bottom:18px;}
+  .auth-menu-user img, .auth-menu-user .ph{
+    width:46px; height:46px; border-radius:50%; object-fit:cover;
+    background:var(--accent); color:#1A1207; display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:16px;
+  }
+  .auth-menu-user .un{font-size:15px; font-weight:600; color:var(--chalk);}
+  .auth-menu-user .ue{font-size:12px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Position bar ---------- */
+  .position-bar{
+    display:flex; gap:8px; padding:14px 20px; overflow-x:auto;
+    border-bottom:1px solid var(--line); scrollbar-width:none;
+  }
+  .position-bar::-webkit-scrollbar{display:none;}
+  .pos-chip{
+    flex-shrink:0; display:flex; align-items:center; gap:8px;
+    padding:8px 13px 8px 8px; border-radius:999px;
+    border:1.5px solid var(--line-strong); background:var(--surface);
+    cursor:pointer; transition:all .15s ease;
+  }
+  .pos-chip .pos-dot{width:24px;height:24px;border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:#0E2A1C; flex-shrink:0;}
+  .pos-chip .pos-dot svg{width:14px; height:14px;}
+  .pos-chip .pos-label{font-size:12.5px; color:var(--chalk-dim); font-weight:500;}
+  .pos-chip.active{border-color:var(--chip-color, var(--accent)); background:var(--chip-bg, var(--accent-dim));}
+  .pos-chip.active .pos-label{color:var(--chalk);}
+
+  main{flex:1; padding:20px 20px 100px; overflow-y:auto;}
+  .view{display:none; animation:fade .25s ease;}
+  .view.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ---------- Cards / generic ---------- */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .section-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--chalk-faint);
+    margin:26px 0 10px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .section-label:first-child{margin-top:0;}
+
+  /* ---------- Inicio ---------- */
+  .greeting{font-size:26px; margin-bottom:4px;}
+  .greeting-sub{color:var(--chalk-dim); font-size:14px; margin-bottom:20px;}
+
+  .stat-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .stat-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px;
+  }
+  .stat-num{font-family:'IBM Plex Mono',monospace; font-size:28px; color:var(--chalk); line-height:1;}
+  .stat-cap{font-size:12px; color:var(--chalk-dim); margin-top:6px;}
+
+  .cta-btn{
+    width:100%; margin-top:16px;
+    background:var(--accent); color:#1A1207;
+    border:none; border-radius:12px;
+    padding:16px; font-family:'Oswald',sans-serif; font-size:16px;
+    text-transform:uppercase; letter-spacing:0.03em; font-weight:600;
+    cursor:pointer;
+    box-shadow:0 6px 20px -6px rgba(255,107,53,0.55);
+  }
+  .cta-btn:active{transform:scale(0.98);}
+  .cta-btn.ghost{
+    background:transparent; color:var(--chalk); border:1.5px solid var(--line-strong);
+    box-shadow:none;
+  }
+
+  /* ---------- Goal grid (signature element, arquero) ---------- */
+  .goal-wrap{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px;
+  }
+  .goal-title{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;}
+  .goal-title h3{font-size:14px; color:var(--chalk-dim); font-weight:500; letter-spacing:0.06em;}
+  .goal-frame{
+    position:relative;
+    border:3px solid var(--chalk);
+    border-bottom:none;
+    border-radius:4px 4px 0 0;
+    aspect-ratio:16/7;
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    grid-template-rows:1fr 1fr;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 8px, rgba(243,241,231,0.05) 8px 9px);
+  }
+  .goal-frame::before{
+    content:""; position:absolute; inset:0;
+    background-image:
+      linear-gradient(90deg, var(--line-strong) 1px, transparent 1px),
+      linear-gradient(0deg, var(--line-strong) 1px, transparent 1px);
+    background-size:33.333% 50%;
+    pointer-events:none;
+  }
+  .zone{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .zone .pct{
+    font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600;
+    z-index:1;
+  }
+  .zone .n{
+    position:absolute; bottom:4px; right:6px; font-size:9px; color:var(--chalk-faint); font-family:'IBM Plex Mono',monospace;
+  }
+  .goal-legend{display:flex; gap:16px; margin-top:10px; font-size:11px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
+  .goal-legend span{display:inline-flex; align-items:center; gap:5px;}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  /* ---------- Category tally (other positions) ---------- */
+  .tally-row{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .tally-row:last-child{margin-bottom:0;}
+  .tally-ico{width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .tally-ico svg{width:13px; height:13px;}
+  .tally-label{width:100px; flex-shrink:0; font-size:12px; color:var(--chalk-dim);}
+  .tally-track{flex:1; height:8px; border-radius:4px; background:rgba(243,241,231,0.08); overflow:hidden;}
+  .tally-fill{height:100%; border-radius:4px;}
+  .tally-num{width:22px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--chalk-dim); flex-shrink:0;}
+
+  /* ---------- Ejercicios ---------- */
+  .filter-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:none;}
+  .filter-row::-webkit-scrollbar{display:none;}
+  .chip{
+    flex-shrink:0;
+    padding:7px 14px; border-radius:999px;
+    border:1px solid var(--line-strong);
+    font-size:12.5px; color:var(--chalk-dim);
+    font-family:'IBM Plex Mono',monospace;
+    cursor:pointer; white-space:nowrap;
+  }
+  .chip.active{background:var(--accent); color:#1A1207; border-color:var(--accent); font-weight:600;}
+
+  .drill{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px; margin-bottom:10px;
+    cursor:pointer;
+  }
+  .drill-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .drill-name{font-size:15px; font-weight:600; color:var(--chalk);}
+  .drill-meta{display:flex; align-items:center; gap:8px; margin-top:4px;}
+  .badge{
+    width:34px; height:34px; border-radius:9px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    font-family:'IBM Plex Mono',monospace; font-size:7.5px; font-weight:600;
+    flex-shrink:0; letter-spacing:0.01em;
+  }
+  .badge svg{width:15px; height:15px;}
+  .drill-dose{font-size:11.5px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
+  .drill-desc{font-size:13px; color:var(--chalk-dim); line-height:1.5; margin-top:10px; display:none;}
+  .drill.open .drill-desc{display:block;}
+  .add-btn{
+    width:30px; height:30px; border-radius:8px;
+    border:1.5px solid var(--line-strong); background:transparent; color:var(--chalk);
+    font-size:17px; line-height:1; cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .add-btn.added{background:var(--save-dim); border-color:var(--save); color:var(--save);}
+  .drill-actions{display:flex; align-items:center; gap:8px; flex-shrink:0;}
+  .info-btn{
+    width:26px; height:26px; border-radius:50%;
+    border:1.5px solid var(--line-strong); background:transparent; color:var(--chalk-dim);
+    font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;
+    cursor:pointer; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .info-btn.open{color:var(--accent); border-color:var(--accent); background:var(--accent-dim);}
+
+  /* ---------- Entrenar ---------- */
+  .template-row{display:flex; gap:10px; overflow-x:auto; margin-bottom:6px; padding-bottom:4px;}
+  .tmpl-card{
+    flex-shrink:0; width:150px;
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:12px; cursor:pointer;
+  }
+  .tmpl-card h4{font-size:13.5px; color:var(--chalk); margin:0 0 6px; font-family:'Oswald',sans-serif; letter-spacing:0.02em;}
+  .tmpl-card p{font-size:11px; color:var(--chalk-dim); margin:0; font-family:'IBM Plex Mono',monospace;}
+  .tmpl-card.recommended{border-color:var(--accent); background:linear-gradient(160deg, var(--accent-dim), var(--surface) 65%);}
+  .tmpl-card .tmpl-flag{font-size:9px; font-family:'IBM Plex Mono',monospace; color:var(--accent); letter-spacing:0.08em; margin-bottom:6px; display:block;}
+
+  .draft-item{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; margin-bottom:8px;
+  }
+  .draft-item .name{font-size:14px; color:var(--chalk);}
+  .draft-item .dose{font-size:11px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace; margin-top:2px;}
+  .remove-x{background:none; border:none; color:var(--chalk-faint); font-size:18px; cursor:pointer; padding:4px 8px;}
+  .empty-state{
+    text-align:center; padding:30px 16px; color:var(--chalk-dim); font-size:13.5px;
+    border:1.5px dashed var(--line-strong); border-radius:14px;
+  }
+
+  .active-session .drill-check{
+    display:flex; align-items:center; gap:12px;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; margin-bottom:8px;
+  }
+  .check-circle{
+    width:24px; height:24px; border-radius:50%; border:2px solid var(--line-strong);
+    flex-shrink:0; cursor:pointer; position:relative;
+  }
+  .drill-check.done .check-circle{background:var(--save); border-color:var(--save);}
+  .drill-check.done .check-circle::after{
+    content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#0E2A1C; font-size:13px; font-weight:700;
+  }
+  .drill-check.done .name{color:var(--chalk-faint); text-decoration:line-through;}
+
+  /* ---------- Arquetipos ---------- */
+  .archetype-row{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;}
+  .archetype-row::-webkit-scrollbar{display:none;}
+  .arche-card{
+    flex-shrink:0; width:132px;
+    background:var(--surface); border:1.5px solid var(--line-strong); border-radius:14px;
+    padding:12px 12px 13px; cursor:pointer; transition:all .15s ease;
+  }
+  .arche-card.selected{border-color:var(--accent); background:var(--accent-dim);}
+  .arche-card .arche-init{
+    width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:14px; color:#0E2A1C; margin-bottom:8px;
+  }
+  .arche-card .arche-name{font-size:12.5px; font-weight:600; color:var(--chalk); line-height:1.25;}
+  .arche-card .arche-tag{font-size:10px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace; margin-top:3px;}
+  .arche-desc-box{
+    margin-top:12px; padding:12px 14px; border-radius:12px;
+    background:var(--surface); border:1px solid var(--line);
+    font-size:12.5px; color:var(--chalk-dim); line-height:1.55;
+  }
+  .arche-desc-box b{color:var(--chalk);}
+  .arche-priority-tags{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;}
+  .arche-priority-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:9.5px; padding:3px 8px; border-radius:999px;
+    background:var(--accent-dim); color:var(--accent); font-weight:600;
+  }
+
+  /* ---------- Carta estilo FIFA ---------- */
+  .player-card{
+    position:relative; border-radius:20px; padding:20px 18px 18px;
+    overflow:hidden; border:1.5px solid var(--line-strong);
+    background: linear-gradient(155deg, var(--tier-c1, #3a3a3a), var(--tier-c2, #1a1a1a) 60%);
+  }
+  .player-card::before{
+    content:""; position:absolute; inset:0; opacity:.5; pointer-events:none;
+    background:
+      repeating-linear-gradient(115deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 26px);
+  }
+  .pc-top{display:flex; justify-content:space-between; align-items:flex-start; position:relative;}
+  .pc-ovr{font-family:'Oswald',sans-serif; font-size:38px; font-weight:700; line-height:1; color:var(--tier-text,#F3F1E7);}
+  .pc-pos{display:flex; align-items:center; gap:5px; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; letter-spacing:0.06em; color:var(--tier-text,#F3F1E7); opacity:.85; margin-top:4px;}
+  .pc-tier{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase;
+    padding:5px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.35); color:var(--tier-text,#F3F1E7);
+  }
+  .pc-mid{text-align:center; margin:6px 0 14px; position:relative;}
+  .pc-badge{
+    width:64px; height:64px; border-radius:50%; margin:0 auto 8px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-size:22px; font-weight:700;
+    background:rgba(255,255,255,0.14); color:var(--tier-text,#F3F1E7);
+    border:2px solid rgba(255,255,255,0.3);
+  }
+  .pc-name{font-size:16px; font-weight:700; color:var(--tier-text,#F3F1E7); font-family:'Oswald',sans-serif; letter-spacing:0.02em;}
+  .pc-tag{font-size:11px; color:var(--tier-text,#F3F1E7); opacity:.75; font-family:'IBM Plex Mono',monospace; margin-top:2px;}
+  .pc-radar{position:relative; display:flex; justify-content:center; margin-bottom:8px;}
+  .pc-attrs{
+    position:relative; display:grid; grid-template-columns:1fr 1fr; gap:7px 16px;
+    padding-top:12px; border-top:1px solid rgba(255,255,255,0.18);
+  }
+  .pc-attr{display:flex; align-items:center; gap:7px;}
+  .pc-attr svg{width:14px; height:14px; flex-shrink:0; opacity:.85;}
+  .pc-attr .an{font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:700; color:var(--tier-text,#F3F1E7); width:22px; flex-shrink:0;}
+  .pc-attr .al{font-size:10.5px; color:var(--tier-text,#F3F1E7); opacity:.8; flex:1;}
+  .pc-noarche{
+    position:relative; text-align:center; font-size:12.5px; color:var(--tier-text,#F3F1E7); opacity:.85;
+    padding:6px 4px 2px; line-height:1.5;
+  }
+  .card-mini-row{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;}
+  .card-mini-row::-webkit-scrollbar{display:none;}
+  .card-mini{
+    flex-shrink:0; width:104px; border-radius:14px; padding:12px 10px; text-align:center;
+    background: linear-gradient(155deg, var(--tier-c1, #3a3a3a), var(--tier-c2, #1a1a1a) 60%);
+    border:1px solid var(--line-strong); cursor:pointer;
+  }
+  .card-mini .cm-ovr{font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; color:var(--tier-text,#F3F1E7);}
+  .card-mini .cm-pos{font-family:'IBM Plex Mono',monospace; font-size:9px; color:var(--tier-text,#F3F1E7); opacity:.8; letter-spacing:0.06em;}
+  .card-mini .cm-name{font-size:10.5px; color:var(--tier-text,#F3F1E7); margin-top:4px; font-weight:600; line-height:1.25;}
+
+  /* ---------- Progreso ---------- */
+  .pos-breakdown{display:flex; gap:8px; margin-bottom:10px;}
+  .pos-mini{flex:1; text-align:center; padding:10px 4px; border-radius:12px; border:1px solid var(--line); background:var(--surface);}
+  .pos-mini .n{font-family:'IBM Plex Mono',monospace; font-size:18px;}
+  .pos-mini .l{font-size:9.5px; color:var(--chalk-dim); margin-top:3px; letter-spacing:0.05em;}
+
+  .history-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:13px 0; border-bottom:1px solid var(--line); gap:10px;
+  }
+  .history-item:last-child{border-bottom:none;}
+  .history-date{font-size:14px; color:var(--chalk); display:flex; align-items:center; gap:8px;}
+  .history-sub{font-size:11.5px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace; margin-top:2px;}
+  .history-note{font-size:12px; color:var(--chalk-dim); margin-top:5px; font-style:italic; line-height:1.4;}
+  .history-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; padding:4px 9px; border-radius:7px;
+    background:var(--accent-dim); color:var(--accent);
+  }
+  .history-actions{display:flex; gap:4px; flex-shrink:0;}
+  .hist-icon-btn{
+    background:var(--surface); border:1px solid var(--line-strong); color:var(--chalk-dim);
+    border-radius:8px; width:30px; height:30px; font-size:13px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .hist-icon-btn.danger{color:var(--miss);}
+  .hist-share-btn{
+    background:none; border:none; color:var(--accent); font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px; letter-spacing:0.06em; text-transform:none; cursor:pointer; padding:2px 0;
+  }
+  .danger-zone{border:1px dashed rgba(228,72,59,0.4); border-radius:12px; padding:12px; margin-top:18px;}
+  .danger-zone-label{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.1em; color:var(--miss); text-transform:uppercase; margin-bottom:8px;}
+  .backup-count{font-size:12px; color:var(--chalk-dim); margin:-8px 0 16px;}
+
+  .toast{
+    position:fixed; left:50%; transform:translateX(-50%) translateY(120%);
+    bottom:calc(74px + env(safe-area-inset-bottom)); width:calc(100% - 32px); max-width:448px;
+    background:var(--surface-2); border:1px solid var(--line-strong); border-radius:14px;
+    padding:14px 14px; z-index:70; box-shadow:0 10px 30px -10px rgba(0,0,0,0.5);
+    transition:transform .3s ease;
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  .toast p{font-size:12.5px; color:var(--chalk); margin:0 0 10px; line-height:1.4;}
+  .toast-row{display:flex; gap:8px;}
+  .toast-row button{flex:1; padding:9px; border-radius:9px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; cursor:pointer;}
+  .toast-row .toast-btn-main{background:var(--accent); color:#1A1207; border:none; font-weight:600;}
+  .toast-row .toast-btn-dismiss{background:transparent; color:var(--chalk-dim); border:1px solid var(--line-strong);}
+
+  /* ---------- Nivel de entrenador (XP) ---------- */
+  .level-card{
+    background:linear-gradient(135deg, var(--surface-2), var(--surface));
+    border:1px solid var(--line-strong); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:16px; display:flex; align-items:center; gap:14px;
+    cursor:pointer;
+  }
+  .level-badge{
+    width:52px; height:52px; border-radius:50%; flex-shrink:0;
+    background:radial-gradient(circle at 30% 30%, var(--accent), #7a2f10);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:20px; color:#1A1207;
+    box-shadow:0 4px 14px -4px rgba(255,107,53,0.6);
+  }
+  .level-info{flex:1; min-width:0;}
+  .level-title-row{display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .level-title{font-family:'Oswald',sans-serif; font-size:14px; letter-spacing:0.02em; color:var(--chalk); text-transform:uppercase;}
+  .level-xp-label{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--chalk-dim); flex-shrink:0;}
+  .level-bar-track{background:rgba(243,241,231,0.10); border-radius:999px; height:7px; margin-top:8px; overflow:hidden;}
+  .level-bar-fill{background:linear-gradient(90deg, var(--accent), #FFB067); height:100%; border-radius:999px; transition:width .4s ease;}
+
+  .levelup-bg{
+    position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center;
+    background:rgba(6,16,10,0.82); backdrop-filter:blur(3px);
+  }
+  .levelup-bg.open{display:flex;}
+  .levelup-card{
+    width:calc(100% - 56px); max-width:340px; background:var(--surface-2);
+    border:1px solid var(--line-strong); border-radius:20px; padding:32px 24px 26px;
+    text-align:center; animation:levelPop .35s cubic-bezier(.2,1.4,.4,1);
+  }
+  @keyframes levelPop{from{opacity:0; transform:scale(0.75);} to{opacity:1; transform:scale(1);}}
+  .levelup-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.16em; color:var(--chalk-dim); text-transform:uppercase;}
+  .levelup-num{font-family:'Oswald',sans-serif; font-size:64px; font-weight:700; color:var(--accent); line-height:1; margin:8px 0 4px;}
+  .levelup-title{font-family:'Oswald',sans-serif; font-size:19px; text-transform:uppercase; color:var(--chalk); letter-spacing:0.02em; margin-bottom:18px;}
+
+  /* ---------- Partidos ---------- */
+  .match-stat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px;}
+  .match-stat-card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 6px; text-align:center;}
+  .match-stat-card .n{font-family:'IBM Plex Mono',monospace; font-size:20px; color:var(--chalk); line-height:1;}
+  .match-stat-card .l{font-size:9.5px; color:var(--chalk-dim); margin-top:5px; letter-spacing:0.03em;}
+  .field-row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 2px; border-bottom:1px solid var(--line);}
+  .field-row label{font-size:13.5px; color:var(--chalk-dim);}
+  .field-input{
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:9px;
+    color:var(--chalk); font-family:'IBM Plex Mono',monospace; font-size:14px;
+    padding:8px 10px; width:88px; text-align:right;
+  }
+  .field-input:focus{outline:none; border-color:var(--accent);}
+  .field-row textarea.field-input{width:100%; text-align:left; resize:vertical; min-height:56px; font-family:'IBM Plex Sans',sans-serif; font-size:13px;}
+  .pos-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; padding:3px 6px; border-radius:5px;
+    color:#0E2A1C; flex-shrink:0;
+  }
+  .bars{display:flex; align-items:flex-end; gap:6px; height:80px; margin-top:14px;}
+  .bar-col{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end;}
+  .bar{width:100%; background:var(--accent); border-radius:4px 4px 0 0; min-height:3px;}
+  .bar-lbl{font-size:9.5px; color:var(--chalk-faint); font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Bottom nav ---------- */
+  nav.bottom{
+    position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+    width:100%; max-width:480px;
+    background:rgba(11,33,22,0.92); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line);
+    display:flex;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    z-index:10;
+  }
+  .nav-btn{
+    flex:1; background:none; border:none; color:var(--chalk-faint);
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.04em;
+    cursor:pointer; padding:6px 0;
+  }
+  .nav-btn.active{color:var(--accent);}
+  .nav-ico{width:20px; height:20px; position:relative;}
+
+  /* modal */
+  .modal-bg{
+    position:fixed; inset:0; background:rgba(6,16,10,0.72); backdrop-filter:blur(2px);
+    display:none; align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .modal-bg.open{display:flex;}
+  .modal{
+    width:100%; max-width:480px; background:var(--surface-2);
+    border-radius:20px 20px 0 0; padding:22px 20px calc(24px + env(safe-area-inset-bottom));
+    border-top:1px solid var(--line-strong);
+    max-height:80vh; overflow-y:auto;
+  }
+  .modal h2{font-size:19px; margin-bottom:4px;}
+  .modal .sub{color:var(--chalk-dim); font-size:13px; margin-bottom:18px;}
+
+  ::-webkit-scrollbar{width:0px;}
+
+  /* ---------- Carrera (sub-tabs + widgets nuevos) ---------- */
+  .subtab-row{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px; scrollbar-width:none;}
+  .subtab-row::-webkit-scrollbar{display:none;}
+  .subtab-btn{
+    flex-shrink:0; padding:8px 14px; border-radius:20px; border:1px solid var(--line-strong);
+    background:var(--surface); color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;
+    font-size:11px; letter-spacing:0.03em; cursor:pointer;
+  }
+  .subtab-btn.active{background:var(--accent); border-color:var(--accent); color:#1a0d03; font-weight:600;}
+
+  .legend-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:12px; cursor:pointer;
+  }
+  .legend-card.locked{opacity:0.55;}
+  .legend-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .legend-name{font-size:14.5px; font-weight:600; color:var(--chalk);}
+  .legend-tag{font-size:10.5px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
+  .legend-pct{font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:600;}
+  .legend-track{height:9px; border-radius:5px; background:rgba(243,241,231,0.08); overflow:hidden; margin-bottom:8px;}
+  .legend-fill{height:100%; border-radius:5px; transition:width .4s ease;}
+  .legend-hint{font-size:11.5px; color:var(--chalk-dim); line-height:1.4;}
+
+  .week-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px; margin-bottom:14px;}
+  .week-head{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;}
+  .week-title{font-size:15px; font-weight:600; color:var(--chalk);}
+  .week-sub{font-size:11px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace; margin-top:2px;}
+  .week-pct{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--accent); flex-shrink:0;}
+  .week-day{
+    display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--line);
+  }
+  .week-day-check{
+    width:22px; height:22px; border-radius:50%; border:2px solid var(--line-strong); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer;
+  }
+  .week-day-check.done{background:var(--save); border-color:var(--save); color:#0a1a0a;}
+  .week-day-body{flex:1;}
+  .week-day-title{font-size:13px; color:var(--chalk); font-weight:600;}
+  .week-day-cats{font-size:11px; color:var(--chalk-dim);}
+
+  .suggest-card{
+    background:linear-gradient(135deg, var(--surface-2), var(--surface));
+    border:1px solid var(--line-strong); border-radius:var(--radius); padding:16px; margin-bottom:18px;
+  }
+  .suggest-eyebrow{font-size:10px; letter-spacing:0.1em; color:var(--accent); font-family:'IBM Plex Mono',monospace; margin-bottom:6px;}
+  .suggest-text{font-size:14px; line-height:1.45; color:var(--chalk); margin-bottom:10px;}
+  .suggest-btn{
+    background:none; border:1px solid var(--line-strong); color:var(--chalk);
+    padding:8px 14px; border-radius:10px; font-size:12px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
+  }
+
+  .space-toggle{display:flex; gap:8px; margin-bottom:6px;}
+  .space-opt{
+    flex:1; padding:14px 10px; border-radius:12px; border:1px solid var(--line-strong);
+    background:var(--surface); color:var(--chalk-dim); text-align:center; cursor:pointer; font-size:12.5px;
+  }
+  .space-opt.active{border-color:var(--accent); background:var(--accent-dim); color:var(--chalk);}
+  .space-opt .ico{font-size:20px; display:block; margin-bottom:4px;}
+
+  /* ---------- Coach IA (mensajes pre/post entrenamiento) ---------- */
+  .coach-card{
+    background:linear-gradient(135deg, rgba(255,107,53,0.14), var(--surface));
+    border:1px solid var(--line-strong); border-radius:var(--radius); padding:16px; margin-bottom:18px;
+  }
+  .coach-eyebrow{display:flex; align-items:center; gap:6px; font-size:10px; letter-spacing:0.1em; color:var(--accent); font-family:'IBM Plex Mono',monospace; margin-bottom:7px;}
+  .coach-text{font-size:14px; line-height:1.5; color:var(--chalk);}
+  .coach-text b{color:var(--chalk);}
+
+  /* ---------- Objetivo de temporada ---------- */
+  .goal-card{
+    display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius); padding:14px 16px; margin-bottom:18px; cursor:pointer;
+  }
+  .goal-card .goal-ico{
+    width:38px; height:38px; border-radius:10px; background:var(--accent-dim); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .goal-card .goal-body{flex:1;}
+  .goal-card .goal-label{font-size:10px; letter-spacing:0.08em; color:var(--chalk-faint); font-family:'IBM Plex Mono',monospace;}
+  .goal-card .goal-name{font-size:14.5px; font-weight:600; color:var(--chalk); margin-top:2px;}
+  .goal-card .goal-chevron{color:var(--chalk-faint); font-size:18px;}
+  .goal-pick-row{display:flex; flex-direction:column; gap:8px;}
+  .goal-pick-item{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:12px;
+    border:1px solid var(--line-strong); background:var(--surface); cursor:pointer;
+  }
+  .goal-pick-item.selected{border-color:var(--accent); background:var(--accent-dim);}
+  .goal-pick-item .gi-name{font-size:13.5px; color:var(--chalk); font-weight:500;}
+
+  /* ---------- Reporte post-entrenamiento (IA) ---------- */
+  .report-hero{text-align:center; margin-bottom:18px;}
+  .report-hero-ico{font-size:34px; margin-bottom:6px;}
+  .report-hero-title{font-family:'Oswald',sans-serif; text-transform:uppercase; font-size:18px; letter-spacing:0.02em;}
+  .report-hero-sub{font-size:12px; color:var(--chalk-dim); margin-top:3px;}
+  .report-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px;}
+  .report-stat{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:10px 6px; text-align:center;}
+  .report-stat .n{font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:600; color:var(--chalk);}
+  .report-stat .l{font-size:9.5px; color:var(--chalk-dim); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em;}
+  .report-block{margin-bottom:14px;}
+  .report-block-label{font-size:10.5px; letter-spacing:0.08em; color:var(--accent); font-family:'IBM Plex Mono',monospace; margin-bottom:6px; text-transform:uppercase;}
+  .report-block-text{font-size:13.5px; line-height:1.55; color:var(--chalk);}
+  .report-tag-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
+  .report-tag{font-size:11px; padding:4px 9px; border-radius:20px; font-family:'IBM Plex Mono',monospace;}
+  .report-tag.up{background:var(--save-dim); color:var(--save);}
+  .report-tag.work{background:var(--miss-dim); color:var(--miss);}
+  .report-motivation{
+    background:linear-gradient(135deg, var(--surface-2), var(--surface)); border:1px solid var(--line-strong);
+    border-radius:var(--radius); padding:14px 16px; font-size:13.5px; line-height:1.5; font-style:italic;
+    color:var(--chalk); margin-bottom:18px;
+  }
+  .journal-block{border-top:1px solid var(--line); padding-top:16px; margin-top:6px;}
+  .mood-row{display:flex; gap:5px; margin-bottom:14px;}
+  .mood-btn{
+    flex:1; padding:9px 0; border-radius:8px; border:1px solid var(--line-strong); background:var(--surface);
+    color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace; font-size:12px; cursor:pointer;
+  }
+  .mood-btn.selected{background:var(--accent); border-color:var(--accent); color:#1a0d03; font-weight:600;}
+  .journal-field{margin-bottom:12px;}
+  .journal-field label{display:block; font-size:11.5px; color:var(--chalk-dim); margin-bottom:5px;}
+  .journal-field textarea, .journal-field input[type=text]{
+    width:100%; background:var(--surface); border:1px solid var(--line-strong); border-radius:10px;
+    padding:10px 12px; color:var(--chalk); font-family:'IBM Plex Sans',sans-serif; font-size:13px; resize:vertical;
+  }
+
+  /* ---------- Récords personales ---------- */
+  .records-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;}
+  .record-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px;}
+  .record-card .rc-val{font-family:'IBM Plex Mono',monospace; font-size:19px; font-weight:600; color:var(--accent);}
+  .record-card .rc-label{font-size:11px; color:var(--chalk-dim); margin-top:2px; line-height:1.3;}
+  .record-card .rc-date{font-size:9.5px; color:var(--chalk-faint); margin-top:4px;}
+  .record-card.editable{cursor:pointer;}
+  .record-card.empty .rc-val{color:var(--chalk-faint); font-size:14px;}
+
+  /* ---------- Diario del jugador (historial) ---------- */
+  .journal-item{border-bottom:1px solid var(--line); padding:12px 0;}
+  .journal-item:last-child{border-bottom:none;}
+  .journal-item-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .journal-mood-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--chalk);
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:20px; padding:2px 9px;
+  }
+  .journal-item-text{font-size:12.5px; color:var(--chalk-dim); line-height:1.5;}
+  .journal-item-text b{color:var(--chalk); font-weight:600;}
+
+  /* ---------- OVR historial ---------- */
+  .ovr-hist-row{display:flex; align-items:flex-end; gap:4px; height:70px; margin-bottom:8px;}
+  .ovr-hist-bar{flex:1; background:var(--accent); border-radius:3px 3px 0 0; min-height:3px; position:relative;}
+  .ovr-hist-empty{color:var(--chalk-faint); font-size:12px;}
+
+  /* ---------- Clima ---------- */
+  .weather-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:14px;
+  }
+  .weather-top{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+  .weather-temp{font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; color:var(--chalk);}
+  .weather-desc{font-size:12px; color:var(--chalk-dim);}
+  .weather-tips{font-size:12.5px; color:var(--chalk); line-height:1.5; margin-top:8px;}
+
+  /* ---------- Debilidades ---------- */
+  .weak-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:14px;}
+  .weak-card-title{font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--miss); margin-bottom:10px;}
+  .weak-row{display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--line);}
+  .weak-row:first-of-type{border-top:none; padding-top:0;}
+  .weak-ico{width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--miss-dim); color:var(--miss);}
+  .weak-text{flex:1; font-size:12.5px; line-height:1.4; color:var(--chalk-dim);}
+  .weak-text b{color:var(--chalk); font-weight:600;}
+
+  /* ---------- Desafíos semanales ---------- */
+  .challenge-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:14px;}
+  .challenge-card-title{font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--chalk-faint); margin-bottom:10px; display:flex; justify-content:space-between;}
+  .challenge-row{padding:9px 0; border-top:1px solid var(--line);}
+  .challenge-row:first-of-type{border-top:none; padding-top:0;}
+  .challenge-top{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;}
+  .challenge-text{font-size:12.5px; color:var(--chalk); line-height:1.3;}
+  .challenge-text.done{color:var(--save);}
+  .challenge-check{font-size:13px; flex-shrink:0; color:var(--chalk-faint);}
+  .challenge-check.done{color:var(--save);}
+  .challenge-track{height:6px; border-radius:3px; background:rgba(243,241,231,0.08); overflow:hidden;}
+  .challenge-fill{height:100%; border-radius:3px; background:var(--accent);}
+  .challenge-fill.done{background:var(--save);}
+
+  /* ---------- Evolución por habilidad ---------- */
+  .skill-evo-row{display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--line);}
+  .skill-evo-row:first-child{border-top:none; padding-top:0;}
+  .skill-evo-label{flex:1; font-size:12.5px; color:var(--chalk);}
+  .skill-evo-delta{font-family:'IBM Plex Mono',monospace; font-size:12.5px; font-weight:600; min-width:44px; text-align:right;}
+  .skill-evo-delta.up{color:var(--save);}
+  .skill-evo-delta.down{color:var(--miss);}
+  .skill-evo-delta.flat{color:var(--chalk-faint);}
+
+  /* ---------- Potencial ---------- */
+  .potential-row{margin-bottom:16px;}
+  .potential-row:last-child{margin-bottom:0;}
+  .potential-top{display:flex; justify-content:space-between; margin-bottom:6px; font-size:12.5px; color:var(--chalk);}
+  .potential-top .v{font-family:'IBM Plex Mono',monospace; font-weight:600;}
+  .potential-track{height:8px; border-radius:4px; background:rgba(243,241,231,0.08); overflow:hidden;}
+  .potential-fill{height:100%; border-radius:4px; background:linear-gradient(90deg, var(--accent), var(--save));}
+
+  /* ---------- Informe mensual ---------- */
+  .month-stat-row{display:flex; justify-content:space-between; padding:9px 0; border-top:1px solid var(--line); font-size:13px; color:var(--chalk-dim);}
+  .month-stat-row:first-child{border-top:none; padding-top:0;}
+  .month-stat-row .v{font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--chalk);}
+  .month-highlight{margin-top:14px; padding:12px 14px; background:var(--accent-dim); border-radius:12px; font-size:12.5px; color:var(--chalk); line-height:1.4;}
+  .month-modal-title{font-size:18px; margin-bottom:2px;}
+  .month-modal-sub{font-size:12px; color:var(--chalk-dim); margin-bottom:16px; font-family:'IBM Plex Mono',monospace;}
+
+  .video-box{
+    border:1.5px dashed var(--line-strong); border-radius:var(--radius); padding:22px 16px;
+    text-align:center; margin-bottom:14px;
+  }
+  .video-tip{
+    background:var(--surface); border-left:3px solid var(--accent); border-radius:0 10px 10px 0;
+    padding:12px 14px; margin-bottom:10px; font-size:13px; line-height:1.4;
+  }
+
+  .community-post{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px;}
+  .cp-head{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .cp-avatar{width:26px; height:26px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0; object-fit:cover;}
+  .cp-name{font-size:12.5px; font-weight:600;}
+  .cp-time{font-size:10.5px; color:var(--chalk-faint); font-family:'IBM Plex Mono',monospace;}
+  .cp-text{font-size:13.5px; line-height:1.4; color:var(--chalk); margin-bottom:8px;}
+  .cp-like{background:none; border:none; color:var(--chalk-dim); font-size:12px; cursor:pointer; display:flex; align-items:center; gap:5px;}
+  .cp-like.liked{color:var(--accent);}
+  .community-compose{display:flex; gap:8px; margin-bottom:16px;}
+  .community-compose textarea{
+    flex:1; resize:none; background:var(--surface); border:1px solid var(--line-strong); border-radius:12px;
+    color:var(--chalk); padding:10px 12px; font-family:'IBM Plex Sans',sans-serif; font-size:13px; min-height:44px;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <h1>Arquero+</h1>
+        <span id="today-date">CARGANDO…</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="streak-pill">🔥<span id="streak-num" class="mono">0</span></div>
+      <button class="auth-btn" title="Respaldo" onclick="openBackupMenu()" style="padding:6px 10px;">💾</button>
+      <div id="auth-widget"></div>
+    </div>
+  </header>
+
+  <div class="position-bar" id="position-bar"></div>
+
+  <main>
+    <!-- ============ INICIO ============ -->
+    <section class="view active" id="view-inicio">
+      <div class="greeting" id="greeting-text">Hola</div>
+      <div class="greeting-sub" id="greeting-sub">Listo para sumar otro entrenamiento.</div>
+
+      <div class="level-card" id="level-widget" onclick="goTo('progreso')"></div>
+
+      <div id="coach-wrap"></div>
+      <div id="goal-widget-wrap"></div>
+      <div id="weekly-challenge-wrap"></div>
+      <div id="weakness-wrap"></div>
+      <div id="smart-suggestion-wrap"></div>
+
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-num mono" id="stat-total">0</div>
+          <div class="stat-cap">Sesiones totales</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num mono" id="stat-week">0</div>
+          <div class="stat-cap">Esta semana</div>
+        </div>
+      </div>
+
+      <button class="cta-btn" onclick="goTo('entrenar')">Empezar entrenamiento</button>
+
+      <div class="section-label" id="pos-widget-label">Mapa de atajadas</div>
+      <div id="pos-widget"></div>
+
+      <div class="section-label">Última sesión</div>
+      <div id="last-session-card"></div>
+    </section>
+
+    <!-- ============ EJERCICIOS ============ -->
+    <section class="view" id="view-ejercicios">
+      <h2 style="font-size:22px; margin-bottom:16px;" id="ejercicios-title">Biblioteca de ejercicios</h2>
+      <div class="filter-row" id="filter-row"></div>
+      <div id="drill-list"></div>
+    </section>
+
+    <!-- ============ ENTRENAR ============ -->
+    <section class="view" id="view-entrenar">
+      <h2 style="font-size:22px; margin-bottom:14px;" id="entrenar-title">Sesión de hoy</h2>
+      <div id="entrenar-content"></div>
+    </section>
+
+    <!-- ============ PROGRESO ============ -->
+    <section class="view" id="view-progreso">
+      <h2 style="font-size:22px; margin-bottom:16px;">Progreso</h2>
+
+      <div class="section-label" style="margin-top:0;">Nivel de entrenador</div>
+      <div class="level-card" id="level-widget-progreso"></div>
+
+      <div class="section-label">Tu carta</div>
+      <div id="player-card-wrap"></div>
+
+      <div class="section-label">Tus otras cartas</div>
+      <div class="card-mini-row" id="card-mini-row"></div>
+
+      <div class="stat-row" style="margin-bottom:10px; margin-top:26px;">
+        <div class="stat-card">
+          <div class="stat-num mono" id="prog-total">0</div>
+          <div class="stat-cap">Sesiones</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num mono" id="prog-streak">0</div>
+          <div class="stat-cap">Racha (semanas)</div>
+        </div>
+      </div>
+
+      <button class="cta-btn ghost" style="margin-top:0; margin-bottom:22px;" onclick="openMonthlyReport()">Ver informe mensual</button>
+
+      <div class="section-label">Por posición</div>
+      <div class="pos-breakdown" id="pos-breakdown"></div>
+
+      <div class="section-label">Últimas 6 semanas</div>
+      <div class="card"><div class="bars" id="week-bars"></div></div>
+
+      <div class="section-label">Mapa de atajadas · Arquero</div>
+      <div id="prog-goal-grid"></div>
+
+      <div class="section-label">Evolución del OVR</div>
+      <div class="card" id="ovr-history-wrap"></div>
+
+      <div class="section-label">Evolución por habilidad · últimos 30 días</div>
+      <div class="card" id="skill-evo-wrap"></div>
+
+      <div class="section-label">Potencial</div>
+      <div class="card" id="potential-wrap"></div>
+
+      <div class="section-label">Récords personales</div>
+      <div id="records-wrap"></div>
+
+      <div class="section-label">Diario del jugador</div>
+      <div class="card" id="journal-history-wrap"></div>
+
+      <div class="section-label">Historial<button class="hist-share-btn" onclick="shareHistory()">📤 Compartir</button></div>
+      <div class="card" id="history-list"></div>
+    </section>
+
+    <!-- ============ PARTIDOS ============ -->
+    <section class="view" id="view-partidos">
+      <h2 style="font-size:22px; margin-bottom:16px;" id="partidos-title">Partidos</h2>
+
+      <div class="filter-row" id="match-filter-row"></div>
+
+      <div class="match-stat-grid" id="match-stat-grid"></div>
+
+      <button class="cta-btn" style="margin-top:0;" onclick="openMatchModal()">+ Registrar partido</button>
+
+      <div class="section-label">Historial de partidos</div>
+      <div class="card" id="match-history-list"></div>
+    </section>
+
+    <!-- ============ CARRERA ============ -->
+    <section class="view" id="view-carrera">
+      <h2 style="font-size:22px; margin-bottom:14px;">Carrera</h2>
+      <div class="subtab-row" id="carrera-subtabs"></div>
+      <div id="carrera-content"></div>
+    </section>
+  </main>
+
+
+  <nav class="bottom">
+    <button class="nav-btn active" data-view="inicio" onclick="goTo('inicio')">
+      <div class="nav-ico">🏠</div>INICIO
+    </button>
+    <button class="nav-btn" data-view="ejercicios" onclick="goTo('ejercicios')">
+      <div class="nav-ico">📋</div>EJERCICIOS
+    </button>
+    <button class="nav-btn" data-view="entrenar" onclick="goTo('entrenar')">
+      <div class="nav-ico">🥅</div>ENTRENAR
+    </button>
+    <button class="nav-btn" data-view="progreso" onclick="goTo('progreso')">
+      <div class="nav-ico">📈</div>PROGRESO
+    </button>
+    <button class="nav-btn" data-view="partidos" onclick="goTo('partidos')">
+      <div class="nav-ico">⚽</div>PARTIDOS
+    </button>
+    <button class="nav-btn" data-view="carrera" onclick="goTo('carrera')">
+      <div class="nav-ico">👑</div>CARRERA
+    </button>
+  </nav>
+</div>
+
+<!-- Modal: cuenta -->
+<div class="auth-menu-bg" id="auth-menu-bg" onclick="if(event.target===this) closeAuthMenu()">
+  <div class="auth-menu">
+    <div class="auth-menu-user" id="auth-menu-user"></div>
+    <div class="cloud-flag on" id="auth-menu-status" style="text-align:left; margin-bottom:16px;">☁ Progreso sincronizado con tu cuenta de Google</div>
+    <button class="cta-btn ghost" style="margin-top:0;" onclick="doSignOut()">Cerrar sesión</button>
+  </div>
+</div>
+
+<!-- Modal: respaldo manual -->
+<div class="auth-menu-bg" id="backup-menu-bg" onclick="if(event.target===this) closeBackupMenu()">
+  <div class="auth-menu">
+    <h3 style="font-size:16px; margin-bottom:6px;">Respaldo de tu progreso</h3>
+    <div style="font-size:12.5px; color:var(--chalk-dim); line-height:1.5; margin-bottom:18px;">
+      Descargá un archivito con todas tus sesiones y ejercicios. Si algún día cambiás de celular o se borra el caché del navegador, lo restaurás con ese mismo archivo. No necesitás cuenta ni configurar nada.
+    </div>
+    <div class="backup-count" id="backup-count"></div>
+    <button class="cta-btn" style="margin-top:0;" onclick="downloadBackup()">⬇ Descargar respaldo</button>
+    <button class="cta-btn ghost" onclick="document.getElementById('backup-file-input').click()">⬆ Restaurar desde archivo</button>
+    <input type="file" id="backup-file-input" accept="application/json,.json" style="display:none;" onchange="restoreBackup(event)">
+    <div id="backup-msg" style="font-size:12px; margin-top:12px; text-align:center; min-height:16px;"></div>
+    <button class="cta-btn ghost" style="margin-top:6px;" onclick="closeBackupMenu()">Cerrar</button>
+
+    <div class="danger-zone">
+      <div class="danger-zone-label">Zona de peligro</div>
+      <button class="cta-btn ghost" style="margin-top:0; border-color:rgba(228,72,59,0.5); color:var(--miss);" onclick="resetAllProgress()">🗑 Borrar todo mi progreso</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast: recordatorio de respaldo -->
+<div class="toast" id="backup-toast"></div>
+
+<!-- Modal: reporte inteligente post-entrenamiento -->
+<div class="modal-bg" id="report-modal-bg">
+  <div class="modal">
+    <div id="report-modal-body"></div>
+  </div>
+</div>
+
+<!-- Modal: informe mensual -->
+<div class="modal-bg" id="month-modal-bg">
+  <div class="modal">
+    <div id="month-modal-body"></div>
+    <button class="cta-btn ghost" style="margin-top:16px;" onclick="closeMonthlyReport()">Cerrar</button>
+  </div>
+</div>
+
+<!-- Modal: objetivo de temporada -->
+<div class="auth-menu-bg" id="goal-modal-bg" onclick="if(event.target===this) closeGoalModal()">
+  <div class="auth-menu">
+    <h3 style="font-size:16px; margin-bottom:4px;">Elegí tu objetivo de temporada</h3>
+    <div style="font-size:12px; color:var(--chalk-dim); margin-bottom:16px;">Tus entrenamientos recomendados se van a adaptar a este objetivo.</div>
+    <div class="goal-pick-row" id="goal-pick-row"></div>
+    <button class="cta-btn ghost" style="margin-top:14px;" onclick="closeGoalModal()">Cerrar</button>
+  </div>
+</div>
+
+<!-- Modal: subida de nivel -->
+<div class="levelup-bg" id="levelup-bg" onclick="if(event.target===this) closeLevelUp()">
+  <div class="levelup-card">
+    <div class="levelup-eyebrow">¡Subiste de nivel!</div>
+    <div class="levelup-num" id="levelup-num">2</div>
+    <div class="levelup-title" id="levelup-title">Amateur</div>
+    <button class="cta-btn" style="margin-top:0;" onclick="closeLevelUp()">Seguir entrenando</button>
+  </div>
+</div>
+
+<!-- Modal: registrar tiros -->
+<div class="modal-bg" id="shotlog-modal">
+  <div class="modal">
+    <h2>Registrar remates</h2>
+    <div class="sub">Tocá una zona para sumar un remate. Elegí si fue atajada o gol.</div>
+    <div id="modal-goal-grid"></div>
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="cta-btn ghost" style="margin-top:0;" onclick="closeShotlog()">Cerrar</button>
+      <button class="cta-btn" style="margin-top:0;" onclick="finishSessionWithZones()">Guardar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: registrar / editar partido -->
+<div class="modal-bg" id="match-modal">
+  <div class="modal">
+    <h2 id="match-modal-title">Registrar partido</h2>
+    <div class="sub">Cargá tus estadísticas del partido.</div>
+
+    <div class="section-label" style="margin-top:0;">Tipo de partido</div>
+    <div class="filter-row" id="match-context-row"></div>
+
+    <div class="field-row"><label>Fecha</label><input type="date" id="match-date" class="field-input"></div>
+    <div class="field-row"><label>⚽ Goles</label><input type="number" min="0" inputmode="numeric" id="match-goals" class="field-input" value="0"></div>
+    <div class="field-row"><label>🅰 Asistencias</label><input type="number" min="0" inputmode="numeric" id="match-assists" class="field-input" value="0"></div>
+    <div class="field-row"><label>🦵 Barridas</label><input type="number" min="0" inputmode="numeric" id="match-tackles" class="field-input" value="0"></div>
+    <div class="field-row" id="match-saves-row"><label>🧤 Atajadas</label><input type="number" min="0" inputmode="numeric" id="match-saves" class="field-input" value="0"></div>
+    <div class="field-row" style="align-items:flex-start; flex-direction:column; gap:6px;">
+      <label>Nota (opcional)</label>
+      <textarea id="match-note" class="field-input" placeholder="Ej: partido de vuelta contra..."></textarea>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="cta-btn ghost" style="margin-top:0;" onclick="closeMatchModal()">Cancelar</button>
+      <button class="cta-btn" style="margin-top:0;" onclick="saveMatch()">Guardar partido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PALETTE
+============================================================ */
+const PALETTE = ['#FF6B35','#8FEA6B','#5BC8FF','#FFD35B','#C99BFF','#FF6BA6'];
+
+/* ============================================================
+   ÍCONOS (SVG propios, inline, sin dependencias externas)
+============================================================ */
+const ICON_PATHS = {
+  glove:   'M8 12V6a2 2 0 0 1 4 0v4M12 10V5a2 2 0 0 1 4 0v5M16 10V7a2 2 0 0 1 4 0v6c0 3.5-2.5 6-6 6H9a5 5 0 0 1-4-2l-2-3 1.5-1.5L8 15v-3',
+  shield:  'M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z',
+  gear:    'M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1',
+  target:  'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2z',
+  bolt:    'M13 2L4 14h6l-1 8 9-12h-6l1-8z',
+  fall:    'M5 12l4 4 10-10M5 18h14',
+  run:     'M13 4a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM8 21l2-6-3-2 1-5 4 1 2 3h3M8 13l-3 2 2 6',
+  boot:    'M6 3v6l-3 4v4a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1c0-3-2-4-5-5l-4-2V3H6z',
+  pass:    'M4 12h13M12 6l5 6-5 6',
+  duel:    'M8 8l8 8M16 8l-8 8M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z',
+  header:  'M12 3a5 5 0 0 1 5 5c0 2-1 3-2 4l-1 5H10l-1-5c-1-1-2-2-2-4a5 5 0 0 1 5-5z',
+  compass: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15 9l-2 5-5 2 2-5 5-2z',
+  magnet:  'M6 4h4v9a2 2 0 0 0 4 0V4h4v9a6 6 0 0 1-12 0V4zM6 4v3h4M18 4v3h-4',
+  eye:     'M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
+  zigzag:  'M3 17l5-5-3-3 8-6 3 4-5 3 4 4-3 3 5 4',
+  backturn:'M12 4a8 8 0 1 0 6 13M12 4v5h5',
+  arrows:  'M4 12h16M4 12l4-4M4 12l4 4M20 12l-4-4M20 12l-4 4',
+};
+function iconSvg(name, size, color){
+  const p = ICON_PATHS[name] || ICON_PATHS.target;
+  size = size || 16; color = color || 'currentColor';
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="${p}"/></svg>`;
+}
+// ícono por posición
+const POSITION_ICON = {ARQ:'glove', DEF:'shield', MED:'gear', DEL:'target'};
+// ícono por categoría (id de categoría -> ícono representativo)
+const CATEGORY_ICON = {
+  REF:'bolt', BLQ:'fall', ACH:'run', PIE:'boot', SAQ:'pass', '1v1':'duel',
+  MAR:'duel', AER:'header', SAL:'pass', LEC:'eye',
+  CTP:'boot', VIS:'pass', REC:'magnet', LLE:'arrows',
+  FIN:'target', MSB:'run', ESP:'backturn', REG:'zigzag',
+};
+
+/* ============================================================
+   POSITIONS
+============================================================ */
+const POSITIONS = [
+  {id:'ARQ', name:'Arquero', color:'#FF6B35'},
+  {id:'DEF', name:'Defensor', color:'#5BC8FF'},
+  {id:'MED', name:'Mediocampista', color:'#FFD35B'},
+  {id:'DEL', name:'Delantero', color:'#FF6BA6'},
+];
+function posById(id){ return POSITIONS.find(p=>p.id===id); }
+
+/* ============================================================
+   CATEGORIES (per position)
+============================================================ */
+const CATEGORIES = {
+  ARQ: [
+    {id:'REF', name:'Reflejos y Reacción'},
+    {id:'BLQ', name:'Blocaje y Caídas'},
+    {id:'ACH', name:'Achique y Salidas'},
+    {id:'PIE', name:'Juego de Pies'},
+    {id:'SAQ', name:'Saques y Distribución'},
+    {id:'1v1', name:'Uno contra Uno'},
+  ],
+  DEF: [
+    {id:'MAR', name:'Marcación y Duelos'},
+    {id:'AER', name:'Juego Aéreo'},
+    {id:'SAL', name:'Salida de Balón'},
+    {id:'LEC', name:'Anticipación y Lectura'},
+  ],
+  MED: [
+    {id:'CTP', name:'Control y Primer Toque'},
+    {id:'VIS', name:'Visión y Pase'},
+    {id:'REC', name:'Recuperación'},
+    {id:'LLE', name:'Llegada al Área'},
+  ],
+  DEL: [
+    {id:'FIN', name:'Definición y Remate'},
+    {id:'MSB', name:'Movimientos sin Balón'},
+    {id:'ESP', name:'Juego de Espaldas'},
+    {id:'REG', name:'Regate y Desborde'},
+  ],
+};
+// asignar color de la paleta compartida a cada categoría (por posición, cíclico)
+Object.keys(CATEGORIES).forEach(pos=>{
+  CATEGORIES[pos].forEach((c,i)=>{ c.color = PALETTE[i % PALETTE.length]; });
+});
+function catById(pos, catId){ return CATEGORIES[pos].find(c=>c.id===catId); }
+
+/* ============================================================
+   DRILLS (per position) — ids prefijados por posición
+============================================================ */
+const DRILLS = {
+  ARQ: [
+    {id:'arq_ref1', cat:'REF', name:'Reacción a rebotes de pared', dose:'4 series x 45s', desc:'Parado a 2-3m de una pared, lanzá el balón con fuerza variando el ángulo y reaccioná al rebote con las manos. Prioridad: primer paso rápido, no anticipar.'},
+    {id:'arq_ref2', cat:'REF', name:'Reflejos con dos balones', dose:'3 series x 10 reps', desc:'Un compañero lanza alternadamente a ambos lados a corta distancia. Foco en manos blandas y recuperación inmediata de postura.'},
+    {id:'arq_ref3', cat:'REF', name:'Cambios de dirección explosivos', dose:'5 series x 20s', desc:'Desplazamientos laterales cortos y explosivos entre conos, terminando cada repetición con una estirada simulada.'},
+    {id:'arq_blq1', cat:'BLQ', name:'Caída lateral controlada', dose:'4 series x 6 reps', desc:'Desde posición básica, caída lateral técnica sobre colchoneta o césped, apoyando cadera-costado y protegiendo el balón con ambas manos.'},
+    {id:'arq_blq2', cat:'BLQ', name:'Blocaje bajo de rodillas', dose:'3 series x 8 reps', desc:'Remates rasos dirigidos al cuerpo. Trabajar la técnica de "cesta" con manos y antebrazos, rodillas juntas, sin dejar rebote.'},
+    {id:'arq_blq3', cat:'BLQ', name:'Estirada a media altura', dose:'4 series x 6 reps c/lado', desc:'Remates a media altura fuera del alcance directo. Foco en el paso de carga previo y extensión completa del cuerpo.'},
+    {id:'arq_blq4', cat:'BLQ', name:'Palomas a esquina alta', dose:'3 series x 5 reps c/lado', desc:'Remates altos a las escuadras. Trabajar el salto vertical-lateral y el desvío con la punta de los dedos por encima del travesaño.'},
+    {id:'arq_ach1', cat:'ACH', name:'Achique 1 vs. delantero', dose:'6 repeticiones', desc:'Un atacante encara desde media distancia. Practicar el achique progresivo, reduciendo el ángulo sin anticipar la caída.'},
+    {id:'arq_ach2', cat:'ACH', name:'Salida a centros cruzados', dose:'8 centros por lado', desc:'Centros desde ambas bandas al área chica. Trabajar lectura de trayectoria, timing de salto y despeje con puños o atrape.'},
+    {id:'arq_ach3', cat:'ACH', name:'Achique y recuperación de posición', dose:'5 series', desc:'Salir rápido ante un pase filtrado y, si no llega, recuperar la posición bajo los tres palos con pasos cortos hacia atrás.'},
+    {id:'arq_pie1', cat:'PIE', name:'Control orientado bajo presión', dose:'10 repeticiones', desc:'Recibir con un rival cerca aplicando presión leve, orientar el primer control hacia el espacio libre y salir jugando en dos toques.'},
+    {id:'arq_pie2', cat:'PIE', name:'Pase corto y largo a dos pies', dose:'20 pases (10+10)', desc:'Circuito de pases cortos precisos y saques largos rasos, alternando pie hábil y pie menos hábil.'},
+    {id:'arq_pie3', cat:'PIE', name:'Salida jugada bajo presión', dose:'6 secuencias', desc:'Simular una salida con el balón desde el fondo ante presión de un rival, buscando siempre la opción más segura antes que el despeje.'},
+    {id:'arq_saq1', cat:'SAQ', name:'Saque de mano a bandas', dose:'8 saques por lado', desc:'Precisión de saque lateral rápido apuntando a un compañero o cono en la banda para iniciar el contraataque.'},
+    {id:'arq_saq2', cat:'SAQ', name:'Saque de meta largo (drop kick)', dose:'10 saques', desc:'Trabajar el saque de volea larga con contacto limpio, priorizando altura y distancia consistente hacia un blanco.'},
+    {id:'arq_saq3', cat:'SAQ', name:'Distribución rápida en contraataque', dose:'6 secuencias', desc:'Tras una atajada, ejecutar la distribución más rápida posible según la situación (mano corta, saque largo o pase con el pie).'},
+    {id:'arq_1v1a', cat:'1v1', name:'Duelo mano a mano frontal', dose:'8 duelos', desc:'Enfrentamiento directo con un atacante desde el borde del área. Trabajar el momento exacto de la salida y mantenerse "grande" en la línea de tiro.'},
+    {id:'arq_1v1b', cat:'1v1', name:'Achique en profundidad', dose:'6 repeticiones', desc:'Ante un pase filtrado en profundidad, salir a cortar el balón antes que el atacante, decidiendo rápido entre despejar o atrapar.'},
+    {id:'arq_1v1c', cat:'1v1', name:'Cierre de ángulo en carrera', dose:'6 repeticiones', desc:'El atacante arranca desde una banda hacia el área; cerrar el ángulo de tiro con carrera diagonal controlada, sin llegar apurado.'},
+  ],
+  DEF: [
+    {id:'def_mar1', cat:'MAR', name:'Marcación al hombre en carrera', dose:'6 carreras de 15m', desc:'Trabajar la distancia óptima de marca, no dejar girar al rival y achicar en el momento justo de la recepción.'},
+    {id:'def_mar2', cat:'MAR', name:'Duelo cuerpo a cuerpo', dose:'5 series x 30s', desc:'Proteger la posición usando el cuerpo de forma legal, sin usar los brazos, ganando la posición antes del contacto.'},
+    {id:'def_mar3', cat:'MAR', name:'Desdoblamiento tras pérdida', dose:'6 repeticiones', desc:'Tras perder el balón, recuperar la posición defensiva a máxima velocidad y frenar el contragolpe rival.'},
+    {id:'def_aer1', cat:'AER', name:'Despeje de cabeza bajo presión', dose:'8 centros', desc:'Anticipar el salto ante un rival y despejar con la frente hacia el lateral, evitando el rebote al medio.'},
+    {id:'def_aer2', cat:'AER', name:'Duelo aéreo con timing de salto', dose:'6 duelos', desc:'Calcular la trayectoria del balón y saltar en el momento justo para ganar la posición en el aire.'},
+    {id:'def_aer3', cat:'AER', name:'Marca en pelota parada', dose:'5 córners simulados', desc:'Repartir marcas y bloquear la carrera del rival en córners y tiros libres.'},
+    {id:'def_sal1', cat:'SAL', name:'Salida limpia bajo presión', dose:'8 repeticiones', desc:'Recibir de costado y resolver con el primer toque orientado, evitando el pase hacia atrás como única salida.'},
+    {id:'def_sal2', cat:'SAL', name:'Pase largo diagonal', dose:'10 pases', desc:'Cambio de orientación con precisión hacia la banda contraria para romper líneas de presión rival.'},
+    {id:'def_sal3', cat:'SAL', name:'Conducción progresiva', dose:'6 repeticiones', desc:'Avanzar con el balón controlado desde el fondo hasta mitad de cancha antes de decidir el pase.'},
+    {id:'def_lec1', cat:'LEC', name:'Anticipación de pase filtrado', dose:'6 repeticiones', desc:'Leer la intención del pase rival y cortar la trayectoria antes de que llegue al delantero.'},
+    {id:'def_lec2', cat:'LEC', name:'Achique de línea coordinado', dose:'5 series', desc:'Practicar subir la línea defensiva al unísono con los compañeros para dejar en offside al delantero.'},
+    {id:'def_lec3', cat:'LEC', name:'Cobertura al compañero adelantado', dose:'6 repeticiones', desc:'Cuando un compañero sale al duelo, ocupar su espacio y cubrir la profundidad detrás suyo.'},
+  ],
+  MED: [
+    {id:'med_ctp1', cat:'CTP', name:'Control orientado en espacio reducido', dose:'10 repeticiones', desc:'Recibir de espaldas a la presión y resolver con un solo toque hacia el espacio libre.'},
+    {id:'med_ctp2', cat:'CTP', name:'Recepción con giro', dose:'8 repeticiones', desc:'Controlar y girar en un solo movimiento para quedar encarando hacia adelante.'},
+    {id:'med_ctp3', cat:'CTP', name:'Control con pie de apoyo bajo presión', dose:'6 series x 30s', desc:'Dominar el balón con un rival cerca, protegiendo con el cuerpo sin perder la posesión.'},
+    {id:'med_vis1', cat:'VIS', name:'Pase entre líneas', dose:'10 repeticiones', desc:'Encontrar y ejecutar el pase filtrado entre la defensa y el mediocampo rival.'},
+    {id:'med_vis2', cat:'VIS', name:'Cambio de orientación largo', dose:'8 pases', desc:'Abrir el juego con precisión de un lado a otro de la cancha para desequilibrar al rival.'},
+    {id:'med_vis3', cat:'VIS', name:'Triangulaciones en espacio reducido', dose:'5 series', desc:'Combinar con dos compañeros en pocos toques para salir de la presión rival.'},
+    {id:'med_rec1', cat:'REC', name:'Presión inmediata tras pérdida', dose:'6 repeticiones', desc:'Recuperar el balón en los primeros 5 segundos después de perderlo.'},
+    {id:'med_rec2', cat:'REC', name:'Interceptación de líneas de pase', dose:'8 repeticiones', desc:'Anticipar y cortar pases rivales leyendo la posición del cuerpo del pasador.'},
+    {id:'med_rec3', cat:'REC', name:'Cobertura y doblaje defensivo', dose:'5 series', desc:'Acompañar al compañero que presiona para generar superioridad numérica en la recuperación.'},
+    {id:'med_lle1', cat:'LLE', name:'Llegada tardía al área', dose:'6 repeticiones', desc:'Incorporarse al área sin ser detectado por la marca, aprovechando el segundo palo.'},
+    {id:'med_lle2', cat:'LLE', name:'Remate de media distancia', dose:'8 remates', desc:'Definición desde fuera del área tras una jugada colectiva, priorizando colocación.'},
+    {id:'med_lle3', cat:'LLE', name:'Último pase en velocidad', dose:'8 repeticiones', desc:'Ejecutar la asistencia final con precisión a máxima velocidad de juego.'},
+  ],
+  DEL: [
+    {id:'del_fin1', cat:'FIN', name:'Definición de primera bajo presión', dose:'10 remates', desc:'Resolver de primera ante un defensor que presiona, priorizando colocación sobre potencia.'},
+    {id:'del_fin2', cat:'FIN', name:'Definición de cabeza en centros', dose:'8 centros', desc:'Rematar de cabeza con distintas trayectorias de centro, buscando ambos palos.'},
+    {id:'del_fin3', cat:'FIN', name:'Mano a mano con el arquero', dose:'8 repeticiones', desc:'Definir en situaciones de uno contra uno con el arquero, variando la decisión entre remate y gambeta.'},
+    {id:'del_msb1', cat:'MSB', name:'Desmarque de ruptura', dose:'6 repeticiones', desc:'Romper la línea defensiva en el momento justo del pase filtrado.'},
+    {id:'del_msb2', cat:'MSB', name:'Desmarque de apoyo', dose:'6 repeticiones', desc:'Generar líneas de pase constantes para el compañero que tiene el balón.'},
+    {id:'del_msb3', cat:'MSB', name:'Movimiento entre centrales', dose:'5 series', desc:'Trabajar el desmarque diagonal entre los dos centrales rivales para recibir de cara al arco.'},
+    {id:'del_esp1', cat:'ESP', name:'Recepción de espaldas con protección', dose:'8 repeticiones', desc:'Controlar el balón de espaldas al arco protegiendo con el cuerpo y girar para encarar.'},
+    {id:'del_esp2', cat:'ESP', name:'Descarga y pared', dose:'8 repeticiones', desc:'Recibir de espaldas, tocar para un compañero y recibir la devolución en profundidad.'},
+    {id:'del_esp3', cat:'ESP', name:'Pivoteo bajo marca cercana', dose:'6 series x 30s', desc:'Sostener el balón de espaldas bajo presión directa de un defensor sin perder la posesión.'},
+    {id:'del_reg1', cat:'REG', name:'Regate en velocidad hacia el arco', dose:'6 repeticiones', desc:'Encarar en carrera y definir tras superar a un defensor.'},
+    {id:'del_reg2', cat:'REG', name:'Cambio de ritmo y desborde', dose:'8 repeticiones', desc:'Trabajar la finta y aceleración para llegar a línea de fondo por la banda.'},
+    {id:'del_reg3', cat:'REG', name:'Gambeta corta en espacio reducido', dose:'5 series', desc:'Resolver un duelo 1 contra 1 en poco espacio con cambios de dirección cortos.'},
+  ],
+};
+
+// índice plano para lookup rápido por id
+const DRILL_INDEX = {};
+Object.keys(DRILLS).forEach(pos=> DRILLS[pos].forEach(d=> DRILL_INDEX[d.id] = {...d, position:pos}));
+function drillById(id){ return DRILL_INDEX[id]; }
+
+/* ============================================================
+   TEMPLATES (per position)
+============================================================ */
+const TEMPLATES = {
+  ARQ: [
+    {name:'Explosiva', dur:'15 min', drills:['arq_ref1','arq_ref2','arq_blq2']},
+    {name:'Completa', dur:'45 min', drills:['arq_ref1','arq_blq3','arq_ach1','arq_pie1','arq_saq2','arq_1v1a']},
+    {name:'Pies y Salidas', dur:'25 min', drills:['arq_pie1','arq_pie2','arq_pie3','arq_ach2']},
+    {name:'Bajo los tres palos', dur:'20 min', drills:['arq_blq1','arq_blq2','arq_blq4']},
+  ],
+  DEF: [
+    {name:'Marca sólida', dur:'20 min', drills:['def_mar1','def_mar2','def_lec1']},
+    {name:'Juego aéreo', dur:'15 min', drills:['def_aer1','def_aer2']},
+    {name:'Salida limpia', dur:'25 min', drills:['def_sal1','def_sal2','def_sal3']},
+  ],
+  MED: [
+    {name:'Primer toque', dur:'15 min', drills:['med_ctp1','med_ctp2']},
+    {name:'Visión de juego', dur:'20 min', drills:['med_vis1','med_vis2','med_vis3']},
+    {name:'Box to box', dur:'25 min', drills:['med_rec1','med_lle1','med_lle3']},
+  ],
+  DEL: [
+    {name:'Definición pura', dur:'20 min', drills:['del_fin1','del_fin2','del_fin3']},
+    {name:'Movilidad ofensiva', dur:'18 min', drills:['del_msb1','del_msb2','del_msb3']},
+    {name:'Desborde', dur:'15 min', drills:['del_reg1','del_reg2']},
+  ],
+};
+
+/* ============================================================
+   ARQUETIPOS (per position) — inspirados en referentes históricos
+   'priority' apunta a las categorías que ese arquetipo prioriza,
+   se usan para recomendar ejercicios y ponderar el rating (OVR).
+============================================================ */
+const ARCHETYPES = {
+  ARQ: [
+    {id:'yashin',    name:'Lev Yashin',        tag:'El Pulpo Negro', color:'#FF6B35',
+      desc:'Reflejos felinos y coraje puro en el mano a mano. El estilo que definió al arquero moderno por su reacción explosiva.',
+      priority:['REF','1v1']},
+    {id:'buffon',    name:'Gianluigi Buffon',  tag:'El Muro',        color:'#5BC8FF',
+      desc:'Lectura de juego y solidez en el blocaje. Colocación y seguridad antes que espectacularidad.',
+      priority:['BLQ','ACH']},
+    {id:'neuer',     name:'Manuel Neuer',      tag:'El Líbero',      color:'#8FEA6B',
+      desc:'Arquero-jugador: domina el juego de pies y se anima a salir lejos del área para cortar cualquier pelota.',
+      priority:['PIE','SAQ']},
+    {id:'dibu',      name:'Emiliano Martínez', tag:'El Loco',        color:'#FFD35B',
+      desc:'Especialista en el mano a mano y en la definición por penales: reflejos, aguante psicológico y presencia bajo los tres palos.',
+      priority:['1v1','BLQ']},
+  ],
+  DEF: [
+    {id:'maldini',   name:'Paolo Maldini',     tag:'El Elegante',    color:'#5BC8FF',
+      desc:'Anticipación perfecta y marca limpia: gana el duelo antes de que empiece, casi sin necesidad de entrar fuerte.',
+      priority:['LEC','MAR']},
+    {id:'vandijk',   name:'Virgil van Dijk',   tag:'El Coloso',      color:'#FFD35B',
+      desc:'Dominio absoluto del juego aéreo combinado con una salida de balón exquisita para un central.',
+      priority:['AER','SAL']},
+    {id:'cannavaro', name:'Fabio Cannavaro',   tag:'El Muro Bajo',   color:'#C99BFF',
+      desc:'Duelos ganados con timing e inteligencia posicional, más que con altura o fuerza bruta.',
+      priority:['MAR','LEC']},
+  ],
+  MED: [
+    {id:'xavi',      name:'Xavi Hernández',    tag:'El Metrónomo',   color:'#FFD35B',
+      desc:'Control orientado impecable y visión de juego para dictar el ritmo de todo el equipo desde el medio.',
+      priority:['CTP','VIS']},
+    {id:'kroos',     name:'Toni Kroos',        tag:'El Cirujano',    color:'#5BC8FF',
+      desc:'Precisión quirúrgica en el cambio de orientación y en el último pase antes del área.',
+      priority:['VIS','LLE']},
+    {id:'kante',     name:"N'Golo Kanté",      tag:'El Motor',       color:'#8FEA6B',
+      desc:'Recuperación incansable y cobertura de cada metro del campo, siempre en el lugar justo.',
+      priority:['REC','CTP']},
+  ],
+  DEL: [
+    {id:'messi',     name:'Lionel Messi',      tag:'El Mago',        color:'#5BC8FF',
+      desc:'Regate en espacios cortos y definición fría, siempre generando peligro con o sin espacio.',
+      priority:['REG','FIN']},
+    {id:'cr7',       name:'Cristiano Ronaldo', tag:'La Máquina',     color:'#FF6BA6',
+      desc:'Movimientos sin balón letales y definición imponente, tanto de pie como de cabeza.',
+      priority:['MSB','FIN']},
+    {id:'haaland',   name:'Erling Haaland',    tag:'El Depredador',  color:'#FFD35B',
+      desc:'Instinto puro dentro del área y explosividad para ganar la espalda de cualquier defensa.',
+      priority:['ESP','FIN']},
+  ],
+};
+function archetypesFor(pos){ return ARCHETYPES[pos]; }
+function archetypeById(pos, id){ return ARCHETYPES[pos].find(a=>a.id===id); }
+
+/* ============================================================
+   SEMANAS ESPECIALES — programas temáticos de varios días
+   armados con ejercicios ya existentes en DRILLS, ordenados
+   alrededor del estilo de un arquetipo puntual.
+============================================================ */
+const SPECIAL_WEEKS = {
+  ARQ: [
+    {id:'semana_dibu', archetypeId:'dibu', name:'Semana Dibu', tagline:'Mano a mano, reflejos, centros y penales',
+      days:[
+        {title:'Mano a mano', cats:['1v1'], drillIds:['arq_1v1a','arq_1v1b','arq_1v1c']},
+        {title:'Reflejos', cats:['REF'], drillIds:['arq_ref1','arq_ref2','arq_ref3']},
+        {title:'Centros y salidas', cats:['ACH'], drillIds:['arq_ach1','arq_ach2','arq_ach3']},
+        {title:'Blocaje bajo presión', cats:['BLQ'], drillIds:['arq_blq2','arq_blq3']},
+        {title:'Definición: penales', cats:['1v1','REF'], drillIds:['arq_1v1a','arq_ref2']},
+      ]},
+    {id:'semana_yashin', archetypeId:'yashin', name:'Semana Yashin', tagline:'Explosividad y coraje en el mano a mano',
+      days:[
+        {title:'Reacción explosiva', cats:['REF'], drillIds:['arq_ref1','arq_ref3']},
+        {title:'Uno contra uno', cats:['1v1'], drillIds:['arq_1v1a','arq_1v1c']},
+        {title:'Blocajes valientes', cats:['BLQ'], drillIds:['arq_blq1','arq_blq2']},
+        {title:'Cierre de ángulo', cats:['1v1'], drillIds:['arq_1v1b','arq_1v1c']},
+      ]},
+    {id:'semana_neuer', archetypeId:'neuer', name:'Semana Neuer', tagline:'El arquero-líbero: pies y salidas lejos del área',
+      days:[
+        {title:'Primer control bajo presión', cats:['PIE'], drillIds:['arq_pie1','arq_pie3']},
+        {title:'Pases a dos pies', cats:['PIE'], drillIds:['arq_pie2']},
+        {title:'Saques largos', cats:['SAQ'], drillIds:['arq_saq1','arq_saq2']},
+        {title:'Achique en profundidad', cats:['ACH'], drillIds:['arq_ach2','arq_ach3']},
+      ]},
+  ],
+  DEF: [
+    {id:'semana_maldini', archetypeId:'maldini', name:'Semana Maldini', tagline:'Barridas, perfil corporal, anticipos y cabezazos',
+      days:[
+        {title:'Anticipación', cats:['LEC'], drillIds:['def_lec1','def_lec2']},
+        {title:'Marca y perfil corporal', cats:['MAR'], drillIds:['def_mar1','def_mar2']},
+        {title:'Duelo cuerpo a cuerpo', cats:['MAR'], drillIds:['def_mar2','def_mar3']},
+        {title:'Cabezazos y juego aéreo', cats:['AER'], drillIds:['def_aer1','def_aer2']},
+        {title:'Cobertura y lectura', cats:['LEC'], drillIds:['def_lec3','def_lec1']},
+      ]},
+    {id:'semana_vandijk', archetypeId:'vandijk', name:'Semana Van Dijk', tagline:'Dominio aéreo y salida limpia',
+      days:[
+        {title:'Juego aéreo', cats:['AER'], drillIds:['def_aer1','def_aer2','def_aer3']},
+        {title:'Salida de balón', cats:['SAL'], drillIds:['def_sal1','def_sal2']},
+        {title:'Conducción progresiva', cats:['SAL'], drillIds:['def_sal3']},
+      ]},
+  ],
+  MED: [
+    {id:'semana_xavi', archetypeId:'xavi', name:'Semana Xavi', tagline:'Control orientado y visión de juego',
+      days:[
+        {title:'Primer toque', cats:['CTP'], drillIds:['med_ctp1','med_ctp2']},
+        {title:'Visión de pase', cats:['VIS'], drillIds:['med_vis1','med_vis2']},
+        {title:'Último pase', cats:['VIS','LLE'], drillIds:['med_vis3','med_lle1']},
+      ]},
+  ],
+  DEL: [
+    {id:'semana_messi', archetypeId:'messi', name:'Semana Messi', tagline:'Regate en espacios cortos y definición fría',
+      days:[
+        {title:'Regate corto', cats:['REG'], drillIds:['del_reg1','del_reg3']},
+        {title:'Definición', cats:['FIN'], drillIds:['del_fin1','del_fin2']},
+        {title:'Desborde', cats:['REG'], drillIds:['del_reg2']},
+      ]},
+    {id:'semana_haaland', archetypeId:'haaland', name:'Semana Haaland', tagline:'Instinto de área y explosividad',
+      days:[
+        {title:'Juego de espaldas', cats:['ESP'], drillIds:['del_esp1','del_esp3']},
+        {title:'Definición pura', cats:['FIN'], drillIds:['del_fin2','del_fin3']},
+        {title:'Movimientos sin balón', cats:['MSB'], drillIds:['del_msb1','del_msb3']},
+      ]},
+  ],
+};
+function weeksFor(pos){ return SPECIAL_WEEKS[pos] || []; }
+function weekById(pos, id){ return weeksFor(pos).find(w=>w.id===id); }
+
+// clasificación aproximada de cada categoría según cuánto espacio de campo requiere
+const CATEGORY_SPACE = {
+  // ARQ
+  REF:'reducido', BLQ:'reducido', ACH:'amplio', PIE:'reducido', SAQ:'amplio', '1v1':'amplio',
+  // DEF
+  MAR:'reducido', AER:'amplio', SAL:'amplio', LEC:'amplio',
+  // MED
+  CTP:'reducido', VIS:'amplio', REC:'amplio', LLE:'amplio',
+  // DEL
+  FIN:'reducido', MSB:'amplio', ESP:'reducido', REG:'reducido',
+};
+
+const ZONES = [
+  {id:'TL', label:'Alta Izq'}, {id:'TC', label:'Alta Centro'}, {id:'TR', label:'Alta Der'},
+  {id:'BL', label:'Baja Izq'}, {id:'BC', label:'Baja Centro'}, {id:'BR', label:'Baja Der'},
+];
+
+/* ============================================================
+   FIREBASE (login con Google + guardado en la nube)
+   ------------------------------------------------------------
+   PASO A PASO PARA ACTIVARLO (gratis, ~10 min):
+   1. Entrá a https://console.firebase.google.com y creá un proyecto.
+   2. Menú "Compilación" → "Authentication" → "Comenzar" → activá el
+      proveedor "Google".
+   3. Menú "Compilación" → "Firestore Database" → "Crear base de datos"
+      → modo producción (después ajustamos las reglas abajo).
+   4. En "Configuración del proyecto" (ícono de tuerca) → sección
+      "Tus apps" → creá una app web (</>) → copiá el objeto
+      firebaseConfig que te muestra y pegalo reemplazando el de abajo.
+   5. En Firestore → pestaña "Reglas", pegá esto y publicá:
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /usuarios/{userId} {
+              allow read, write: if request.auth != null && request.auth.uid == userId;
+            }
+          }
+        }
+   6. Guardá el archivo y abrilo en el navegador (no dentro de Claude,
+      ahí el login con popup no anda bien). Listo: el botón
+      "Iniciar sesión con Google" del header ya te va a funcionar.
+
+   Mientras NO configures esto, la app sigue andando perfecto en modo
+   local (localStorage) sin pedir login.
+============================================================ */
+const FIREBASE_CONFIG = {
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_PROYECTO.firebaseapp.com",
+  projectId: "TU_PROYECTO",
+  storageBucket: "TU_PROYECTO.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "TU_API_KEY";
+let fbApp=null, fbAuth=null, fbDb=null, currentUser=null;
+
+function initFirebase(){
+  if(!FIREBASE_READY || typeof firebase==='undefined') return;
+  try{
+    fbApp = firebase.initializeApp(FIREBASE_CONFIG);
+    fbAuth = firebase.auth();
+    fbDb = firebase.firestore();
+    fbAuth.onAuthStateChanged(async (user)=>{
+      const wasLoggedOut = !currentUser;
+      currentUser = user;
+      renderAuthWidget();
+      if(user){
+        await migrateLocalToCloudIfNeeded();
+        await loadState();
+        renderPositionBar();
+        refreshCurrentView();
+      } else if(!wasLoggedOut){
+        await loadState();
+        renderPositionBar();
+        refreshCurrentView();
+      }
+    });
+  }catch(e){ console.warn('Firebase no se pudo inicializar', e); }
+}
+
+async function signInWithGoogle(){
+  if(!FIREBASE_READY){
+    alert('Todavía no configuraste Firebase en el código. Mirá el comentario "FIREBASE" cerca del inicio del <script>.');
+    return;
+  }
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await fbAuth.signInWithPopup(provider);
+  }catch(e){
+    console.error(e);
+    alert('No se pudo iniciar sesión (' + (e.code||'') + '). Si estás probando la app adentro de Claude, abrila como archivo en el navegador y probá de nuevo — el popup de Google necesita una pestaña normal.');
+  }
+}
+async function doSignOut(){
+  closeAuthMenu();
+  if(fbAuth) await fbAuth.signOut();
+}
+function openAuthMenu(){
+  if(!currentUser) return;
+  const box = document.getElementById('auth-menu-user');
+  box.innerHTML = `
+    ${currentUser.photoURL ? `<img src="${currentUser.photoURL}">` : `<div class="ph">${(currentUser.displayName||'?')[0]}</div>`}
+    <div><div class="un">${currentUser.displayName||'Tu cuenta'}</div><div class="ue">${currentUser.email||''}</div></div>`;
+  document.getElementById('auth-menu-bg').classList.add('open');
+}
+function closeAuthMenu(){ document.getElementById('auth-menu-bg').classList.remove('open'); }
+
+/* ---------- Respaldo manual (descargar / restaurar archivo) ---------- */
+function openBackupMenu(){
+  document.getElementById('backup-msg').textContent = '';
+  const countEl = document.getElementById('backup-count');
+  countEl.textContent = sessions.length===0
+    ? 'Todavía no tenés sesiones guardadas.'
+    : `Tenés ${sessions.length} sesión${sessions.length===1?'':'es'} guardada${sessions.length===1?'':'s'} lista${sessions.length===1?'':'s'} para respaldar.`;
+  document.getElementById('backup-menu-bg').classList.add('open');
+}
+function closeBackupMenu(){ document.getElementById('backup-menu-bg').classList.remove('open'); }
+
+function downloadBackup(){
+  const payload = {
+    app: 'arquero-plus',
+    backupVersion: 1,
+    exportedAt: new Date().toISOString(),
+    state: currentStateObject()
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  a.href = url;
+  a.download = `arquero-plus-respaldo-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  const msg = document.getElementById('backup-msg');
+  msg.style.color = 'var(--save)';
+  msg.textContent = '✓ Respaldo descargado';
+}
+
+async function restoreBackup(evt){
+  const file = evt.target.files && evt.target.files[0];
+  evt.target.value = '';
+  if(!file) return;
+  const msg = document.getElementById('backup-msg');
+  try{
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const incoming = parsed && parsed.state ? parsed.state : parsed; // acepta también un JSON "pelado"
+    if(!incoming || !Array.isArray(incoming.sessions) || typeof incoming.draft !== 'object'){
+      throw new Error('formato inválido');
+    }
+    const warnCloud = currentUser
+      ? ' Como estás con la cuenta de Google conectada, esto también va a reemplazar lo que tenés guardado en la nube.'
+      : '';
+    const ok = confirm('Esto va a reemplazar el progreso actual de la app por el del archivo.' + warnCloud + ' ¿Continuar?');
+    if(!ok) return;
+    sessions = incoming.sessions || [];
+    draft = incoming.draft || {ARQ:[],DEF:[],MED:[],DEL:[]};
+    activePosition = incoming.activePosition || 'ARQ';
+    selectedArchetype = incoming.selectedArchetype || {ARQ:null,DEF:null,MED:null,DEL:null};
+    POSITIONS.forEach(p=>{ if(!draft[p.id]) draft[p.id]=[]; if(selectedArchetype[p.id]===undefined) selectedArchetype[p.id]=null; });
+    await persistState();
+    renderPositionBar();
+    refreshCurrentView();
+    msg.style.color = 'var(--save)';
+    msg.textContent = '✓ Progreso restaurado';
+  }catch(e){
+    console.error(e);
+    msg.style.color = 'var(--miss)';
+    msg.textContent = 'No se pudo leer el archivo. ¿Es un respaldo de Arquero+?';
+  }
+}
+
+function renderAuthWidget(){
+  const el = document.getElementById('auth-widget');
+  if(!el) return;
+  if(currentUser){
+    el.innerHTML = currentUser.photoURL
+      ? `<img class="auth-avatar" src="${currentUser.photoURL}" onclick="openAuthMenu()">`
+      : `<div class="auth-avatar" onclick="openAuthMenu()">${(currentUser.displayName||'?')[0]}</div>`;
+  }else if(FIREBASE_READY){
+    el.innerHTML = `<button class="auth-btn" onclick="signInWithGoogle()">${iconSvg('target',14)} Iniciar sesión</button>`;
+  }else{
+    el.innerHTML = '';
+  }
+}
+
+// si el usuario venía usando la app sin cuenta y ahora se loguea,
+// subimos lo que tenía guardado localmente (solo si la nube está vacía)
+async function migrateLocalToCloudIfNeeded(){
+  if(!currentUser || !fbDb) return;
+  const ref = fbDb.collection('usuarios').doc(currentUser.uid);
+  const snap = await ref.get();
+  if(snap.exists) return; // ya tiene datos en la nube, no pisamos nada
+  const local = readAllLocal();
+  if(local) await ref.set(local);
+}
+
+function readAllLocal(){
+  try{
+    const raw = localStorage.getItem('arqueroplus_state');
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function writeAllLocal(state){
+  try{ localStorage.setItem('arqueroplus_state', JSON.stringify(state)); }catch(e){}
+}
+
+/* ============================================================
+   STATE
+============================================================ */
+let sessions = [];              // {id, date, position, drillIds:[], durationMin, zones?, note?}
+let matches = [];               // {id, date, position, context, goals, assists, tackles, saves, note?}
+let draft = {ARQ:[],DEF:[],MED:[],DEL:[]};
+let activePosition = 'ARQ';
+let activeSession = null;
+let activeChecked = {};
+let filterCat = 'ALL';
+let matchFilterContext = 'ALL';
+let editingMatchId = null;
+let matchModalContext = 'club';
+let shotlogTemp = {};
+let selectedArchetype = {ARQ:null,DEF:null,MED:null,DEL:null};
+let spacePref = null;            // null | 'amplio' | 'reducido'
+let weekProgress = {};           // { [weekId]: { [dayIndex]: true } }
+let carreraSubTab = 'modo';      // 'modo' | 'semanas' | 'comunidad' | 'extra'
+let communityPosts = [];         // caché en memoria del feed (no se persiste local)
+
+// ---- IA Coach / memoria / diario / récords / objetivo / OVR histórico ----
+let journal = [];                 // {id, sessionId, date, position, mood, best, hardest, discomfort, comment}
+let manualRecords = {};           // {dominadas:{value,date}, sprint:{value,date}, distancia:{value,date}}
+let seasonGoal = null;            // id de SEASON_GOALS, o null
+let ovrHistory = [];              // {date, position, ovr, attrs?}
+let weeklyChallenges = [];        // {id, week, position, type, catId?, target, text}
+let lastWeather = null;           // {temp, code, desc, tip, fetchedAt} — no se persiste, se vuelve a pedir
+let pendingSessionForJournal = null; // sesión recién terminada, mientras se completa el diario
+
+const MATCH_CONTEXTS = [
+  {id:'club',   name:'Club',   color:'#FF6B35'},
+  {id:'amigos', name:'Amigos', color:'#8FEA6B'},
+  {id:'otro',   name:'Otro',   color:'#9AA5B1'}
+];
+function contextById(id){ return MATCH_CONTEXTS.find(c=>c.id===id) || MATCH_CONTEXTS[2]; }
+
+function currentStateObject(){
+  return {sessions, matches, draft, activePosition, selectedArchetype, spacePref, weekProgress,
+    journal, manualRecords, seasonGoal, ovrHistory, weeklyChallenges};
+}
+
+async function loadState(){
+  let data = null;
+  if(currentUser && fbDb){
+    try{
+      const snap = await fbDb.collection('usuarios').doc(currentUser.uid).get();
+      if(snap.exists) data = snap.data();
+    }catch(e){ console.warn('No se pudo leer de la nube, uso local', e); }
+  }
+  if(!data){
+    // dentro de Claude (artifact) usamos window.storage como respaldo; si no, localStorage
+    if(!currentUser && window.storage){
+      try{
+        const r = await window.storage.get('state_v3', false);
+        if(r) data = JSON.parse(r.value);
+      }catch(e){ /* clave no existe todavía */ }
+    }
+    if(!data) data = readAllLocal();
+  }
+  sessions = (data && data.sessions) || [];
+  matches = (data && data.matches) || [];
+  draft = (data && data.draft) || {ARQ:[],DEF:[],MED:[],DEL:[]};
+  activePosition = (data && data.activePosition) || 'ARQ';
+  selectedArchetype = (data && data.selectedArchetype) || {ARQ:null,DEF:null,MED:null,DEL:null};
+  spacePref = (data && data.spacePref) || null;
+  weekProgress = (data && data.weekProgress) || {};
+  journal = (data && data.journal) || [];
+  manualRecords = (data && data.manualRecords) || {};
+  seasonGoal = (data && data.seasonGoal) || null;
+  ovrHistory = (data && data.ovrHistory) || [];
+  weeklyChallenges = (data && data.weeklyChallenges) || [];
+  POSITIONS.forEach(p=>{ if(!draft[p.id]) draft[p.id]=[]; if(selectedArchetype[p.id]===undefined) selectedArchetype[p.id]=null; });
+}
+
+async function persistState(){
+  const state = currentStateObject();
+  if(currentUser && fbDb){
+    try{ await fbDb.collection('usuarios').doc(currentUser.uid).set(state); return; }
+    catch(e){ console.warn('No se pudo guardar en la nube, guardo local', e); }
+  }
+  writeAllLocal(state);
+  if(!currentUser && window.storage){
+    try{ await window.storage.set('state_v3', JSON.stringify(state), false); }catch(e){}
+  }
+}
+
+async function saveSessions(){ await persistState(); }
+async function saveMatches(){ await persistState(); }
+async function saveDraft(){ await persistState(); }
+async function savePosition(){ await persistState(); }
+async function saveArchetype(){ await persistState(); }
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function fmtDate(d){ return d.toLocaleDateString('es-ES', {weekday:'short', day:'numeric', month:'short'}); }
+
+function weekKey(d){
+  const date = new Date(d);
+  date.setHours(0,0,0,0);
+  date.setDate(date.getDate() - date.getDay()); // retrocede al domingo de esa semana
+  return date.toISOString().slice(0,10);
+}
+function computeStreakWeeks(list){
+  if(list.length===0) return 0;
+  const weeks = new Set(list.map(s=>weekKey(new Date(s.date))));
+  let streak = 0;
+  let cursor = new Date();
+  while(true){
+    if(weeks.has(weekKey(cursor))){ streak++; cursor.setDate(cursor.getDate()-7); }
+    else break;
+  }
+  return streak;
+}
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function aggregateZones(){
+  const agg = {};
+  ZONES.forEach(z=>agg[z.id]={s:0,g:0});
+  sessions.filter(s=>s.position==='ARQ').forEach(s=>{
+    if(!s.zones) return;
+    ZONES.forEach(z=>{
+      if(s.zones[z.id]){ agg[z.id].s += s.zones[z.id].s||0; agg[z.id].g += s.zones[z.id].g||0; }
+    });
+  });
+  return agg;
+}
+
+function zoneColor(pct, total){
+  if(total===0) return 'transparent';
+  if(pct>=75) return 'var(--save-dim)';
+  if(pct>=45) return 'rgba(255,211,91,0.16)';
+  return 'var(--miss-dim)';
+}
+function zoneTextColor(pct,total){
+  if(total===0) return 'var(--chalk-faint)';
+  if(pct>=75) return 'var(--save)';
+  if(pct>=45) return '#FFD35B';
+  return 'var(--miss)';
+}
+
+function renderGoalGrid(container, zonesData, clickable){
+  container.innerHTML = '';
+  const wrap = document.createElement('div');
+  wrap.className = 'goal-wrap';
+  const title = document.createElement('div');
+  title.className = 'goal-title';
+  title.innerHTML = `<h3>${clickable ? 'Tocá una zona' : '% de atajada por zona'}</h3>`;
+  wrap.appendChild(title);
+
+  const frame = document.createElement('div');
+  frame.className = 'goal-frame';
+  ZONES.forEach(z=>{
+    const zd = zonesData[z.id] || {s:0,g:0};
+    const total = zd.s + zd.g;
+    const pct = total>0 ? Math.round((zd.s/total)*100) : 0;
+    const cell = document.createElement('div');
+    cell.className = 'zone';
+    cell.style.background = zoneColor(pct,total);
+    cell.style.color = zoneTextColor(pct,total);
+    cell.innerHTML = `<div class="pct">${total>0 ? pct+'%' : '—'}</div><div class="n">${total>0 ? total+' tiros' : ''}</div>`;
+    if(clickable){ cell.addEventListener('click', ()=> tapZone(z.id, cell)); }
+    frame.appendChild(cell);
+  });
+  wrap.appendChild(frame);
+
+  if(!clickable){
+    const legend = document.createElement('div');
+    legend.className = 'goal-legend';
+    legend.innerHTML = `
+      <span><span class="dot" style="background:var(--save)"></span>Zona fuerte</span>
+      <span><span class="dot" style="background:#FFD35B"></span>Media</span>
+      <span><span class="dot" style="background:var(--miss)"></span>A trabajar</span>`;
+    wrap.appendChild(legend);
+  }
+  container.appendChild(wrap);
+}
+
+function tapZone(zoneId, cellEl){
+  const choice = confirm('¿Fue atajada?\n\nAceptar = Atajada\nCancelar = Gol recibido');
+  if(!shotlogTemp[zoneId]) shotlogTemp[zoneId] = {s:0,g:0};
+  if(choice) shotlogTemp[zoneId].s++; else shotlogTemp[zoneId].g++;
+  const total = shotlogTemp[zoneId].s + shotlogTemp[zoneId].g;
+  const pct = Math.round((shotlogTemp[zoneId].s/total)*100);
+  cellEl.style.background = zoneColor(pct,total);
+  cellEl.style.color = zoneTextColor(pct,total);
+  cellEl.innerHTML = `<div class="pct">${pct}%</div><div class="n">${total} tiros</div>`;
+}
+
+// tally de categorías entrenadas para posiciones que no son arquero
+function renderCategoryTally(container, posId){
+  const cats = CATEGORIES[posId];
+  const counts = {};
+  cats.forEach(c=>counts[c.id]=0);
+  sessions.filter(s=>s.position===posId).forEach(s=>{
+    s.drillIds.forEach(id=>{
+      const d = drillById(id);
+      if(d && counts[d.cat]!==undefined) counts[d.cat]++;
+    });
+  });
+  const max = Math.max(1, ...Object.values(counts));
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+  let html = '';
+  cats.forEach(c=>{
+    const n = counts[c.id];
+    html += `<div class="tally-row">
+      <div class="tally-ico" style="background:${c.color}22; color:${c.color};">${iconSvg(CATEGORY_ICON[c.id],13,c.color)}</div>
+      <div class="tally-label">${c.name}</div>
+      <div class="tally-track"><div class="tally-fill" style="width:${(n/max)*100}%; background:${c.color};"></div></div>
+      <div class="tally-num">${n}</div>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+  container.innerHTML = '';
+  container.appendChild(wrap);
+}
+
+/* ============================================================
+   RATING / CARTA ESTILO FIFA
+============================================================ */
+// cuenta ejercicios completados por categoría para una posición
+function categoryCounts(posId){
+  const cats = CATEGORIES[posId];
+  const counts = {};
+  cats.forEach(c=>counts[c.id]=0);
+  sessions.filter(s=>s.position===posId).forEach(s=>{
+    s.drillIds.forEach(id=>{
+      const d = drillById(id);
+      if(d && counts[d.cat]!==undefined) counts[d.cat]++;
+    });
+  });
+  return counts;
+}
+
+// convierte conteo de ejercicios en un atributo estilo FIFA (40-99)
+function computeAttributes(posId){
+  const counts = categoryCounts(posId);
+  const attrs = {};
+  Object.keys(counts).forEach(catId=>{
+    attrs[catId] = Math.min(99, 40 + counts[catId]*4);
+  });
+  return attrs;
+}
+
+// rating general (OVR): promedio ponderado, priorizando las categorías del arquetipo elegido
+function computeOVR(posId, archetypeId){
+  const attrs = computeAttributes(posId);
+  const cats = CATEGORIES[posId];
+  const arche = archetypeId ? archetypeById(posId, archetypeId) : null;
+  let sum=0, weight=0;
+  cats.forEach(c=>{
+    const w = (arche && arche.priority.includes(c.id)) ? 2 : 1;
+    sum += attrs[c.id]*w; weight += w;
+  });
+  return Math.round(sum/weight);
+}
+
+function cardTier(ovr){
+  if(ovr>=85) return {name:'Leyenda', c1:'#3a2a0a', c2:'#0f0a02', text:'#FFD35B', badge:'#FFD35B'};
+  if(ovr>=75) return {name:'Oro',     c1:'#4a3510', c2:'#1c1404', text:'#FFE8A3', badge:'#FFD35B'};
+  if(ovr>=60) return {name:'Plata',   c1:'#3a3f45', c2:'#14171a', text:'#E9EEF2', badge:'#C7D0D6'};
+  return              {name:'Bronce', c1:'#4a3323', c2:'#1c130c', text:'#F0DCC6', badge:'#C98A55'};
+}
+
+function renderPlayerCard(container, posId, big){
+  const pos = posById(posId);
+  const archeId = selectedArchetype[posId];
+  const arche = archeId ? archetypeById(posId, archeId) : null;
+  const ovr = computeOVR(posId, archeId);
+  const tier = cardTier(ovr);
+  const attrs = computeAttributes(posId);
+  const cats = CATEGORIES[posId];
+
+  const card = document.createElement('div');
+  card.className = big ? 'player-card' : 'card-mini';
+  card.style.setProperty('--tier-c1', tier.c1);
+  card.style.setProperty('--tier-c2', tier.c2);
+  card.style.setProperty('--tier-text', tier.text);
+
+  if(big){
+    let attrHtml = '';
+    cats.forEach(c=>{
+      attrHtml += `<div class="pc-attr">${iconSvg(CATEGORY_ICON[c.id],14,tier.text)}<span class="an">${attrs[c.id]}</span><span class="al">${c.name}</span></div>`;
+    });
+    card.innerHTML = `
+      <div class="pc-top">
+        <div>
+          <div class="pc-ovr">${ovr}</div>
+          <div class="pc-pos">${iconSvg(POSITION_ICON[pos.id],11,tier.text)} ${pos.id}</div>
+        </div>
+        <div class="pc-tier">${tier.name}</div>
+      </div>
+      <div class="pc-mid">
+        <div class="pc-badge">${arche ? arche.name.split(' ').map(w=>w[0]).slice(0,2).join('') : iconSvg(POSITION_ICON[pos.id],26,tier.text)}</div>
+        <div class="pc-name">${arche ? arche.name : 'Sin arquetipo'}</div>
+        <div class="pc-tag">${arche ? arche.tag : 'Elegí uno en la pestaña Entrenar'}</div>
+      </div>
+      <div class="pc-radar"><canvas width="220" height="200" style="width:220px;height:200px;"></canvas></div>
+      <div class="pc-attrs">${attrHtml}</div>
+    `;
+  }else{
+    card.innerHTML = `
+      <div class="cm-ovr">${ovr}</div>
+      <div class="cm-pos">${pos.id}</div>
+      <div class="cm-name">${arche ? arche.name : pos.name}</div>
+    `;
+    card.onclick = ()=>{
+      activePosition = posId;
+      savePosition();
+      filterCat='ALL';
+      renderPositionBar();
+      renderProgreso();
+    };
+  }
+  container.innerHTML = '';
+  container.appendChild(card);
+
+  if(big){
+    const canvas = card.querySelector('canvas');
+    if(canvas) drawRadarChart(canvas, cats.map(c=>c.id), cats.map(c=>attrs[c.id]), tier.text);
+  }
+}
+
+// dibuja un radar/spider chart simple en canvas, sin dependencias externas
+function drawRadarChart(canvas, labels, values, color){
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.width, h = canvas.height;
+  canvas.width = w*dpr; canvas.height = h*dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const cx = w/2, cy = h/2 - 6, R = Math.min(w,h)/2 - 30;
+  const n = labels.length;
+  const angle = (i)=> (Math.PI*2*i/n) - Math.PI/2;
+
+  ctx.clearRect(0,0,w,h);
+
+  // anillos de fondo
+  [0.25,0.5,0.75,1].forEach(f=>{
+    ctx.beginPath();
+    for(let i=0;i<=n;i++){
+      const a = angle(i%n);
+      const r = R*f;
+      const x = cx + r*Math.cos(a), y = cy + r*Math.sin(a);
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // ejes + etiquetas
+  ctx.font = "9px 'IBM Plex Mono', monospace";
+  ctx.fillStyle = color; ctx.globalAlpha = .75;
+  for(let i=0;i<n;i++){
+    const a = angle(i);
+    const x2 = cx + R*Math.cos(a), y2 = cy + R*Math.sin(a);
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(x2,y2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth=1; ctx.stroke();
+    const lx = cx + (R+14)*Math.cos(a), ly = cy + (R+14)*Math.sin(a);
+    ctx.textAlign = Math.cos(a) > 0.3 ? 'left' : Math.cos(a) < -0.3 ? 'right' : 'center';
+    ctx.fillText(labels[i], lx, ly+3);
+  }
+  ctx.globalAlpha = 1;
+
+  // polígono de valores
+  ctx.beginPath();
+  for(let i=0;i<=n;i++){
+    const idx = i%n;
+    const a = angle(idx);
+    const r = R * (values[idx]/99);
+    const x = cx + r*Math.cos(a), y = cy + r*Math.sin(a);
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = color+'33';
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.fill();
+  ctx.stroke();
+
+  // puntos
+  for(let i=0;i<n;i++){
+    const a = angle(i);
+    const r = R * (values[i]/99);
+    const x = cx + r*Math.cos(a), y = cy + r*Math.sin(a);
+    ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+  }
+}
+
+/* ============================================================
+   RECOMENDACIÓN SEGÚN ARQUETIPO
+============================================================ */
+function getRecommendedDrills(posId, archetypeId){
+  const arche = archetypeById(posId, archetypeId);
+  if(!arche) return [];
+  const picks = [];
+  arche.priority.forEach(catId=>{
+    const drillsInCat = DRILLS[posId].filter(d=>d.cat===catId);
+    picks.push(...drillsInCat.slice(0,2).map(d=>d.id));
+  });
+  return picks;
+}
+
+function selectArchetype(posId, archeId){
+  selectedArchetype[posId] = (selectedArchetype[posId]===archeId) ? null : archeId;
+  saveArchetype();
+  renderEntrenar();
+}
+
+function useRecommended(){
+  const archeId = selectedArchetype[activePosition];
+  if(!archeId) return;
+  draft[activePosition] = getRecommendedDrills(activePosition, archeId);
+  saveDraft();
+  renderEntrenar();
+}
+
+/* ============================================================
+   ⭐ MOTOR DE PERSONALIZACIÓN IA
+   ------------------------------------------------------------
+   Combina arquetipo + objetivo de temporada + memoria del jugador
+   (qué entrenó, qué evitó, hace cuánto) + clima, para armar una
+   sesión distinta cada vez — nunca repite exactamente lo mismo.
+============================================================ */
+const EXPLOSIVE_CATS = ['REF','ACH','MAR','AER','MSB','REG','1v1'];
+
+const SEASON_GOALS = [
+  {id:'arquero',     name:'Ser mejor arquero',        ico:'🧤'},
+  {id:'defensor',    name:'Mejorar como defensor',    ico:'🛡️'},
+  {id:'velocidad',   name:'Mejorar velocidad',        ico:'⚡'},
+  {id:'reflejos',    name:'Mejorar reflejos',         ico:'👁️'},
+  {id:'pases',       name:'Mejorar pases',            ico:'🎯'},
+  {id:'definicion',  name:'Mejorar definición',       ico:'🥅'},
+  {id:'resistencia', name:'Mejorar resistencia',      ico:'🏃'},
+];
+function goalById(id){ return SEASON_GOALS.find(g=>g.id===id); }
+
+const GOAL_CATEGORY_MAP = {
+  arquero:     {ARQ:['1v1','BLQ','ACH','REF']},
+  defensor:    {DEF:['MAR','LEC','AER'], ARQ:['1v1','ACH']},
+  velocidad:   {ARQ:['REF','ACH'], DEF:['MAR'], MED:['REC'], DEL:['MSB']},
+  reflejos:    {ARQ:['REF'], DEF:['LEC'], MED:['CTP'], DEL:['MSB']},
+  pases:       {ARQ:['SAQ','PIE'], DEF:['SAL'], MED:['VIS','CTP'], DEL:['MSB']},
+  definicion:  {ARQ:['1v1'], MED:['LLE'], DEL:['FIN']},
+  resistencia: {},
+};
+function goalCategoriesFor(goalId, posId){
+  if(!goalId) return [];
+  return (GOAL_CATEGORY_MAP[goalId] || {})[posId] || [];
+}
+
+function renderGoalWidget(){
+  const wrap = document.getElementById('goal-widget-wrap');
+  if(!wrap) return;
+  const goal = seasonGoal ? goalById(seasonGoal) : null;
+  wrap.innerHTML = `
+    <div class="goal-card" onclick="openGoalModal()">
+      <div class="goal-ico">${goal ? goal.ico : '🎯'}</div>
+      <div class="goal-body">
+        <div class="goal-label">OBJETIVO DE TEMPORADA</div>
+        <div class="goal-name">${goal ? goal.name : 'Elegí tu objetivo'}</div>
+      </div>
+      <div class="goal-chevron">›</div>
+    </div>`;
+}
+function openGoalModal(){
+  const row = document.getElementById('goal-pick-row');
+  row.innerHTML = SEASON_GOALS.map(g=>`
+    <div class="goal-pick-item ${seasonGoal===g.id?'selected':''}" onclick="selectSeasonGoal('${g.id}')">
+      <div class="goal-ico">${g.ico}</div><div class="gi-name">${g.name}</div>
+    </div>`).join('');
+  document.getElementById('goal-modal-bg').classList.add('open');
+}
+function closeGoalModal(){ document.getElementById('goal-modal-bg').classList.remove('open'); }
+async function selectSeasonGoal(id){
+  seasonGoal = seasonGoal===id ? null : id;
+  await persistState();
+  closeGoalModal();
+  renderGoalWidget();
+  refreshCurrentView();
+}
+
+/* ---------- Memoria del jugador ---------- */
+function computeConsecutiveDayStreak(){
+  if(sessions.length===0) return 0;
+  const days = new Set(sessions.map(s=> new Date(s.date).toDateString()));
+  let streak = 0;
+  let cursor = new Date();
+  if(!days.has(cursor.toDateString())) cursor.setDate(cursor.getDate()-1);
+  while(days.has(cursor.toDateString())){ streak++; cursor.setDate(cursor.getDate()-1); }
+  return streak;
+}
+function buildMemory(posId){
+  const posSessions = sessions.filter(s=>s.position===posId).sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const cats = CATEGORIES[posId];
+  const counts = categoryCounts(posId);
+  const daysSinceCat = {};
+  cats.forEach(c=>{
+    const last = [...posSessions].reverse().find(s=> s.drillIds.some(id=>{ const d=drillById(id); return d && d.cat===c.id; }));
+    daysSinceCat[c.id] = last ? Math.floor((Date.now()-new Date(last.date).getTime())/86400000) : null;
+  });
+  const sortedByCount = [...cats].sort((a,b)=>counts[a.id]-counts[b.id]);
+  const weakest = sortedByCount.slice(0,2).map(c=>c.id);
+  const strongest = [...sortedByCount].reverse().slice(0,2).map(c=>c.id);
+  const posCounts = {}; POSITIONS.forEach(p=>posCounts[p.id]=sessions.filter(s=>s.position===p.id).length);
+  const mostTrainedPos = Object.keys(posCounts).sort((a,b)=>posCounts[b]-posCounts[a])[0];
+  return {
+    posSessions, counts, daysSinceCat, weakest, strongest, mostTrainedPos,
+    totalSessions: sessions.length,
+    streakDays: computeConsecutiveDayStreak(),
+    lastSession: posSessions[posSessions.length-1] || null,
+  };
+}
+
+/* ============================================================
+   ⭐ DEBILIDADES (categorías descuidadas)
+============================================================ */
+function renderWeaknessWidget(){
+  const wrap = document.getElementById('weakness-wrap');
+  if(!wrap) return;
+  const posId = activePosition;
+  const mem = buildMemory(posId);
+  if(mem.totalSessions===0){ wrap.innerHTML=''; return; }
+  const rows = mem.weakest.map(catId=>{
+    const cat = catById(posId, catId);
+    const days = mem.daysSinceCat[catId];
+    let txt;
+    if(days===null) txt = `Todavía no entrenaste <b>${cat.name.toLowerCase()}</b>.`;
+    else if(days===0) txt = `Hoy entrenaste <b>${cat.name.toLowerCase()}</b> — es tu categoría menos trabajada, seguí sumando.`;
+    else txt = `Hace <b>${days} día${days===1?'':'s'}</b> que no entrenás <b>${cat.name.toLowerCase()}</b>.`;
+    return `<div class="weak-row">
+      <div class="weak-ico">${iconSvg(CATEGORY_ICON[catId],14,'currentColor')}</div>
+      <div class="weak-text">${txt}</div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = `<div class="weak-card">
+    <div class="weak-card-title">⚠ Puntos a reforzar</div>
+    ${rows}
+  </div>`;
+}
+
+/* ============================================================
+   ⭐ DESAFÍOS SEMANALES
+============================================================ */
+function currentWeekKey(){ return weekKey(new Date()); }
+
+function generateWeeklyChallenges(){
+  const wk = currentWeekKey();
+  const posId = activePosition;
+  const already = weeklyChallenges.filter(c=>c.week===wk && c.position===posId);
+  if(already.length>0) return;
+  // saca desafíos viejos de otras semanas para no acumular basura
+  weeklyChallenges = weeklyChallenges.filter(c=>c.week===wk);
+
+  const mem = buildMemory(posId);
+  const cats = CATEGORIES[posId];
+  const list = [];
+
+  list.push({id:'sessions_'+wk+'_'+posId, week:wk, position:posId, type:'sessions', target:3,
+    text:'Completá 3 entrenamientos esta semana.'});
+
+  if(mem.weakest[0]){
+    const cat = catById(posId, mem.weakest[0]);
+    list.push({id:'cat_'+mem.weakest[0]+'_'+wk+'_'+posId, week:wk, position:posId, type:'category', catId:mem.weakest[0], target:2,
+      text:`Entrená ${cat.name.toLowerCase()} 2 veces.`});
+  }
+
+  const otherCats = cats.filter(c=> !mem.weakest.includes(c.id));
+  if(otherCats.length>0){
+    const seed = (new Date().getDate() + posId.length) % otherCats.length;
+    const pick = otherCats[seed];
+    list.push({id:'cat2_'+pick.id+'_'+wk+'_'+posId, week:wk, position:posId, type:'category', catId:pick.id, target:1,
+      text:`Sumá al menos 1 ejercicio de ${pick.name.toLowerCase()}.`});
+  }
+
+  weeklyChallenges = weeklyChallenges.concat(list);
+  persistState();
+}
+
+function challengeProgress(ch){
+  const wkStart = new Date(ch.week+'T00:00:00');
+  const wkEnd = new Date(wkStart); wkEnd.setDate(wkEnd.getDate()+7);
+  const weekSessions = sessions.filter(s=>{
+    const d = new Date(s.date);
+    return d>=wkStart && d<wkEnd && s.position===ch.position;
+  });
+  if(ch.type==='sessions') return Math.min(ch.target, weekSessions.length);
+  if(ch.type==='category'){
+    let n = 0;
+    weekSessions.forEach(s=> s.drillIds.forEach(id=>{ const d=drillById(id); if(d && d.cat===ch.catId) n++; }));
+    return Math.min(ch.target, n);
+  }
+  return 0;
+}
+
+function renderWeeklyChallengeWidget(){
+  const wrap = document.getElementById('weekly-challenge-wrap');
+  if(!wrap) return;
+  generateWeeklyChallenges();
+  const posId = activePosition;
+  const list = weeklyChallenges.filter(c=>c.week===currentWeekKey() && c.position===posId);
+  if(list.length===0){ wrap.innerHTML=''; return; }
+  const doneCount = list.filter(c=> challengeProgress(c)>=c.target).length;
+  const rows = list.map(ch=>{
+    const prog = challengeProgress(ch);
+    const done = prog>=ch.target;
+    return `<div class="challenge-row">
+      <div class="challenge-top">
+        <div class="challenge-text ${done?'done':''}">${ch.text}</div>
+        <div class="challenge-check ${done?'done':''}">${done?'✓':prog+'/'+ch.target}</div>
+      </div>
+      <div class="challenge-track"><div class="challenge-fill ${done?'done':''}" style="width:${(prog/ch.target)*100}%;"></div></div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = `<div class="challenge-card">
+    <div class="challenge-card-title"><span>🏅 Desafíos de la semana</span><span>${doneCount}/${list.length}</span></div>
+    ${rows}
+  </div>`;
+}
+
+/* ============================================================
+   ⭐ EVOLUCIÓN POR HABILIDAD (últimos 30 días)
+============================================================ */
+function renderSkillEvolutionWidget(){
+  const wrap = document.getElementById('skill-evo-wrap');
+  if(!wrap) return;
+  const posId = activePosition;
+  const cats = CATEGORIES[posId];
+  const cutoff = Date.now() - 30*86400000;
+  const posHistory = ovrHistory.filter(h=>h.position===posId && h.attrs);
+  if(posHistory.length===0){
+    wrap.innerHTML = '<div class="ovr-hist-empty">Todavía no hay datos suficientes. Completá entrenamientos para ver tu evolución por habilidad.</div>';
+    return;
+  }
+  const baseline = [...posHistory].reverse().find(h=> new Date(h.date).getTime() <= cutoff) || posHistory[0];
+  const current = computeAttributes(posId);
+  const rows = cats.map(c=>{
+    const before = baseline.attrs[c.id] !== undefined ? baseline.attrs[c.id] : current[c.id];
+    const delta = current[c.id] - before;
+    const cls = delta>0 ? 'up' : delta<0 ? 'down' : 'flat';
+    const sign = delta>0 ? '↑ +' : delta<0 ? '↓ ' : '· ';
+    return `<div class="skill-evo-row">
+      <div class="skill-evo-label">${c.name}</div>
+      <div class="skill-evo-delta ${cls}">${sign}${Math.abs(delta)}</div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = rows;
+}
+
+/* ============================================================
+   ⭐ SISTEMA DE POTENCIAL
+============================================================ */
+function computePotential(posId){
+  const total = sessions.filter(s=>s.position===posId).length;
+  if(total===0) return null;
+  const ovr = computeOVR(posId, selectedArchetype[posId]);
+  const cats = CATEGORIES[posId];
+  const counts = categoryCounts(posId);
+  const coverage = cats.filter(c=>counts[c.id]>0).length / cats.length * 100;
+  const streakW = computeStreakWeeks(sessions.filter(s=>s.position===posId));
+  const last30 = sessions.filter(s=>s.position===posId && new Date(s.date) >= new Date(Date.now()-30*86400000)).length;
+  const consistency = Math.min(100, streakW*15 + last30*4);
+  const potential = Math.round(ovr*0.55 + coverage*0.2 + consistency*0.25);
+  return Math.max(ovr, Math.min(99, potential));
+}
+
+function renderPotentialWidget(){
+  const wrap = document.getElementById('potential-wrap');
+  if(!wrap) return;
+  const rows = POSITIONS.map(p=>{
+    const pot = computePotential(p.id);
+    if(pot===null) return '';
+    return `<div class="potential-row">
+      <div class="potential-top"><span>${p.name}</span><span class="v" style="color:${p.color}">${pot}/100</span></div>
+      <div class="potential-track"><div class="potential-fill" style="width:${pot}%;"></div></div>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = rows || '<div class="ovr-hist-empty">Completá entrenamientos para calcular tu potencial.</div>';
+}
+
+/* ============================================================
+   ⭐ INFORME MENSUAL
+============================================================ */
+function monthKeyOf(d){ const dt=new Date(d); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}`; }
+function monthLabel(mKey){
+  const [y,m] = mKey.split('-').map(Number);
+  const dt = new Date(y, m-1, 1);
+  return dt.toLocaleDateString('es-ES', {month:'long', year:'numeric'});
+}
+function computeMonthlyReport(mKey){
+  const posId = activePosition;
+  const monthSessions = sessions.filter(s=> s.position===posId && monthKeyOf(s.date)===mKey);
+  const totalMin = monthSessions.reduce((a,s)=>a+(s.durationMin||0),0);
+  const hours = Math.round((totalMin/60)*10)/10;
+
+  const monthOvr = ovrHistory.filter(h=>h.position===posId && monthKeyOf(h.date)===mKey);
+  let ovrChange = null;
+  if(monthOvr.length>0){
+    const first = monthOvr[0].ovr;
+    const last = monthOvr[monthOvr.length-1].ovr;
+    ovrChange = last - first;
+  }
+  const currentOvr = computeOVR(posId, selectedArchetype[posId]);
+
+  const monthChallenges = weeklyChallenges.filter(c=>{
+    const wkStart = new Date(c.week+'T00:00:00');
+    return c.position===posId && monthKeyOf(wkStart)===mKey;
+  });
+  const challengeDone = monthChallenges.filter(c=>challengeProgress(c)>=c.target).length;
+  const challengePct = monthChallenges.length>0 ? Math.round((challengeDone/monthChallenges.length)*100) : null;
+
+  // busca si este es el mes con más entrenamientos hasta ahora
+  const allMonths = {};
+  sessions.filter(s=>s.position===posId).forEach(s=>{ const mk=monthKeyOf(s.date); allMonths[mk]=(allMonths[mk]||0)+1; });
+  const bestCount = Math.max(0, ...Object.values(allMonths));
+  const isBestMonth = monthSessions.length>0 && monthSessions.length===bestCount &&
+    Object.keys(allMonths).filter(mk=>allMonths[mk]===bestCount).length===1 && allMonths[mKey]===bestCount;
+
+  return {mKey, posId, count: monthSessions.length, hours, ovrChange, currentOvr, challengePct, isBestMonth};
+}
+function openMonthlyReport(){
+  const mKey = monthKeyOf(new Date());
+  const r = computeMonthlyReport(mKey);
+  const pos = posById(r.posId);
+  const body = document.getElementById('month-modal-body');
+  const ovrLine = r.ovrChange===null ? '—'
+    : (r.ovrChange>0 ? `+${r.ovrChange}` : `${r.ovrChange}`);
+  body.innerHTML = `
+    <div class="month-modal-title">${monthLabel(mKey).replace(/^\w/, c=>c.toUpperCase())}</div>
+    <div class="month-modal-sub">Como ${pos.name.toLowerCase()}</div>
+    <div class="month-stat-row"><span>Entrenamientos</span><span class="v">${r.count}</span></div>
+    <div class="month-stat-row"><span>Horas entrenadas</span><span class="v">${r.hours}</span></div>
+    <div class="month-stat-row"><span>Cambio de OVR</span><span class="v">${ovrLine}</span></div>
+    <div class="month-stat-row"><span>OVR actual</span><span class="v">${r.currentOvr}</span></div>
+    ${r.challengePct!==null ? `<div class="month-stat-row"><span>Desafíos completados</span><span class="v">${r.challengePct}%</span></div>` : ''}
+    ${r.isBestMonth && r.count>0 ? `<div class="month-highlight">🏆 Este fue tu mejor mes desde que empezaste a entrenar.</div>` : ''}
+    ${r.count===0 ? `<div class="month-highlight">Todavía no registraste entrenamientos de ${pos.name.toLowerCase()} este mes.</div>` : ''}
+  `;
+  document.getElementById('month-modal-bg').classList.add('open');
+}
+function closeMonthlyReport(){ document.getElementById('month-modal-bg').classList.remove('open'); }
+
+/* ---------- Motor de sesión inteligente (nunca repite igual) ---------- */
+function computeSmartDrills(posId){
+  const cats = CATEGORIES[posId];
+  const archeId = selectedArchetype[posId];
+  const arche = archeId ? archetypeById(posId, archeId) : null;
+  const mem = buildMemory(posId);
+  const goalCats = goalCategoriesFor(seasonGoal, posId);
+
+  const score = {};
+  cats.forEach(c=>{ score[c.id] = 0; });
+  if(arche) arche.priority.forEach(c=>{ if(score[c]!==undefined) score[c] += 3; });
+  goalCats.forEach(c=>{ if(score[c]!==undefined) score[c] += 4; });
+  cats.forEach(c=>{
+    const days = mem.daysSinceCat[c.id];
+    score[c.id] += (days===null) ? 5 : Math.min(5, Math.floor(days/2));
+  });
+  if(lastWeather && lastWeather.condition==='lluvia'){
+    cats.forEach(c=>{ score[c.id] += (CATEGORY_SPACE[c.id]==='reducido') ? 2 : -1; });
+  }
+  if(lastWeather && lastWeather.condition==='calor'){
+    cats.forEach(c=>{ if(EXPLOSIVE_CATS.includes(c.id)) score[c.id] -= 1; });
+  }
+  if(spacePref){
+    cats.forEach(c=>{ if(CATEGORY_SPACE[c.id]===spacePref) score[c.id] += 1; });
+  }
+
+  const orderedCats = [...cats].sort((a,b)=> score[b.id]-score[a.id]);
+  const topCats = orderedCats.slice(0, Math.min(3, orderedCats.length)).map(c=>c.id);
+
+  const lastDrillIds = mem.lastSession ? new Set(mem.lastSession.drillIds) : new Set();
+  const picks = [];
+  topCats.forEach(catId=>{
+    const drillsInCat = DRILLS[posId].filter(d=>d.cat===catId);
+    if(drillsInCat.length===0) return;
+    const fresh = drillsInCat.filter(d=> !lastDrillIds.has(d.id));
+    const pool = fresh.length>0 ? fresh : drillsInCat;
+    const seed = (new Date().getDate() + catId.length) % pool.length;
+    [pool[seed % pool.length], pool[(seed+1) % pool.length]].filter(Boolean).forEach(d=>{
+      if(!picks.includes(d.id)) picks.push(d.id);
+    });
+  });
+  const max = (lastWeather && lastWeather.condition==='calor') ? 4 : 6;
+  return picks.slice(0, max);
+}
+function useSmartWorkout(){
+  draft[activePosition] = computeSmartDrills(activePosition);
+  saveDraft();
+  renderEntrenar();
+}
+
+/* ---------- Entrenador IA: mensajes pre-entrenamiento ---------- */
+function generateCoachPreMessage(posId){
+  const pos = posById(posId);
+  const mem = buildMemory(posId);
+  const smartCats = [...new Set(computeSmartDrills(posId).map(id=>{ const d=drillById(id); return d?d.cat:null; }).filter(Boolean))];
+  const catNames = smartCats.map(c=> catById(posId,c).name.toLowerCase());
+  const goal = seasonGoal ? goalById(seasonGoal) : null;
+
+  let text;
+  if(mem.totalSessions===0){
+    text = catNames.length ? `Arrancamos de cero. Hoy vamos a trabajar <b>${catNames.join(' y ')}</b> para conocer tu nivel real.`
+      : `Arrancamos de cero. Elegí una plantilla o arquetipo para armar tu primera sesión.`;
+  } else if(catNames.length){
+    text = `Hoy vamos a trabajar <b>${catNames.join(' y ')}</b>.`;
+    const weakInSmart = smartCats.find(c=> mem.weakest.includes(c));
+    if(weakInSmart){
+      const days = mem.daysSinceCat[weakInSmart];
+      const catName = catById(posId, weakInSmart).name.toLowerCase();
+      text += days ? ` Te lo recomiendo porque hace ${days} día${days===1?'':'s'} que no entrenás ${catName} y es una de tus categorías más descuidadas.`
+                   : ` Te lo recomiendo porque es una de tus categorías más descuidadas hasta ahora.`;
+    } else if(goal){
+      text += ` Todo apuntando a tu objetivo: <b>${goal.name.toLowerCase()}</b>.`;
+    }
+    if(mem.streakDays>=3) text += ` Llevás ${mem.streakDays} días seguidos entrenando — buen compromiso, prestá atención a la recuperación.`;
+  } else {
+    text = `Elegí ejercicios o una plantilla para arrancar la sesión de ${pos.name.toLowerCase()}.`;
+  }
+  if(lastWeather && lastWeather.tip) text += ` ${lastWeather.tip}`;
+  return text;
+}
+function renderCoachCard(containerId, posId){
+  const wrap = document.getElementById(containerId);
+  if(!wrap) return;
+  if(sessions.filter(s=>s.position===posId).length===0 && !seasonGoal){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = `
+    <div class="coach-card">
+      <div class="coach-eyebrow">🧑‍🏫 ENTRENADOR IA</div>
+      <div class="coach-text">${generateCoachPreMessage(posId)}</div>
+    </div>`;
+}
+
+/* ============================================================
+   POSITION BAR
+============================================================ */
+function renderPositionBar(){
+  const bar = document.getElementById('position-bar');
+  bar.innerHTML = '';
+  POSITIONS.forEach(p=>{
+    const chip = document.createElement('div');
+    chip.className = 'pos-chip' + (activePosition===p.id ? ' active':'');
+    chip.style.setProperty('--chip-color', p.color);
+    chip.style.setProperty('--chip-bg', p.color+'22');
+    chip.innerHTML = `<span class="pos-dot" style="background:${p.color}">${iconSvg(POSITION_ICON[p.id],14,'#0E2A1C')}</span><span class="pos-label">${p.name}</span>`;
+    chip.onclick = ()=>{
+      activePosition = p.id;
+      savePosition();
+      filterCat = 'ALL';
+      renderPositionBar();
+      refreshCurrentView();
+    };
+    bar.appendChild(chip);
+  });
+}
+
+function refreshCurrentView(){
+  const active = document.querySelector('.view.active');
+  if(!active) return;
+  const id = active.id.replace('view-','');
+  if(id==='inicio') renderInicio();
+  if(id==='ejercicios') renderEjercicios();
+  if(id==='entrenar') renderEntrenar();
+  if(id==='progreso') renderProgreso();
+  if(id==='partidos') renderPartidos();
+  if(id==='carrera') renderCarrera();
+}
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+function goTo(view){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  if(view==='inicio') renderInicio();
+  if(view==='ejercicios') renderEjercicios();
+  if(view==='entrenar') renderEntrenar();
+  if(view==='progreso') renderProgreso();
+  if(view==='partidos') renderPartidos();
+  if(view==='carrera') renderCarrera();
+}
+
+/* ============================================================
+   RENDER: INICIO
+============================================================ */
+function renderInicio(){
+  document.getElementById('today-date').textContent = fmtDate(new Date()).toUpperCase();
+  document.getElementById('streak-num').textContent = computeStreakWeeks(sessions);
+  renderLevelWidget('level-widget');
+
+  const hour = new Date().getHours();
+  const greet = hour < 12 ? 'Buen día' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
+  document.getElementById('greeting-text').textContent = greet;
+  const pos = posById(activePosition);
+  document.getElementById('greeting-sub').textContent = `Entrenando como ${pos.name.toLowerCase()}.`;
+
+  document.getElementById('stat-total').textContent = sessions.length;
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  document.getElementById('stat-week').textContent = sessions.filter(s=> new Date(s.date) >= weekAgo).length;
+
+  renderGoalWidget();
+  renderCoachCard('coach-wrap', activePosition);
+  renderWeeklyChallengeWidget();
+  renderWeaknessWidget();
+  renderSmartSuggestion();
+
+  const widgetLabel = document.getElementById('pos-widget-label');
+  const widget = document.getElementById('pos-widget');
+  if(activePosition==='ARQ'){
+    widgetLabel.textContent = 'Mapa de atajadas';
+    renderGoalGrid(widget, aggregateZones(), false);
+  }else{
+    widgetLabel.textContent = 'Categorías entrenadas · ' + pos.name;
+    renderCategoryTally(widget, activePosition);
+  }
+
+  const lastCard = document.getElementById('last-session-card');
+  const lastOfPos = [...sessions].reverse().find(s=>s.position===activePosition);
+  if(!lastOfPos){
+    lastCard.innerHTML = `<div class="empty-state">Todavía no registraste una sesión de ${pos.name.toLowerCase()}.<br>Arrancá cuando quieras.</div>`;
+  }else{
+    lastCard.innerHTML = `
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:15px; font-weight:600;">${fmtDate(new Date(lastOfPos.date))}</div>
+            <div class="drill-dose" style="margin-top:4px;">${lastOfPos.drillIds.length} ejercicios · ${lastOfPos.durationMin} min</div>
+          </div>
+          <div class="history-badge">✓ Completa</div>
+        </div>
+      </div>`;
+  }
+}
+
+/* ============================================================
+   CALENDARIO INTELIGENTE (sugerencia en Inicio)
+============================================================ */
+function renderSmartSuggestion(){
+  const wrap = document.getElementById('smart-suggestion-wrap');
+  if(!wrap) return;
+  const pos = activePosition;
+  const cats = CATEGORIES[pos];
+  const posSessions = sessions.filter(s=>s.position===pos).sort((a,b)=> new Date(a.date)-new Date(b.date));
+  if(posSessions.length===0){ wrap.innerHTML = ''; return; }
+
+  const last = posSessions[posSessions.length-1];
+  const lastCatCounts = {};
+  last.drillIds.forEach(id=>{ const d=drillById(id); if(d) lastCatCounts[d.cat]=(lastCatCounts[d.cat]||0)+1; });
+  const lastMainCat = Object.keys(lastCatCounts).sort((a,b)=>lastCatCounts[b]-lastCatCounts[a])[0];
+  const EXPLOSIVE = ['REF','ACH','MAR','AER','MSB','REG','1v1'];
+  const wasExplosive = lastMainCat && EXPLOSIVE.includes(lastMainCat);
+
+  const twoWeeksAgo = new Date(); twoWeeksAgo.setDate(twoWeeksAgo.getDate()-14);
+  const recentCounts = {};
+  cats.forEach(c=>recentCounts[c.id]=0);
+  posSessions.filter(s=> new Date(s.date) >= twoWeeksAgo).forEach(s=>{
+    s.drillIds.forEach(id=>{ const d=drillById(id); if(d && recentCounts[d.cat]!==undefined) recentCounts[d.cat]++; });
+  });
+  const leastTrained = [...cats].sort((a,b)=> recentCounts[a.id]-recentCounts[b.id])[0];
+  const daysSince = Math.floor((Date.now() - new Date(last.date).getTime())/86400000);
+
+  let eyebrow, text;
+  if(daysSince===0){
+    eyebrow = 'YA ENTRENASTE HOY';
+    text = `Ya registraste una sesión hoy. Si vas por más, sumá algo suave de ${leastTrained.name.toLowerCase()} para no sobrecargar.`;
+  }else if(wasExplosive){
+    eyebrow = 'CALENDARIO INTELIGENTE';
+    text = `Tu última sesión fue de ${catById(pos,lastMainCat).name.toLowerCase()}, más explosiva. Hoy conviene bajar el ritmo: técnica y recuperación en ${leastTrained.name.toLowerCase()}.`;
+  }else{
+    eyebrow = 'CALENDARIO INTELIGENTE';
+    text = `Hace ${daysSince} día${daysSince===1?'':'s'} que no entrenás ${leastTrained.name.toLowerCase()}. Buen día para retomarlo.`;
+  }
+
+  wrap.innerHTML = `
+    <div class="suggest-card">
+      <div class="suggest-eyebrow">📅 ${eyebrow}</div>
+      <div class="suggest-text">${text}</div>
+      <button class="suggest-btn" onclick="filterCat='${leastTrained.id}'; goTo('ejercicios');">Ver ejercicios sugeridos</button>
+    </div>`;
+}
+
+/* ============================================================
+   CARRERA — dispatcher de sub-tabs
+============================================================ */
+function renderCarrera(){
+  const tabs = [
+    {id:'modo', label:'Modo Carrera'},
+    {id:'semanas', label:'Semanas'},
+    {id:'comunidad', label:'Comunidad'},
+    {id:'extra', label:'GPS y Video'},
+  ];
+  const bar = document.getElementById('carrera-subtabs');
+  bar.innerHTML = tabs.map(t=>`<button class="subtab-btn ${carreraSubTab===t.id?'active':''}" onclick="setCarreraSubTab('${t.id}')">${t.label}</button>`).join('');
+  const content = document.getElementById('carrera-content');
+  if(carreraSubTab==='modo') renderCarreraModo(content);
+  else if(carreraSubTab==='semanas') renderCarreraSemanas(content);
+  else if(carreraSubTab==='comunidad') renderCarreraComunidad(content);
+  else renderCarreraExtra(content);
+}
+function setCarreraSubTab(id){ carreraSubTab=id; renderCarrera(); }
+
+/* ---------- Modo Carrera: barra de progreso por leyenda ---------- */
+function legendProgress(posId, archeId){
+  const arche = archetypeById(posId, archeId);
+  const target = 40; // ejercicios de sus categorías prioritarias para llegar al 100%
+  let count = 0;
+  sessions.filter(s=>s.position===posId).forEach(s=>{
+    s.drillIds.forEach(id=>{ const d=drillById(id); if(d && arche.priority.includes(d.cat)) count++; });
+  });
+  return Math.min(100, Math.round((count/target)*100));
+}
+function renderCarreraModo(content){
+  const pos = posById(activePosition);
+  const counts = categoryCounts(activePosition);
+  let html = `<p style="font-size:12.5px; color:var(--chalk-dim); margin-bottom:16px;">Elegí una leyenda de ${pos.name.toLowerCase()} y entrená sus categorías fuertes para llenar la barra.</p>`;
+  archetypesFor(activePosition).forEach(a=>{
+    const pct = legendProgress(activePosition, a.id);
+    const selected = selectedArchetype[activePosition]===a.id;
+    const weakest = [...a.priority].sort((x,y)=> (counts[x]||0)-(counts[y]||0))[0];
+    const weakestName = catById(activePosition, weakest).name;
+    html += `
+      <div class="legend-card" onclick="selectArchetype('${activePosition}','${a.id}'); renderCarreraModo(document.getElementById('carrera-content'));">
+        <div class="legend-top">
+          <div>
+            <div class="legend-name">${a.name} ${selected?'⭐':''}</div>
+            <div class="legend-tag">${a.tag}</div>
+          </div>
+          <div class="legend-pct" style="color:${a.color};">${pct}%</div>
+        </div>
+        <div class="legend-track"><div class="legend-fill" style="width:${pct}%; background:${a.color};"></div></div>
+        <div class="legend-hint">Hoy ${a.name.split(' ')[0]} entrenaría: <strong>${weakestName}</strong></div>
+      </div>`;
+  });
+  content.innerHTML = html;
+}
+
+/* ---------- Semanas especiales ---------- */
+function renderCarreraSemanas(content){
+  const pos = activePosition;
+  const weeks = weeksFor(pos);
+  if(weeks.length===0){ content.innerHTML = `<div class="empty-state">Todavía no hay semanas especiales para ${posById(pos).name.toLowerCase()}.</div>`; return; }
+  let html = '';
+  weeks.forEach(w=>{
+    const progress = weekProgress[w.id] || {};
+    const doneCount = w.days.filter((d,i)=>progress[i]).length;
+    html += `<div class="week-card">
+      <div class="week-head">
+        <div>
+          <div class="week-title">${w.name}</div>
+          <div class="week-sub">${w.tagline}</div>
+        </div>
+        <div class="week-pct">${doneCount}/${w.days.length}</div>
+      </div>`;
+    w.days.forEach((d,i)=>{
+      const done = !!progress[i];
+      const catNames = d.cats.map(c=>catById(pos,c).name).join(' · ');
+      html += `<div class="week-day">
+        <div class="week-day-check ${done?'done':''}" onclick="toggleWeekDay('${w.id}', ${i})">${done?'✓':''}</div>
+        <div class="week-day-body" onclick="startWeekDay('${pos}','${w.id}', ${i})">
+          <div class="week-day-title">Día ${i+1} · ${d.title}</div>
+          <div class="week-day-cats">${catNames}</div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  content.innerHTML = html;
+}
+function toggleWeekDay(weekId, dayIndex){
+  if(!weekProgress[weekId]) weekProgress[weekId] = {};
+  weekProgress[weekId][dayIndex] = !weekProgress[weekId][dayIndex];
+  persistState();
+  renderCarreraSemanas(document.getElementById('carrera-content'));
+}
+function startWeekDay(pos, weekId, dayIndex){
+  const w = weekById(pos, weekId);
+  const day = w.days[dayIndex];
+  activePosition = pos;
+  savePosition();
+  draft[pos] = [...day.drillIds];
+  saveDraft();
+  renderPositionBar();
+  goTo('entrenar');
+}
+
+/* ---------- GPS / espacio + Video análisis (demo) ---------- */
+function renderCarreraExtra(content){
+  content.innerHTML = `
+    <div class="section-label" style="margin-top:0;">🌤 Clima y entrenamiento</div>
+    <div id="weather-wrap"></div>
+
+    <div class="section-label">📍 Espacio disponible</div>
+    <div class="space-toggle">
+      <div class="space-opt ${spacePref==='amplio'?'active':''}" onclick="setSpacePref('amplio')"><span class="ico">🏟️</span>Cancha grande</div>
+      <div class="space-opt ${spacePref==='reducido'?'active':''}" onclick="setSpacePref('reducido')"><span class="ico">🏠</span>Espacio reducido</div>
+    </div>
+    <button class="cta-btn ghost" style="margin-top:0; margin-bottom:6px;" onclick="detectLocation()">📡 Detectar ubicación (GPS)</button>
+    <div id="gps-status" style="font-size:11.5px; color:var(--chalk-dim); margin-bottom:10px;">${spacePref ? `Preferencia actual: ${spacePref==='amplio'?'cancha grande':'espacio reducido'}.` : ''}</div>
+    <p style="font-size:11.5px; color:var(--chalk-faint); line-height:1.4; margin-bottom:24px;">El GPS confirma tu ubicación, pero no puede medir el espacio libre real de una cancha. Por eso elegís manualmente arriba, y la app va a tener en cuenta esa preferencia como referencia para tus próximos entrenamientos.</p>
+
+    <div class="section-label">🎥 Análisis de video (demo)</div>
+    <div class="video-box">
+      <div style="font-size:32px; margin-bottom:8px;">🎥</div>
+      <p style="font-size:12.5px; color:var(--chalk-dim); margin-bottom:14px;">Grabá o subí un clip corto de una atajada, barrida o remate.</p>
+      <input type="file" accept="video/*" capture="camcorder" id="video-input" style="display:none;" onchange="simulateVideoAnalysis()">
+      <button class="cta-btn ghost" style="margin-top:0;" onclick="document.getElementById('video-input').click()">Grabar / subir clip</button>
+    </div>
+    <div id="video-result"></div>
+    <p style="font-size:11px; color:var(--chalk-faint); line-height:1.4;">Esta es una vista previa: un análisis de video con IA real necesita un servidor con un modelo de visión conectado, algo que un archivo suelto como este no puede hacer por sí solo. Lo dejamos simulado para mostrar cómo se sentiría.</p>
+  `;
+  renderWeatherWidget();
+}
+function setSpacePref(v){
+  spacePref = spacePref===v ? null : v;
+  persistState();
+  renderCarreraExtra(document.getElementById('carrera-content'));
+}
+function detectLocation(){
+  const statusEl = document.getElementById('gps-status');
+  if(!navigator.geolocation){ statusEl.textContent = 'Este navegador no soporta geolocalización.'; return; }
+  statusEl.textContent = 'Buscando ubicación…';
+  navigator.geolocation.getCurrentPosition(
+    ()=>{ statusEl.textContent = '📍 Ubicación detectada. Elegí arriba si es cancha grande o espacio reducido.'; },
+    ()=>{ statusEl.textContent = 'No se pudo acceder a la ubicación (revisá los permisos del navegador).'; },
+    {timeout:8000}
+  );
+}
+const VIDEO_TIPS = {
+  ARQ: [
+    'Entraste muy de frente en la barrida — probá perfilarte un poco más para reducir el rebote.',
+    'En la atajada llegaste con las manos bajas: subilas antes del contacto para cubrir el ángulo alto.',
+    'El apoyo de la pierna quedó muy lejos del cuerpo — acercalo para ganar estabilidad en la caída.',
+    'Buen tiempo de reacción, pero el primer paso salió cruzado. Trabajá salidas laterales cortas.',
+    'La estirada llegó bien, pero el balón quedó suelto — cerrá más los dedos en el último instante.',
+  ],
+  DEF: [
+    'Entraste al duelo con el cuerpo muy adelantado — retrasá el apoyo para no perder el equilibrio.',
+    'Buen anticipo, pero el salto aéreo fue tarde. Adelantá la carrera de aproximación.',
+    'La marca se abrió en el último paso — mantené la distancia corta hasta el contacto.',
+  ],
+  MED: [
+    'El primer toque te alejó del cuerpo — orientalo más cerca para salir jugando rápido.',
+    'Buena visión de pase, pero el apoyo del pie de sostén quedó corto.',
+    'La recuperación llegó de frente — probá entrar de costado para ganar el balón limpio.',
+  ],
+  DEL: [
+    'La definición salió con el cuerpo muy erguido — bajá el centro de gravedad antes del remate.',
+    'Buen desmarque, pero el timing de la carrera fue un paso tarde.',
+    'El último toque del regate se alejó demasiado del cuerpo.',
+  ],
+};
+function simulateVideoAnalysis(){
+  const tips = VIDEO_TIPS[activePosition] || VIDEO_TIPS.ARQ;
+  const resultEl = document.getElementById('video-result');
+  resultEl.innerHTML = `<div class="video-tip">⏳ Analizando el clip… (demo)</div>`;
+  setTimeout(()=>{
+    const picked = [...tips].sort(()=>Math.random()-0.5).slice(0, 2);
+    resultEl.innerHTML = picked.map(t=>`<div class="video-tip">🎯 ${t}</div>`).join('') +
+      `<p style="font-size:10.5px; color:var(--chalk-faint);">Feedback de ejemplo — todavía no es un análisis real de tu video.</p>`;
+  }, 1400);
+}
+
+/* ---------- Comunidad (real, vía Firebase) ---------- */
+function renderCarreraComunidad(content){
+  if(!currentUser){
+    content.innerHTML = `<div class="empty-state">Iniciá sesión con Google para ver y compartir en la comunidad.</div>` +
+      (FIREBASE_READY
+        ? `<button class="cta-btn" onclick="signInWithGoogle()">Iniciar sesión</button>`
+        : `<p style="font-size:11.5px; color:var(--chalk-faint); margin-top:10px;">Este archivo todavía no tiene Firebase configurado — mirá el comentario "FIREBASE" cerca del inicio del &lt;script&gt;.</p>`);
+    return;
+  }
+  content.innerHTML = `
+    <div class="community-compose"><textarea id="community-input" placeholder="Compartí un entrenamiento o una jugada..." maxlength="280"></textarea></div>
+    <button class="cta-btn" style="margin-top:0; margin-bottom:18px;" onclick="postToCommunity()">Publicar</button>
+    <div id="community-feed"><div class="empty-state">Cargando comunidad…</div></div>
+    <p style="font-size:10.5px; color:var(--chalk-faint); margin-top:8px;">Lo que publiques acá es visible para cualquier otra persona que use esta app con su cuenta de Google.</p>
+  `;
+  loadCommunityFeed();
+}
+async function loadCommunityFeed(){
+  if(!fbDb) return;
+  const feedEl = document.getElementById('community-feed');
+  try{
+    const snap = await fbDb.collection('community').orderBy('createdAt','desc').limit(30).get();
+    communityPosts = snap.docs.map(d=>({id:d.id, ...d.data()}));
+    renderCommunityFeed();
+  }catch(e){
+    console.warn('No se pudo cargar la comunidad', e);
+    if(feedEl) feedEl.innerHTML = `<div class="empty-state">No se pudo cargar la comunidad. Si es la primera vez, puede que falte habilitar la colección "community" en las reglas de Firestore.</div>`;
+  }
+}
+function renderCommunityFeed(){
+  const feedEl = document.getElementById('community-feed');
+  if(!feedEl) return;
+  if(communityPosts.length===0){ feedEl.innerHTML = `<div class="empty-state">Todavía nadie publicó nada. ¡Arrancá vos!</div>`; return; }
+  feedEl.innerHTML = communityPosts.map(p=>{
+    const liked = (p.likes||[]).includes(currentUser.uid);
+    const when = p.createdAt && p.createdAt.toDate ? fmtDate(p.createdAt.toDate()) : '';
+    return `<div class="community-post">
+      <div class="cp-head">
+        ${p.photoURL ? `<img class="cp-avatar" src="${p.photoURL}">` : `<div class="cp-avatar">${escapeHtml((p.name||'?')[0])}</div>`}
+        <div>
+          <div class="cp-name">${escapeHtml(p.name||'Usuario')}</div>
+          <div class="cp-time">${when}</div>
+        </div>
+      </div>
+      <div class="cp-text">${escapeHtml(p.text||'')}</div>
+      <button class="cp-like ${liked?'liked':''}" onclick="toggleLike('${p.id}')">👍 ${(p.likes||[]).length}</button>
+    </div>`;
+  }).join('');
+}
+async function postToCommunity(){
+  const input = document.getElementById('community-input');
+  const text = input.value.trim();
+  if(!text || !fbDb || !currentUser) return;
+  try{
+    await fbDb.collection('community').add({
+      uid: currentUser.uid,
+      name: currentUser.displayName || 'Usuario',
+      photoURL: currentUser.photoURL || null,
+      text,
+      likes: [],
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    input.value = '';
+    await loadCommunityFeed();
+  }catch(e){
+    console.error(e);
+    alert('No se pudo publicar. Revisá tu conexión o las reglas de Firestore.');
+  }
+}
+async function toggleLike(postId){
+  if(!fbDb || !currentUser) return;
+  const post = communityPosts.find(p=>p.id===postId);
+  if(!post) return;
+  const likes = post.likes || [];
+  const has = likes.includes(currentUser.uid);
+  const newLikes = has ? likes.filter(u=>u!==currentUser.uid) : [...likes, currentUser.uid];
+  post.likes = newLikes;
+  renderCommunityFeed();
+  try{ await fbDb.collection('community').doc(postId).update({likes:newLikes}); }
+  catch(e){ console.error(e); }
+}
+
+/* ============================================================
+   RENDER: EJERCICIOS
+============================================================ */
+function renderEjercicios(){
+  const pos = posById(activePosition);
+  document.getElementById('ejercicios-title').textContent = 'Ejercicios · ' + pos.name;
+
+  const fr = document.getElementById('filter-row');
+  fr.innerHTML = '';
+  const all = document.createElement('div');
+  all.className = 'chip' + (filterCat==='ALL' ? ' active':'');
+  all.textContent = 'Todos';
+  all.onclick = ()=>{ filterCat='ALL'; renderEjercicios(); };
+  fr.appendChild(all);
+  CATEGORIES[activePosition].forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (filterCat===c.id ? ' active':'');
+    chip.textContent = c.name;
+    chip.onclick = ()=>{ filterCat=c.id; renderEjercicios(); };
+    fr.appendChild(chip);
+  });
+
+  const list = document.getElementById('drill-list');
+  list.innerHTML = '';
+  const items = DRILLS[activePosition].filter(d=> filterCat==='ALL' || d.cat===filterCat);
+  items.forEach(d=>{
+    const cat = catById(activePosition, d.cat);
+    const inDraft = draft[activePosition].includes(d.id);
+    const el = document.createElement('div');
+    el.className = 'drill';
+    el.innerHTML = `
+      <div class="drill-top">
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <div class="badge" style="background:${cat.color}22; color:${cat.color};">${iconSvg(CATEGORY_ICON[d.cat],15,cat.color)}<span>${d.cat}</span></div>
+          <div>
+            <div class="drill-name">${d.name}</div>
+            <div class="drill-dose">${d.dose}</div>
+          </div>
+        </div>
+        <div class="drill-actions">
+          <button class="info-btn" title="Ver de qué se trata">i</button>
+          <button class="add-btn ${inDraft?'added':''}">${inDraft?'✓':'+'}</button>
+        </div>
+      </div>
+      <div class="drill-desc">${d.desc}</div>
+    `;
+    el.querySelector('.info-btn').addEventListener('click', (e)=>{
+      e.stopPropagation();
+      el.classList.toggle('open');
+      e.currentTarget.classList.toggle('open');
+    });
+    el.querySelector('.drill-top > div').addEventListener('click', ()=> {
+      el.classList.toggle('open');
+      el.querySelector('.info-btn').classList.toggle('open', el.classList.contains('open'));
+    });
+    el.querySelector('.add-btn').addEventListener('click', (e)=>{ e.stopPropagation(); toggleDraft(d.id); });
+    list.appendChild(el);
+  });
+}
+
+function toggleDraft(id){
+  const arr = draft[activePosition];
+  const idx = arr.indexOf(id);
+  if(idx>-1) arr.splice(idx,1); else arr.push(id);
+  saveDraft();
+  renderEjercicios();
+  if(document.getElementById('view-entrenar').classList.contains('active')) renderEntrenar();
+}
+
+/* ============================================================
+   RENDER: ENTRENAR
+============================================================ */
+function renderEntrenar(){
+  const content = document.getElementById('entrenar-content');
+  const title = document.getElementById('entrenar-title');
+  const pos = posById(activePosition);
+
+  if(activeSession){
+    title.textContent = 'Sesión en curso · ' + pos.name;
+    let html = `<div class="coach-card" style="margin-bottom:14px;">
+      <div class="coach-eyebrow">🧑‍🏫 COACH</div>
+      <div class="coach-text">Vamos con todo. Priorizá la técnica antes que la velocidad y completá cada ejercicio de la lista.</div>
+    </div><div class="active-session">`;
+    activeSession.drillIds.forEach(id=>{
+      const d = drillById(id);
+      const done = !!activeChecked[id];
+      html += `<div class="drill-check ${done?'done':''}" data-id="${id}">
+        <div class="check-circle"></div>
+        <div><div class="name">${d.name}</div><div class="drill-dose">${d.dose}</div></div>
+      </div>`;
+    });
+    html += '</div>';
+    content.innerHTML = html;
+    content.querySelectorAll('.drill-check').forEach(el=>{
+      el.addEventListener('click', ()=>{ activeChecked[el.dataset.id] = !activeChecked[el.dataset.id]; renderEntrenar(); });
+    });
+    const finishBtn = document.createElement('button');
+    finishBtn.className = 'cta-btn';
+    finishBtn.textContent = activeSession.position==='ARQ' ? 'Terminar y registrar remates' : 'Terminar sesión';
+    finishBtn.onclick = activeSession.position==='ARQ' ? openShotlog : finishSessionSimple;
+    content.appendChild(finishBtn);
+    return;
+  }
+
+  title.textContent = 'Armá tu sesión · ' + pos.name;
+  let html = '';
+
+  // ---- Entrenador IA: mensaje previo al entrenamiento ----
+  html += `<div class="coach-card">
+    <div class="coach-eyebrow">🧑‍🏫 ENTRENADOR IA</div>
+    <div class="coach-text">${generateCoachPreMessage(activePosition)}</div>
+  </div>`;
+
+  // ---- Selector de arquetipo ----
+  const archeId = selectedArchetype[activePosition];
+  const arche = archeId ? archetypeById(activePosition, archeId) : null;
+  html += '<div class="section-label" style="margin-top:0;">Tu arquetipo</div>';
+  html += '<div class="archetype-row">';
+  archetypesFor(activePosition).forEach(a=>{
+    const sel = archeId === a.id;
+    html += `<div class="arche-card ${sel?'selected':''}" onclick="selectArchetype('${activePosition}','${a.id}')">
+      <div class="arche-init" style="background:${a.color}">${a.name.split(' ').map(w=>w[0]).slice(0,2).join('')}</div>
+      <div class="arche-name">${a.name}</div>
+      <div class="arche-tag">${a.tag}</div>
+    </div>`;
+  });
+  html += '</div>';
+  if(arche){
+    html += `<div class="arche-desc-box">
+      <b>${arche.name}</b> — ${arche.tag}<br>${arche.desc}
+      <div class="arche-priority-tags">${arche.priority.map(cid=>`<span class="arche-priority-tag">${catById(activePosition,cid).name}</span>`).join('')}</div>
+    </div>`;
+  }
+
+  html += '<div class="section-label">Plantillas rápidas</div>';
+  html += '<div class="template-row">';
+  html += `<div class="tmpl-card recommended" onclick="useSmartWorkout()">
+    <span class="tmpl-flag">🧠 IA</span>
+    <h4>Entrenamiento de hoy</h4>
+    <p>${computeSmartDrills(activePosition).length} ejerc. · nunca se repite igual</p>
+  </div>`;
+  if(arche){
+    html += `<div class="tmpl-card recommended" onclick="useRecommended()">
+      <span class="tmpl-flag">★ PARA VOS</span>
+      <h4>Estilo ${arche.name.split(' ')[0]}</h4>
+      <p>${getRecommendedDrills(activePosition, archeId).length} ejerc. · según tu arquetipo</p>
+    </div>`;
+  }
+  TEMPLATES[activePosition].forEach((t,i)=>{
+    html += `<div class="tmpl-card" onclick="useTemplate(${i})"><h4>${t.name}</h4><p>${t.drills.length} ejerc. · ${t.dur}</p></div>`;
+  });
+  html += '</div>';
+
+  html += '<div class="section-label">Ejercicios elegidos</div>';
+  const currentDraft = draft[activePosition];
+  if(currentDraft.length===0){
+    html += `<div class="empty-state">No agregaste ejercicios todavía.<br>Elegí una plantilla o sumalos desde la biblioteca.</div>`;
+  }else{
+    currentDraft.forEach(id=>{
+      const d = drillById(id);
+      html += `<div class="draft-item">
+        <div><div class="name">${d.name}</div><div class="dose">${d.dose}</div></div>
+        <button class="remove-x" onclick="toggleDraft('${id}')">×</button>
+      </div>`;
+    });
+  }
+  content.innerHTML = html;
+
+  if(currentDraft.length>0){
+    const startBtn = document.createElement('button');
+    startBtn.className = 'cta-btn';
+    startBtn.textContent = 'Iniciar sesión (' + currentDraft.length + ' ejercicios)';
+    startBtn.onclick = startSession;
+    content.appendChild(startBtn);
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'cta-btn ghost';
+    clearBtn.textContent = 'Vaciar selección';
+    clearBtn.onclick = ()=>{ draft[activePosition]=[]; saveDraft(); renderEntrenar(); };
+    content.appendChild(clearBtn);
+  } else {
+    content.appendChild(Object.assign(document.createElement('button'),{
+      className:'cta-btn ghost', textContent:'Ir a la biblioteca de ejercicios', onclick:()=>goTo('ejercicios')
+    }));
+  }
+}
+
+function useTemplate(i){
+  draft[activePosition] = [...TEMPLATES[activePosition][i].drills];
+  saveDraft();
+  renderEntrenar();
+}
+
+function startSession(){
+  activeSession = {
+    id: 'sess_'+Date.now(),
+    date: new Date().toISOString(),
+    position: activePosition,
+    drillIds: [...draft[activePosition]],
+    startedAt: Date.now(),
+  };
+  activeChecked = {};
+  renderEntrenar();
+}
+
+function openShotlog(){
+  shotlogTemp = {};
+  renderGoalGrid(document.getElementById('modal-goal-grid'), {}, true);
+  document.getElementById('shotlog-modal').classList.add('open');
+}
+function closeShotlog(){ document.getElementById('shotlog-modal').classList.remove('open'); }
+
+function computeDuration(){
+  const mins = Math.round((Date.now() - activeSession.startedAt)/60000);
+  return mins < 3 ? (10 + Math.floor(Math.random()*15)) : mins;
+}
+
+function addOptionalNote(){
+  const note = prompt('¿Alguna nota de esta sesión? (opcional — dejalo vacío para omitir)');
+  if(note && note.trim()) activeSession.note = note.trim();
+}
+
+function computeCompletionRatio(){
+  if(!activeSession) return 1;
+  const total = activeSession.drillIds.length;
+  if(total===0) return 1;
+  const done = activeSession.drillIds.filter(id=>activeChecked[id]).length;
+  return done/total;
+}
+
+async function finishSessionWithZones(){
+  activeSession.durationMin = computeDuration();
+  activeSession.zones = shotlogTemp;
+  activeSession.completionRatio = computeCompletionRatio();
+  addOptionalNote();
+  await pushSession();
+  closeShotlog();
+}
+
+async function finishSessionSimple(){
+  activeSession.durationMin = computeDuration();
+  activeSession.completionRatio = computeCompletionRatio();
+  addOptionalNote();
+  await pushSession();
+}
+
+async function pushSession(){
+  const levelBefore = computeLevelInfo(totalXP()).level;
+  const finishedSession = activeSession;
+  sessions.push(finishedSession);
+  const report = generateTrainingReport(finishedSession);
+  const ovr = computeOVR(finishedSession.position, selectedArchetype[finishedSession.position]);
+  const attrsSnap = computeAttributes(finishedSession.position);
+  ovrHistory.push({date: finishedSession.date, position: finishedSession.position, ovr, attrs: attrsSnap});
+  await saveSessions();
+  const finishedPos = finishedSession.position;
+  activeSession = null;
+  activeChecked = {};
+  draft[finishedPos] = [];
+  await saveDraft();
+  goTo('inicio');
+  const levelAfter = computeLevelInfo(totalXP()).level;
+  pendingSessionForJournal = finishedSession;
+  openReportModal(finishedSession, report, levelAfter > levelBefore ? levelAfter : null);
+}
+
+/* ============================================================
+   ⭐ INFORME INTELIGENTE POST-ENTRENAMIENTO + DIARIO DEL JUGADOR
+============================================================ */
+let reportModalPendingLevelUp = null;
+let reportModalMood = null;
+
+function generateTrainingReport(session){
+  const pos = posById(session.position);
+  const cats = CATEGORIES[session.position];
+  const catsInSession = [...new Set(session.drillIds.map(id=>{ const d=drillById(id); return d?d.cat:null; }).filter(Boolean))];
+  const improved = catsInSession.map(c=>catById(session.position,c).name);
+  const counts = categoryCounts(session.position);
+  let needsWork = [...cats].filter(c=>!catsInSession.includes(c.id)).sort((a,b)=>counts[a.id]-counts[b.id]).slice(0,2).map(c=>c.name);
+  if(needsWork.length===0) needsWork = [...cats].sort((a,b)=>counts[a.id]-counts[b.id]).slice(0,1).map(c=>c.name);
+
+  const explosiveCount = session.drillIds.filter(id=>{ const d=drillById(id); return d && EXPLOSIVE_CATS.includes(d.cat); }).length;
+  const explosiveRatio = session.drillIds.length ? explosiveCount/session.drillIds.length : 0;
+  let intensity = 'Baja';
+  if(explosiveRatio>=0.6 || session.durationMin>=50) intensity='Alta';
+  else if(explosiveRatio>=0.25 || session.durationMin>=30) intensity='Media';
+
+  const ratio = session.completionRatio!==undefined ? session.completionRatio : 1;
+  let performance;
+  if(ratio>=0.9) performance = 'Excelente — completaste prácticamente toda la sesión planificada.';
+  else if(ratio>=0.6) performance = 'Bueno — cumpliste la mayor parte de los ejercicios.';
+  else performance = 'Irregular — quedaron varios ejercicios sin completar. La próxima, intentá terminar la sesión entera.';
+
+  const posSessionsSorted = sessions.filter(s=>s.position===session.position).sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const idx = posSessionsSorted.findIndex(s=>s.id===session.id);
+  const prev = idx>0 ? posSessionsSorted[idx-1] : null;
+  let rest;
+  if(!prev) rest = 'Primera sesión registrada en esta posición — todavía no hay datos de descanso previos.';
+  else{
+    const days = Math.round((new Date(session.date)-new Date(prev.date))/86400000);
+    if(days<1) rest = 'Entrenaste más de una vez en el mismo día — cuidado con el descanso, el cuerpo también necesita recuperarse.';
+    else if(days===1) rest = 'Un día de descanso entre sesiones — buen ritmo si no sentís fatiga acumulada.';
+    else if(days<=3) rest = `${days} días de descanso — un intervalo saludable para tu recuperación.`;
+    else rest = `${days} días sin entrenar esta posición — bastante descanso, buen momento para retomar el ritmo.`;
+  }
+
+  let recommendation = `Para la próxima sesión, sumá trabajo de ${needsWork[0].toLowerCase()}`;
+  if(seasonGoal) recommendation += ` — te acerca a tu objetivo de "${goalById(seasonGoal).name.toLowerCase()}".`;
+  else recommendation += '.';
+  if(intensity==='Alta') recommendation += ' Dale prioridad a la recuperación: hidratación, estiramiento y buen descanso.';
+
+  const streak = computeConsecutiveDayStreak();
+  const motivPool = [
+    `Cada sesión suma. Vas construyendo la base de un ${pos.name.toLowerCase()} sólido.`,
+    'El nivel no se nota de un día para el otro, se nota en la constancia. Seguí así.',
+    'Los grandes jugadores se hacen en entrenamientos como este, cuando nadie mira.',
+    'Guardate esta sensación de esfuerzo — es la que te va a diferenciar en el partido.',
+  ];
+  let motivational = motivPool[Math.floor(Math.random()*motivPool.length)];
+  if(streak>=3) motivational = `${streak} días seguidos entrenando. Esa constancia es lo que te va a hacer destacar. ¡No aflojes ahora!`;
+
+  return {
+    intensity, performance, rest, recommendation, motivational,
+    improved: improved.length ? improved : ['—'],
+    needsWork,
+    completionPct: Math.round(ratio*100),
+  };
+}
+
+function openReportModal(session, report, levelUpTo){
+  reportModalPendingLevelUp = levelUpTo || null;
+  reportModalMood = null;
+  const pos = posById(session.position);
+  const body = document.getElementById('report-modal-body');
+  body.innerHTML = `
+    <div class="report-hero">
+      <div class="report-hero-ico">🧑‍🏫</div>
+      <div class="report-hero-title">Informe del entrenador</div>
+      <div class="report-hero-sub">${pos.name} · ${fmtDate(new Date(session.date))}</div>
+    </div>
+    <div class="report-stats">
+      <div class="report-stat"><div class="n">${report.intensity}</div><div class="l">Intensidad</div></div>
+      <div class="report-stat"><div class="n">${session.durationMin}'</div><div class="l">Duración</div></div>
+      <div class="report-stat"><div class="n">${report.completionPct}%</div><div class="l">Completado</div></div>
+    </div>
+    <div class="report-block">
+      <div class="report-block-label">Rendimiento general</div>
+      <div class="report-block-text">${report.performance}</div>
+    </div>
+    <div class="report-block">
+      <div class="report-block-label">Descanso</div>
+      <div class="report-block-text">${report.rest}</div>
+    </div>
+    <div class="report-block">
+      <div class="report-block-label">Habilidades que mejoraste hoy</div>
+      <div class="report-tag-row">${report.improved.map(s=>`<span class="report-tag up">↑ ${escapeHtml(s)}</span>`).join('')}</div>
+    </div>
+    <div class="report-block">
+      <div class="report-block-label">Habilidades a trabajar</div>
+      <div class="report-tag-row">${report.needsWork.map(s=>`<span class="report-tag work">${escapeHtml(s)}</span>`).join('')}</div>
+    </div>
+    <div class="report-block">
+      <div class="report-block-label">Recomendación para la próxima sesión</div>
+      <div class="report-block-text">${escapeHtml(report.recommendation)}</div>
+    </div>
+    <div class="report-motivation">"${escapeHtml(report.motivational)}"</div>
+
+    <div class="journal-block">
+      <div class="section-label" style="margin-top:0;">📔 Diario del jugador</div>
+      <div class="journal-field">
+        <label>¿Cómo te sentiste? (1–10)</label>
+        <div class="mood-row" id="mood-row"></div>
+      </div>
+      <div class="journal-field">
+        <label>¿Qué fue lo mejor del entrenamiento?</label>
+        <textarea id="journal-best" rows="2" placeholder="Opcional"></textarea>
+      </div>
+      <div class="journal-field">
+        <label>¿Qué fue lo más difícil?</label>
+        <textarea id="journal-hardest" rows="2" placeholder="Opcional"></textarea>
+      </div>
+      <div class="journal-field">
+        <label>¿Alguna molestia física?</label>
+        <input type="text" id="journal-discomfort" placeholder="Opcional — ej: molestia en el tobillo">
+      </div>
+      <div class="journal-field">
+        <label>Comentarios personales</label>
+        <textarea id="journal-comment" rows="2" placeholder="Opcional"></textarea>
+      </div>
+    </div>
+    <button class="cta-btn" onclick="saveJournalAndCloseReport()">Guardar y continuar</button>
+    <button class="cta-btn ghost" onclick="closeReportModal()">Omitir diario</button>
+  `;
+  const moodRow = document.getElementById('mood-row');
+  moodRow.innerHTML = '';
+  for(let i=1;i<=10;i++){
+    const btn = document.createElement('button');
+    btn.className = 'mood-btn';
+    btn.textContent = i;
+    btn.onclick = ()=>{
+      reportModalMood = i;
+      moodRow.querySelectorAll('.mood-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    moodRow.appendChild(btn);
+  }
+  document.getElementById('report-modal-bg').classList.add('open');
+}
+
+async function saveJournalAndCloseReport(){
+  if(pendingSessionForJournal){
+    const g = id=>{ const el=document.getElementById(id); return el ? el.value.trim() : ''; };
+    journal.push({
+      id: 'jrnl_'+Date.now(),
+      sessionId: pendingSessionForJournal.id,
+      date: pendingSessionForJournal.date,
+      position: pendingSessionForJournal.position,
+      mood: reportModalMood,
+      best: g('journal-best'),
+      hardest: g('journal-hardest'),
+      discomfort: g('journal-discomfort'),
+      comment: g('journal-comment'),
+    });
+    await persistState();
+  }
+  closeReportModal();
+}
+
+function closeReportModal(){
+  document.getElementById('report-modal-bg').classList.remove('open');
+  const lvl = reportModalPendingLevelUp;
+  pendingSessionForJournal = null;
+  reportModalPendingLevelUp = null;
+  if(lvl){ showLevelUp(lvl); }
+  else if(sessions.length>0 && sessions.length%10===0){ showBackupReminder(); }
+  refreshCurrentView();
+}
+
+/* ---------- Recordatorio de respaldo (toast) ---------- */
+function showBackupReminder(){
+  const toast = document.getElementById('backup-toast');
+  toast.innerHTML = `
+    <p>💾 Ya llevás ${sessions.length} sesiones registradas. Es un buen momento para descargar un respaldo, por las dudas.</p>
+    <div class="toast-row">
+      <button class="toast-btn-dismiss" onclick="hideBackupToast()">Ahora no</button>
+      <button class="toast-btn-main" onclick="downloadBackup(); hideBackupToast();">Descargar</button>
+    </div>`;
+  toast.classList.add('show');
+  clearTimeout(showBackupReminder._t);
+  showBackupReminder._t = setTimeout(hideBackupToast, 9000);
+}
+function hideBackupToast(){ document.getElementById('backup-toast').classList.remove('show'); }
+
+/* ============================================================
+   NIVEL DE ENTRENADOR (XP acumulada por constancia)
+   ------------------------------------------------------------
+   Es un sistema aparte de la carta OVR: la carta mide tu nivel
+   técnico por categoría/posición, esto mide constancia general
+   entrenando (todas las posiciones suman al mismo nivel).
+============================================================ */
+const LEVEL_TITLES = [
+  {min:1,  max:3,       name:'Debutante'},
+  {min:4,  max:7,       name:'Amateur'},
+  {min:8,  max:12,      name:'Semi-Profesional'},
+  {min:13, max:18,      name:'Profesional'},
+  {min:19, max:25,      name:'Élite'},
+  {min:26, max:Infinity,name:'Leyenda del Arco'}
+];
+function titleForLevel(level){
+  return (LEVEL_TITLES.find(t=>level>=t.min && level<=t.max) || LEVEL_TITLES[LEVEL_TITLES.length-1]).name;
+}
+function xpForSession(s){
+  let xp = 25 + Math.min(s.durationMin||0, 60); // base + minutos entrenados (tope 60)
+  if(s.zones && Object.keys(s.zones).length>0) xp += 15; // bonus por registrar remates
+  return xp;
+}
+function xpForMatch(m){
+  return 15 + (m.goals||0)*3 + (m.assists||0)*3 + (m.saves||0)*2; // jugar ya suma, y anotar/atajar suma más
+}
+function totalXP(){
+  const sessXP = sessions.reduce((sum,s)=>sum + xpForSession(s), 0);
+  const matchXP = matches.reduce((sum,m)=>sum + xpForMatch(m), 0);
+  return sessXP + matchXP;
+}
+function xpNeededForLevel(level){
+  return 100 + (level-1)*40; // cada nivel pide un poco más que el anterior
+}
+function computeLevelInfo(xp){
+  let level = 1;
+  let remaining = xp;
+  while(remaining >= xpNeededForLevel(level)){
+    remaining -= xpNeededForLevel(level);
+    level++;
+  }
+  return {level, xpIntoLevel:remaining, xpForNext:xpNeededForLevel(level), totalXP:xp};
+}
+function renderLevelWidget(elId){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const info = computeLevelInfo(totalXP());
+  const pct = Math.min(100, Math.round((info.xpIntoLevel/info.xpForNext)*100));
+  el.innerHTML = `
+    <div class="level-badge">${info.level}</div>
+    <div class="level-info">
+      <div class="level-title-row">
+        <div class="level-title">${titleForLevel(info.level)}</div>
+        <div class="level-xp-label">${info.xpIntoLevel}/${info.xpForNext} XP</div>
+      </div>
+      <div class="level-bar-track"><div class="level-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+}
+function showLevelUp(level){
+  document.getElementById('levelup-num').textContent = level;
+  document.getElementById('levelup-title').textContent = titleForLevel(level);
+  document.getElementById('levelup-bg').classList.add('open');
+}
+function closeLevelUp(){ document.getElementById('levelup-bg').classList.remove('open'); }
+
+/* ---------- Editar / eliminar sesiones del historial ---------- */
+function deleteSession(id){
+  if(!confirm('¿Eliminar esta sesión del historial? No se puede deshacer.')) return;
+  sessions = sessions.filter(s=>s.id!==id);
+  saveSessions();
+  renderProgreso();
+}
+function editSessionNote(id){
+  const s = sessions.find(x=>x.id===id);
+  if(!s) return;
+  const note = prompt('Nota de la sesión:', s.note || '');
+  if(note===null) return; // canceló
+  const trimmed = note.trim();
+  if(trimmed) s.note = trimmed; else delete s.note;
+  saveSessions();
+  renderProgreso();
+}
+
+/* ---------- Borrar todo el progreso ---------- */
+async function resetAllProgress(){
+  const step1 = confirm('Esto borra TODAS tus sesiones, ejercicios elegidos y arquetipos. No se puede deshacer. ¿Seguro que querés continuar?');
+  if(!step1) return;
+  const step2 = confirm('Última confirmación: se va a borrar todo tu progreso de Arquero+ (te recomendamos descargar un respaldo antes). ¿Confirmás?');
+  if(!step2) return;
+  sessions = [];
+  draft = {ARQ:[],DEF:[],MED:[],DEL:[]};
+  activePosition = 'ARQ';
+  selectedArchetype = {ARQ:null,DEF:null,MED:null,DEL:null};
+  journal = [];
+  manualRecords = {};
+  seasonGoal = null;
+  ovrHistory = [];
+  await persistState();
+  closeBackupMenu();
+  renderPositionBar();
+  refreshCurrentView();
+}
+
+/* ---------- Compartir historial en texto plano ---------- */
+function buildHistoryText(){
+  const lines = ['ARQUERO+ — Historial de entrenamientos', 'Total sesiones: ' + sessions.length, ''];
+  [...sessions].reverse().forEach(s=>{
+    const p = posById(s.position);
+    const date = fmtDate(new Date(s.date));
+    const drillNames = s.drillIds.map(id=>{ const d=drillById(id); return d ? d.name : id; }).join(', ');
+    let line = `${date} · ${p.name} · ${s.durationMin} min`;
+    if(s.zones){
+      const totalShots = Object.values(s.zones).reduce((a,z)=>a+z.s+z.g,0);
+      const saves = Object.values(s.zones).reduce((a,z)=>a+z.s,0);
+      if(totalShots>0) line += ` · ${saves}/${totalShots} atajadas`;
+    }
+    lines.push(line);
+    lines.push('  Ejercicios: ' + (drillNames || '—'));
+    if(s.note) lines.push('  Nota: ' + s.note);
+    lines.push('');
+  });
+  return lines.join('\n');
+}
+
+async function shareHistory(){
+  if(sessions.length===0){ alert('Todavía no tenés sesiones para compartir.'); return; }
+  const text = buildHistoryText();
+  if(navigator.share){
+    try{ await navigator.share({title:'Historial Arquero+', text}); return; }
+    catch(e){ /* el usuario canceló el share nativo, seguimos con la descarga */ }
+  }
+  const blob = new Blob([text], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `arquero-plus-historial-${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   ⭐ RÉCORDS PERSONALES
+============================================================ */
+const MANUAL_RECORD_DEFS = [
+  {id:'dominadas', label:'Mayor cantidad de dominadas', unit:'reps', lowerBetter:false},
+  {id:'sprint', label:'Sprint más rápido (segundos)', unit:'seg', lowerBetter:true},
+  {id:'distancia', label:'Mayor distancia recorrida (km)', unit:'km', lowerBetter:false},
+];
+function computeAutoRecords(posId){
+  let maxSaves=0, maxSavesDate=null;
+  sessions.filter(s=>s.position===posId).forEach(s=>{
+    if(s.zones){
+      const saves = Object.values(s.zones).reduce((a,z)=>a+(z.s||0),0);
+      if(saves>maxSaves){ maxSaves=saves; maxSavesDate=s.date; }
+    }
+  });
+  const streak = computeConsecutiveDayStreak();
+  const posMatches = matches.filter(m=>m.position===posId);
+  const bestMatch = (field)=>{
+    let best=0, date=null;
+    posMatches.forEach(m=>{ if((m[field]||0)>best){ best=m[field]; date=m.date; } });
+    return {value:best, date};
+  };
+  return {
+    maxSaves, maxSavesDate, streak,
+    bestGoals: bestMatch('goals'), bestAssists: bestMatch('assists'),
+    bestTackles: bestMatch('tackles'), bestMatchSaves: bestMatch('saves'),
+  };
+}
+function recordCardHtml(label, value, date){
+  return `<div class="record-card ${value?'':'empty'}">
+    <div class="rc-val">${value!==null && value!==undefined && value!==0 ? value : '—'}</div>
+    <div class="rc-label">${label}</div>
+    ${date? `<div class="rc-date">${fmtDate(new Date(date))}</div>`:''}
+  </div>`;
+}
+function renderRecords(){
+  const container = document.getElementById('records-wrap');
+  if(!container) return;
+  const auto = computeAutoRecords(activePosition);
+  let html = '<div class="records-grid">';
+  html += recordCardHtml('🧤 Atajadas en una sesión', auto.maxSaves, auto.maxSavesDate);
+  html += recordCardHtml('🔥 Entrenamientos seguidos', auto.streak>0?auto.streak:null, null);
+  html += recordCardHtml('⚽ Goles en un partido', auto.bestGoals.value, auto.bestGoals.date);
+  html += recordCardHtml('🅰 Asistencias en un partido', auto.bestAssists.value, auto.bestAssists.date);
+  html += recordCardHtml('🦵 Barridas en un partido', auto.bestTackles.value, auto.bestTackles.date);
+  if(activePosition==='ARQ') html += recordCardHtml('🧤 Atajadas en un partido', auto.bestMatchSaves.value, auto.bestMatchSaves.date);
+  MANUAL_RECORD_DEFS.forEach(def=>{
+    const rec = manualRecords[def.id];
+    html += `<div class="record-card editable ${rec?'':'empty'}" onclick="editManualRecord('${def.id}')">
+      <div class="rc-val">${rec? rec.value+' '+def.unit : 'Cargar'}</div>
+      <div class="rc-label">${def.label}</div>
+      ${rec? `<div class="rc-date">${fmtDate(new Date(rec.date))}</div>`:''}
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+async function editManualRecord(id){
+  const def = MANUAL_RECORD_DEFS.find(d=>d.id===id);
+  const input = prompt(`${def.label} (${def.unit})`);
+  if(input===null || input.trim()==='') return;
+  const value = parseFloat(input.replace(',','.'));
+  if(isNaN(value)) return;
+  const current = manualRecords[id];
+  const better = !current || (def.lowerBetter ? value < current.value : value > current.value);
+  if(better){
+    manualRecords[id] = {value, date: new Date().toISOString()};
+    await persistState();
+    alert('¡Nuevo récord personal! 🏆');
+  } else {
+    alert(`Tu récord actual (${current.value} ${def.unit}) sigue siendo mejor. No se actualizó.`);
+  }
+  renderRecords();
+}
+
+/* ============================================================
+   ⭐ EVOLUCIÓN DEL OVR
+============================================================ */
+function renderOvrHistoryWidget(){
+  const wrap = document.getElementById('ovr-history-wrap');
+  if(!wrap) return;
+  const list = ovrHistory.filter(h=>h.position===activePosition).slice(-14);
+  if(list.length===0){
+    wrap.innerHTML = '<div class="ovr-hist-empty">Todavía no hay historial de OVR para esta posición. Completá entrenamientos para ver tu evolución.</div>';
+    return;
+  }
+  const max = Math.max(...list.map(h=>h.ovr), 1);
+  let bars = '<div class="ovr-hist-row">';
+  list.forEach(h=>{
+    const pct = Math.max(6, Math.round((h.ovr/max)*100));
+    bars += `<div class="ovr-hist-bar" style="height:${pct}%" title="OVR ${h.ovr}"></div>`;
+  });
+  bars += '</div>';
+  const current = list[list.length-1].ovr;
+  const first = list[0].ovr;
+  const diff = current-first;
+  bars += `<div style="font-size:11.5px; color:var(--chalk-dim);">OVR actual: <b style="color:var(--chalk)">${current}</b>${diff!==0 ? ` (${diff>0?'+':''}${diff} en este historial)` : ''}</div>`;
+  wrap.innerHTML = bars;
+}
+
+/* ============================================================
+   ⭐ DIARIO DEL JUGADOR — historial
+============================================================ */
+function renderJournalHistory(){
+  const wrap = document.getElementById('journal-history-wrap');
+  if(!wrap) return;
+  const list = journal.filter(j=>j.position===activePosition).slice().reverse();
+  if(list.length===0){
+    wrap.innerHTML = '<div class="empty-state">Todavía no completaste el diario de ningún entrenamiento de esta posición.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(j=>`
+    <div class="journal-item">
+      <div class="journal-item-top">
+        <div style="font-size:12.5px; color:var(--chalk-dim);">${fmtDate(new Date(j.date))}</div>
+        ${j.mood ? `<div class="journal-mood-badge">${j.mood}/10</div>` : ''}
+      </div>
+      <div class="journal-item-text">
+        ${j.best ? `<div><b>Lo mejor:</b> ${escapeHtml(j.best)}</div>` : ''}
+        ${j.hardest ? `<div><b>Lo más difícil:</b> ${escapeHtml(j.hardest)}</div>` : ''}
+        ${j.discomfort ? `<div><b>Molestia:</b> ${escapeHtml(j.discomfort)}</div>` : ''}
+        ${j.comment ? `<div><b>Comentario:</b> ${escapeHtml(j.comment)}</div>` : ''}
+        ${(!j.best && !j.hardest && !j.discomfort && !j.comment) ? '<div>Sin comentarios adicionales.</div>' : ''}
+      </div>
+    </div>`).join('');
+}
+
+/* ============================================================
+   ⭐ ADAPTACIÓN AL CLIMA
+============================================================ */
+function weatherDescFromCode(code){
+  if(code===0) return 'Despejado';
+  if([1,2,3].includes(code)) return 'Parcialmente nublado';
+  if([45,48].includes(code)) return 'Niebla';
+  if([51,53,55,56,57].includes(code)) return 'Llovizna';
+  if([61,63,65,66,67,80,81,82].includes(code)) return 'Lluvia';
+  if([71,73,75,77,85,86].includes(code)) return 'Nieve';
+  if([95,96,99].includes(code)) return 'Tormenta';
+  return 'Clima variable';
+}
+function weatherConditionFromCodeTemp(code, temp){
+  const rainCodes = [51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99];
+  if(rainCodes.includes(code)) return 'lluvia';
+  if(temp!==null && temp>=28) return 'calor';
+  if(temp!==null && temp<=8) return 'frio';
+  return 'templado';
+}
+function weatherTipFor(condition){
+  if(condition==='calor') return '☀️ Hace calor: bajamos un poco la intensidad, sumamos más pausas y no te olvides de hidratarte antes, durante y después.';
+  if(condition==='lluvia') return '🌧️ Con lluvia priorizamos ejercicios técnicos y de control, adaptados a superficies mojadas — cuidado con las caídas y apoyos.';
+  if(condition==='frio') return '🥶 Hace frío: sumá unos minutos extra de entrada en calor y vestite con capas para no lesionarte.';
+  return '🌤️ Buenas condiciones para entrenar sin ajustes especiales.';
+}
+function renderWeatherWidget(){
+  const wrap = document.getElementById('weather-wrap');
+  if(!wrap) return;
+  if(!lastWeather){
+    wrap.innerHTML = `<div class="weather-card">
+      <p style="font-size:12.5px; color:var(--chalk-dim); margin-bottom:10px;">Detectá el clima de tu zona para que la app adapte tus próximos entrenamientos (intensidad, hidratación, ejercicios técnicos para lluvia, etc.).</p>
+      <button class="cta-btn ghost" style="margin-top:0;" onclick="fetchWeatherAdaptation()">🌤 Detectar clima</button>
+    </div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="weather-card">
+    <div class="weather-top">
+      <div class="weather-temp">${lastWeather.temp!==null ? Math.round(lastWeather.temp)+'°C' : '—'}</div>
+      <div class="weather-desc">${lastWeather.desc}</div>
+    </div>
+    <div class="weather-tips">${lastWeather.tip}</div>
+    <button class="cta-btn ghost" style="margin-top:10px;" onclick="fetchWeatherAdaptation()">Actualizar</button>
+  </div>`;
+}
+async function fetchWeatherAdaptation(){
+  const wrap = document.getElementById('weather-wrap');
+  if(!navigator.geolocation){ if(wrap) wrap.innerHTML = '<div class="weather-card">Este navegador no soporta geolocalización para detectar el clima.</div>'; return; }
+  if(wrap) wrap.innerHTML = '<div class="weather-card">Buscando el clima actual…</div>';
+  navigator.geolocation.getCurrentPosition(async (pos)=>{
+    try{
+      const {latitude, longitude} = pos.coords;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const temp = data.current ? data.current.temperature_2m : null;
+      const code = data.current ? data.current.weathercode : 0;
+      const condition = weatherConditionFromCodeTemp(code, temp);
+      lastWeather = {temp, code, condition, desc: weatherDescFromCode(code), tip: weatherTipFor(condition), fetchedAt: Date.now()};
+      renderWeatherWidget();
+      renderCoachCard('coach-wrap', activePosition);
+    }catch(e){
+      if(wrap) wrap.innerHTML = '<div class="weather-card">No se pudo obtener el clima ahora. Probá de nuevo en un rato.</div>';
+    }
+  }, ()=>{
+    if(wrap) wrap.innerHTML = '<div class="weather-card">No se pudo acceder a la ubicación (revisá los permisos del navegador).</div>';
+  }, {timeout:8000});
+}
+
+/* ============================================================
+   RENDER: PROGRESO
+============================================================ */
+function renderProgreso(){
+  document.getElementById('prog-total').textContent = sessions.length;
+  document.getElementById('prog-streak').textContent = computeStreakWeeks(sessions);
+  renderLevelWidget('level-widget-progreso');
+
+  renderPlayerCard(document.getElementById('player-card-wrap'), activePosition, true);
+
+  const miniRow = document.getElementById('card-mini-row');
+  miniRow.innerHTML = '';
+  POSITIONS.filter(p=>p.id!==activePosition).forEach(p=>{
+    const holder = document.createElement('div');
+    renderPlayerCard(holder, p.id, false);
+    miniRow.appendChild(holder.firstChild);
+  });
+
+  const breakdown = document.getElementById('pos-breakdown');
+  breakdown.innerHTML = '';
+  POSITIONS.forEach(p=>{
+    const n = sessions.filter(s=>s.position===p.id).length;
+    const el = document.createElement('div');
+    el.className = 'pos-mini';
+    el.style.borderColor = n>0 ? p.color+'55' : 'var(--line)';
+    el.innerHTML = `<div class="n mono" style="color:${p.color}">${n}</div><div class="l">${p.id}</div>`;
+    breakdown.appendChild(el);
+  });
+
+  const barsEl = document.getElementById('week-bars');
+  barsEl.innerHTML = '';
+  const weekCounts = [];
+  for(let i=5;i>=0;i--){
+    const start = new Date(); start.setDate(start.getDate() - i*7 - start.getDay());
+    const end = new Date(start); end.setDate(end.getDate()+7);
+    const count = sessions.filter(s=>{ const d=new Date(s.date); return d>=start && d<end; }).length;
+    weekCounts.push({label: (i===0?'Hoy':'-'+i+'sem'), count});
+  }
+  const max = Math.max(1, ...weekCounts.map(w=>w.count));
+  weekCounts.forEach(w=>{
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `<div class="mono" style="font-size:10px;color:var(--chalk-dim)">${w.count||''}</div>
+      <div class="bar" style="height:${(w.count/max)*100}%"></div>
+      <div class="bar-lbl">${w.label}</div>`;
+    barsEl.appendChild(col);
+  });
+
+  renderGoalGrid(document.getElementById('prog-goal-grid'), aggregateZones(), false);
+
+  renderOvrHistoryWidget();
+  renderSkillEvolutionWidget();
+  renderPotentialWidget();
+  renderRecords();
+  renderJournalHistory();
+
+  const hist = document.getElementById('history-list');
+  if(sessions.length===0){
+    hist.innerHTML = `<div class="empty-state">Sin historial todavía.</div>`;
+  }else{
+    hist.innerHTML = '';
+    [...sessions].reverse().forEach(s=>{
+      const p = posById(s.position);
+      const totalShots = s.zones ? Object.values(s.zones).reduce((a,z)=>a+z.s+z.g,0) : 0;
+      const saves = s.zones ? Object.values(s.zones).reduce((a,z)=>a+z.s,0) : 0;
+      const row = document.createElement('div');
+      row.className = 'history-item';
+      row.innerHTML = `
+        <div>
+          <div class="history-date"><span class="pos-tag" style="background:${p.color}">${p.id}</span>${fmtDate(new Date(s.date))}</div>
+          <div class="history-sub">${s.drillIds.length} ejerc. · ${s.durationMin} min${totalShots>0 ? ' · '+saves+'/'+totalShots+' atajadas':''}</div>
+          ${s.note ? `<div class="history-note">📝 ${escapeHtml(s.note)}</div>` : ''}
+        </div>
+        <div class="history-actions">
+          <button class="hist-icon-btn" title="Editar nota" onclick="editSessionNote('${s.id}')">✎</button>
+          <button class="hist-icon-btn danger" title="Eliminar sesión" onclick="deleteSession('${s.id}')">🗑</button>
+        </div>`;
+      hist.appendChild(row);
+    });
+  }
+}
+
+/* ============================================================
+   RENDER: PARTIDOS
+============================================================ */
+function renderPartidos(){
+  const pos = posById(activePosition);
+  document.getElementById('partidos-title').textContent = 'Partidos · ' + pos.name;
+
+  const fr = document.getElementById('match-filter-row');
+  fr.innerHTML = '';
+  const allChip = document.createElement('div');
+  allChip.className = 'chip' + (matchFilterContext==='ALL' ? ' active':'');
+  allChip.textContent = 'Todos';
+  allChip.onclick = ()=>{ matchFilterContext='ALL'; renderPartidos(); };
+  fr.appendChild(allChip);
+  MATCH_CONTEXTS.forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (matchFilterContext===c.id ? ' active':'');
+    chip.textContent = c.name;
+    chip.onclick = ()=>{ matchFilterContext=c.id; renderPartidos(); };
+    fr.appendChild(chip);
+  });
+
+  const list = matches.filter(m=>m.position===activePosition && (matchFilterContext==='ALL' || m.context===matchFilterContext));
+
+  const agg = list.reduce((a,m)=>{
+    a.played++; a.goals+=m.goals||0; a.assists+=m.assists||0; a.tackles+=m.tackles||0; a.saves+=m.saves||0;
+    return a;
+  }, {played:0, goals:0, assists:0, tackles:0, saves:0});
+
+  let statsHtml = `
+    <div class="match-stat-card"><div class="n mono">${agg.played}</div><div class="l">Partidos</div></div>
+    <div class="match-stat-card"><div class="n mono">${agg.goals}</div><div class="l">Goles</div></div>
+    <div class="match-stat-card"><div class="n mono">${agg.assists}</div><div class="l">Asistencias</div></div>
+    <div class="match-stat-card"><div class="n mono">${agg.tackles}</div><div class="l">Barridas</div></div>`;
+  if(activePosition==='ARQ'){
+    statsHtml += `<div class="match-stat-card"><div class="n mono">${agg.saves}</div><div class="l">Atajadas</div></div>`;
+  }
+  document.getElementById('match-stat-grid').innerHTML = statsHtml;
+
+  const hist = document.getElementById('match-history-list');
+  if(list.length===0){
+    hist.innerHTML = `<div class="empty-state">Todavía no registraste partidos de ${pos.name.toLowerCase()}.<br>Tocá "Registrar partido" para sumar el primero.</div>`;
+  }else{
+    hist.innerHTML = '';
+    [...list].reverse().forEach(m=>{
+      const ctx = contextById(m.context);
+      const parts = [];
+      if(m.goals) parts.push(`⚽ ${m.goals}`);
+      if(m.assists) parts.push(`🅰 ${m.assists}`);
+      if(m.tackles) parts.push(`🦵 ${m.tackles}`);
+      if(activePosition==='ARQ' && m.saves) parts.push(`🧤 ${m.saves}`);
+      const statLine = parts.length ? parts.join(' · ') : 'Sin estadísticas cargadas';
+      const row = document.createElement('div');
+      row.className = 'history-item';
+      row.innerHTML = `
+        <div>
+          <div class="history-date"><span class="pos-tag" style="background:${ctx.color}">${ctx.name}</span>${fmtDate(new Date(m.date))}</div>
+          <div class="history-sub">${statLine}</div>
+          ${m.note ? `<div class="history-note">📝 ${escapeHtml(m.note)}</div>` : ''}
+        </div>
+        <div class="history-actions">
+          <button class="hist-icon-btn" title="Editar" onclick="editMatch('${m.id}')">✎</button>
+          <button class="hist-icon-btn danger" title="Eliminar" onclick="deleteMatch('${m.id}')">🗑</button>
+        </div>`;
+      hist.appendChild(row);
+    });
+  }
+}
+
+function renderMatchContextChips(){
+  const row = document.getElementById('match-context-row');
+  row.innerHTML = '';
+  MATCH_CONTEXTS.forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (matchModalContext===c.id ? ' active' : '');
+    chip.textContent = c.name;
+    chip.onclick = ()=>{ matchModalContext=c.id; renderMatchContextChips(); };
+    row.appendChild(chip);
+  });
+}
+
+function openMatchModal(){
+  editingMatchId = null;
+  matchModalContext = 'club';
+  document.getElementById('match-modal-title').textContent = 'Registrar partido';
+  document.getElementById('match-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('match-goals').value = 0;
+  document.getElementById('match-assists').value = 0;
+  document.getElementById('match-tackles').value = 0;
+  document.getElementById('match-saves').value = 0;
+  document.getElementById('match-note').value = '';
+  document.getElementById('match-saves-row').style.display = activePosition==='ARQ' ? 'flex' : 'none';
+  renderMatchContextChips();
+  document.getElementById('match-modal').classList.add('open');
+}
+function closeMatchModal(){ document.getElementById('match-modal').classList.remove('open'); }
+
+function editMatch(id){
+  const m = matches.find(x=>x.id===id);
+  if(!m) return;
+  editingMatchId = id;
+  matchModalContext = m.context || 'club';
+  document.getElementById('match-modal-title').textContent = 'Editar partido';
+  document.getElementById('match-date').value = new Date(m.date).toISOString().slice(0,10);
+  document.getElementById('match-goals').value = m.goals||0;
+  document.getElementById('match-assists').value = m.assists||0;
+  document.getElementById('match-tackles').value = m.tackles||0;
+  document.getElementById('match-saves').value = m.saves||0;
+  document.getElementById('match-note').value = m.note||'';
+  document.getElementById('match-saves-row').style.display = m.position==='ARQ' ? 'flex' : 'none';
+  renderMatchContextChips();
+  document.getElementById('match-modal').classList.add('open');
+}
+
+async function saveMatch(){
+  const dateVal = document.getElementById('match-date').value;
+  const goals = parseInt(document.getElementById('match-goals').value)||0;
+  const assists = parseInt(document.getElementById('match-assists').value)||0;
+  const tackles = parseInt(document.getElementById('match-tackles').value)||0;
+  const saves = activePosition==='ARQ' ? (parseInt(document.getElementById('match-saves').value)||0) : 0;
+  const note = document.getElementById('match-note').value.trim();
+  const isoDate = dateVal ? new Date(dateVal+'T12:00:00').toISOString() : new Date().toISOString();
+
+  if(editingMatchId){
+    const m = matches.find(x=>x.id===editingMatchId);
+    if(m){
+      m.date = isoDate; m.context = matchModalContext;
+      m.goals = goals; m.assists = assists; m.tackles = tackles; m.saves = saves;
+      if(note) m.note = note; else delete m.note;
+    }
+  }else{
+    matches.push({
+      id: 'match_'+Date.now(),
+      date: isoDate,
+      position: activePosition,
+      context: matchModalContext,
+      goals, assists, tackles, saves,
+      ...(note ? {note} : {})
+    });
+  }
+  const levelBefore = computeLevelInfo(totalXP() - (editingMatchId?0:xpForMatch({goals,assists,tackles,saves}))).level;
+  await saveMatches();
+  closeMatchModal();
+  renderPartidos();
+  const levelAfter = computeLevelInfo(totalXP()).level;
+  if(!editingMatchId && levelAfter > levelBefore) showLevelUp(levelAfter);
+}
+
+function deleteMatch(id){
+  if(!confirm('¿Eliminar este partido del historial? No se puede deshacer.')) return;
+  matches = matches.filter(m=>m.id!==id);
+  saveMatches();
+  renderPartidos();
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+(async function init(){
+  initFirebase();
+  renderAuthWidget();
+  await loadState();
+  renderPositionBar();
+  renderInicio();
+})();
+</script>
+</body>
+</html>
