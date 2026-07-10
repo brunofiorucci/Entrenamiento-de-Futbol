@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
 <title>ARQUERO+ — Entrenamiento de Fútbol</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0E2A1C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ARQUERO+">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- Firebase (login con Google + guardado en la nube). Ver instrucciones de configuración al final del <script> principal. -->
@@ -782,6 +789,52 @@
     flex:1; resize:none; background:var(--surface); border:1px solid var(--line-strong); border-radius:12px;
     color:var(--chalk); padding:10px 12px; font-family:'IBM Plex Sans',sans-serif; font-size:13px; min-height:44px;
   }
+
+  /* ---------- Tutorial de bienvenida ---------- */
+  .welcome-modal-bg{
+    position:fixed; inset:0; background:rgba(6,16,10,0.78); backdrop-filter:blur(2px);
+    display:none; align-items:flex-end; justify-content:center; z-index:80;
+  }
+  .welcome-modal-bg.open{display:flex;}
+  .welcome-modal{
+    width:100%; max-width:480px; background:var(--surface-2);
+    border-radius:20px 20px 0 0; padding:0; border-top:1px solid var(--line-strong);
+    max-height:86vh; overflow-y:auto;
+  }
+  .welcome-head{
+    padding:24px 22px 16px; text-align:center; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(255,107,53,0.10), transparent);
+  }
+  .welcome-head-icon{font-size:34px; display:block; margin-bottom:8px;}
+  .welcome-head h2{
+    font-family:'Oswald', sans-serif; font-size:20px; text-transform:uppercase;
+    letter-spacing:.02em; margin:0 0 6px; color:var(--chalk);
+  }
+  .welcome-head h2 span{color:var(--accent);}
+  .welcome-head p{color:var(--chalk-dim); font-size:13px; margin:0; line-height:1.5;}
+  .welcome-body{padding:18px 22px 6px;}
+  .welcome-steps{display:flex; flex-direction:column; gap:10px; margin-bottom:16px;}
+  .welcome-step{
+    display:flex; gap:12px; align-items:flex-start; background:var(--surface);
+    border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px;
+  }
+  .welcome-step-icon{font-size:20px; line-height:1; flex-shrink:0; width:24px; text-align:center;}
+  .welcome-step b{
+    display:block; font-family:'Oswald', sans-serif; font-size:12.5px; text-transform:uppercase;
+    letter-spacing:.02em; margin-bottom:2px; color:var(--chalk);
+  }
+  .welcome-step small{color:var(--chalk-dim); font-size:11.5px; line-height:1.5;}
+  .welcome-foot{padding:14px 22px calc(22px + env(safe-area-inset-bottom));}
+  .welcome-check{
+    display:flex; align-items:center; gap:8px; margin-bottom:14px;
+    font-size:11.5px; color:var(--chalk-dim);
+  }
+  .welcome-check input{accent-color:var(--accent);}
+  .welcome-start-btn{
+    width:100%; padding:14px; border:none; border-radius:12px; background:var(--accent);
+    color:#1a0d03; font-family:'Oswald', sans-serif; font-size:14px; font-weight:600;
+    text-transform:uppercase; letter-spacing:.03em; cursor:pointer;
+  }
 </style>
 </head>
 <body>
@@ -1053,6 +1106,69 @@
     <div style="display:flex; gap:10px; margin-top:16px;">
       <button class="cta-btn ghost" style="margin-top:0;" onclick="closeMatchModal()">Cancelar</button>
       <button class="cta-btn" style="margin-top:0;" onclick="saveMatch()">Guardar partido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: tutorial de bienvenida -->
+<div class="welcome-modal-bg" id="welcome-modal-bg">
+  <div class="welcome-modal">
+    <div class="welcome-head">
+      <span class="welcome-head-icon">🥅</span>
+      <h2>Bienvenido a ARQUERO<span>+</span></h2>
+      <p>Tu app de entrenamiento de fútbol. Conocé lo básico antes de arrancar.</p>
+    </div>
+    <div class="welcome-body">
+      <div class="welcome-steps">
+        <div class="welcome-step">
+          <div class="welcome-step-icon">🧍</div>
+          <div>
+            <b>Elegí tu posición</b>
+            <small>Arriba de todo podés cambiar entre Arquero, Defensor, Mediocampista o Delantero. Cada una tiene sus propios ejercicios y estadísticas.</small>
+          </div>
+        </div>
+        <div class="welcome-step">
+          <div class="welcome-step-icon">📋</div>
+          <div>
+            <b>Ejercicios</b>
+            <small>Rutinas de entrenamiento pensadas para tu posición, con tips en video.</small>
+          </div>
+        </div>
+        <div class="welcome-step">
+          <div class="welcome-step-icon">🥅</div>
+          <div>
+            <b>Entrenar</b>
+            <small>Registrá tus sesiones de entrenamiento y cargá los resultados por zona.</small>
+          </div>
+        </div>
+        <div class="welcome-step">
+          <div class="welcome-step-icon">📈</div>
+          <div>
+            <b>Progreso</b>
+            <small>Mirá tu evolución por categoría y detectá tus puntos débiles para mejorar.</small>
+          </div>
+        </div>
+        <div class="welcome-step">
+          <div class="welcome-step-icon">⚽</div>
+          <div>
+            <b>Partidos</b>
+            <small>Cargá goles, asistencias, atajadas y barridas de cada partido que jugás.</small>
+          </div>
+        </div>
+        <div class="welcome-step">
+          <div class="welcome-step-icon">👑</div>
+          <div>
+            <b>Carrera</b>
+            <small>Elegí un arquetipo de leyenda y seguí tus desafíos semanales para progresar.</small>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="welcome-foot">
+      <label class="welcome-check">
+        <input type="checkbox" id="welcome-dont-show"> No volver a mostrar este tutorial
+      </label>
+      <button class="welcome-start-btn" id="welcome-start-btn">Empezar</button>
     </div>
   </div>
 </div>
@@ -3871,7 +3987,51 @@ function deleteMatch(id){
   await loadState();
   renderPositionBar();
   renderInicio();
+  initBienvenida();
 })();
+
+/* ---------- Tutorial de bienvenida ---------- */
+
+const WELCOME_STORAGE_KEY = 'arqueroplus_welcome_seen';
+
+function mostrarBienvenida(){
+  const bg = document.getElementById('welcome-modal-bg');
+  if(bg) bg.classList.add('open');
+}
+
+function cerrarBienvenida(){
+  const bg = document.getElementById('welcome-modal-bg');
+  if(!bg) return;
+  const dontShow = document.getElementById('welcome-dont-show');
+  if(dontShow && dontShow.checked){
+    try{ localStorage.setItem(WELCOME_STORAGE_KEY, '1'); }catch(e){}
+  }
+  bg.classList.remove('open');
+}
+
+function initBienvenida(){
+  let yaVista = false;
+  try{ yaVista = localStorage.getItem(WELCOME_STORAGE_KEY) === '1'; }catch(e){}
+  if(!yaVista) mostrarBienvenida();
+
+  const bg = document.getElementById('welcome-modal-bg');
+  const startBtn = document.getElementById('welcome-start-btn');
+  if(startBtn) startBtn.addEventListener('click', cerrarBienvenida);
+  if(bg){
+    bg.addEventListener('click', e => {
+      if(e.target === bg) cerrarBienvenida();
+    });
+  }
+}
+
+/* ---------- PWA / OFFLINE ---------- */
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .catch(err => console.warn('No se pudo registrar el service worker:', err));
+  });
+}
 </script>
 </body>
 </html>
