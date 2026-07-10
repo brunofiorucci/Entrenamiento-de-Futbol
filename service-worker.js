@@ -8,7 +8,7 @@
    necesitan internet SÍ o SÍ. Sin conexión, la app sigue funcionando
    con el progreso guardado localmente en el dispositivo. */
 
-const CACHE_NAME = 'arqueroplus-v1';
+const CACHE_NAME = 'arqueroplus-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

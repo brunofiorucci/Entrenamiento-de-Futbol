@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<meta name="description" content="ARQUERO+ — Entrená como profesional: ejercicios por posición, seguimiento de partidos, plan semanal y progreso físico.">
+<meta name="color-scheme" content="dark">
 <title>ARQUERO+ — Entrenamiento de Fútbol</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0E2A1C">
@@ -12,11 +14,12 @@
 <link rel="icon" href="icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<!-- Firebase (login con Google + guardado en la nube). Ver instrucciones de configuración al final del <script> principal. -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<!-- Firebase (login con Google + guardado en la nube).
+     Los scripts de Firebase (~250 KB) ya NO se cargan acá arriba: se descargan
+     de forma dinámica y solo si FIREBASE_CONFIG fue completado (ver initFirebase()
+     más abajo). Así la app arranca más rápido para quien todavía no lo configuró. -->
 <style>
   :root{
     --bg:#0E2A1C;
@@ -502,6 +505,36 @@
   .levelup-num{font-family:'Oswald',sans-serif; font-size:64px; font-weight:700; color:var(--accent); line-height:1; margin:8px 0 4px;}
   .levelup-title{font-family:'Oswald',sans-serif; font-size:19px; text-transform:uppercase; color:var(--chalk); letter-spacing:0.02em; margin-bottom:18px;}
 
+  /* ---------- Test físico inicial ---------- */
+  .fit-card{
+    background:linear-gradient(135deg, var(--surface-2), var(--surface));
+    border:1px solid var(--line-strong); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:16px; cursor:pointer;
+  }
+  .fit-card-top{display:flex; align-items:center; gap:14px;}
+  .fit-badge{
+    width:52px; height:52px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:22px;
+    background:radial-gradient(circle at 30% 30%, var(--fit-color, var(--accent)), #14351f);
+    box-shadow:0 4px 14px -4px rgba(0,0,0,0.4);
+  }
+  .fit-info{flex:1; min-width:0;}
+  .fit-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.12em; color:var(--chalk-faint); text-transform:uppercase;}
+  .fit-title{font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:0.02em; color:var(--chalk); text-transform:uppercase; margin-top:2px;}
+  .fit-sub{font-size:11.5px; color:var(--chalk-dim); margin-top:3px;}
+  .fit-empty-text{font-size:13px; color:var(--chalk-dim); line-height:1.45; margin-bottom:10px;}
+  .fit-breakdown{margin-top:14px; display:flex; flex-direction:column; gap:9px;}
+  .fit-row{display:flex; align-items:center; gap:10px;}
+  .fit-row .fr-label{flex:1; font-size:12.5px; color:var(--chalk-dim);}
+  .fit-row .fr-val{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--chalk); flex-shrink:0; width:64px; text-align:right;}
+  .fit-dots{display:flex; gap:3px; flex-shrink:0;}
+  .fit-dot{width:8px; height:8px; border-radius:50%; background:rgba(243,241,231,0.14);}
+  .fit-dot.on{background:var(--fit-color, var(--accent));}
+  .fit-retake-btn{
+    margin-top:14px; width:100%; background:none; border:1px solid var(--line-strong); color:var(--chalk-dim);
+    padding:10px; border-radius:10px; font-size:12.5px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
+  }
+
   /* ---------- Partidos ---------- */
   .match-stat-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:18px;}
   .match-stat-card{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 6px; text-align:center;}
@@ -558,6 +591,29 @@
   }
   .modal h2{font-size:19px; margin-bottom:4px;}
   .modal .sub{color:var(--chalk-dim); font-size:13px; margin-bottom:18px;}
+
+  /* ---------- Popup elección de remate (atajada / gol) ---------- */
+  .shot-choice-bg{
+    position:fixed; inset:0; z-index:65; display:none;
+    background:rgba(6,16,10,0.75); align-items:center; justify-content:center; padding:20px;
+  }
+  .shot-choice-bg.open{display:flex;}
+  .shot-choice-card{
+    width:100%; max-width:320px; background:var(--surface-2); border:1px solid var(--line-strong);
+    border-radius:18px; padding:20px; text-align:center;
+  }
+  .shot-choice-title{font-size:14.5px; color:var(--chalk); margin-bottom:14px; font-weight:600;}
+  .shot-choice-btn{
+    width:100%; border:none; border-radius:12px; padding:14px; margin-bottom:10px;
+    font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:0.02em; text-transform:uppercase;
+    cursor:pointer;
+  }
+  .shot-choice-btn:active{transform:scale(0.98);}
+  .shot-choice-btn.save{background:var(--save); color:#0a1a0a;}
+  .shot-choice-btn.miss{background:var(--miss); color:#2a0a08;}
+  .shot-choice-cancel{
+    width:100%; background:none; border:none; color:var(--chalk-dim); font-size:13px; padding:8px; cursor:pointer;
+  }
 
   ::-webkit-scrollbar{width:0px;}
 
@@ -660,6 +716,10 @@
   .report-stat .n{font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:600; color:var(--chalk);}
   .report-stat .l{font-size:9.5px; color:var(--chalk-dim); margin-top:2px; text-transform:uppercase; letter-spacing:0.04em;}
   .report-block{margin-bottom:14px;}
+  .report-block-highlight{
+    background:linear-gradient(135deg, rgba(255,107,53,0.14), var(--surface));
+    border:1px solid var(--line-strong); border-radius:14px; padding:12px 14px;
+  }
   .report-block-label{font-size:10.5px; letter-spacing:0.08em; color:var(--accent); font-family:'IBM Plex Mono',monospace; margin-bottom:6px; text-transform:uppercase;}
   .report-block-text{font-size:13.5px; line-height:1.55; color:var(--chalk);}
   .report-tag-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px;}
@@ -741,6 +801,38 @@
   .challenge-track{height:6px; border-radius:3px; background:rgba(243,241,231,0.08); overflow:hidden;}
   .challenge-fill{height:100%; border-radius:3px; background:var(--accent);}
   .challenge-fill.done{background:var(--save);}
+  .challenge-bottom{display:flex; justify-content:space-between; align-items:center; margin-top:6px;}
+  .challenge-reward{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--chalk-faint); letter-spacing:0.03em;}
+  .challenge-add-btn{
+    background:var(--surface-2); border:1px solid var(--line-strong); color:var(--chalk-dim);
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:4px 10px; border-radius:999px; cursor:pointer;
+  }
+
+  /* ---------- Insignias ---------- */
+  .badge-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .badge-tile{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 8px; text-align:center; opacity:0.4;
+  }
+  .badge-tile.earned{opacity:1; border-color:var(--line-strong); background:linear-gradient(135deg, var(--surface-2), var(--surface));}
+  .badge-tile .bt-icon{font-size:26px; margin-bottom:6px;}
+  .badge-tile .bt-name{font-size:10.5px; color:var(--chalk); line-height:1.25; font-weight:600;}
+  .badge-tile .bt-desc{font-size:9px; color:var(--chalk-faint); line-height:1.3; margin-top:3px;}
+
+  .badgeup-bg{
+    position:fixed; inset:0; z-index:81; display:none; align-items:center; justify-content:center;
+    background:rgba(6,16,10,0.82); backdrop-filter:blur(3px);
+  }
+  .badgeup-bg.open{display:flex;}
+  .badgeup-card{
+    width:calc(100% - 56px); max-width:340px; background:var(--surface-2);
+    border:1px solid var(--line-strong); border-radius:20px; padding:32px 24px 26px;
+    text-align:center; animation:levelPop .35s cubic-bezier(.2,1.4,.4,1);
+  }
+  .badgeup-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.16em; color:var(--chalk-dim); text-transform:uppercase;}
+  .badgeup-icon{font-size:54px; margin:10px 0 4px;}
+  .badgeup-title{font-family:'Oswald',sans-serif; font-size:19px; text-transform:uppercase; color:var(--chalk); letter-spacing:0.02em; margin-bottom:4px;}
+  .badgeup-desc{font-size:12.5px; color:var(--chalk-dim); margin-bottom:18px; line-height:1.4;}
 
   /* ---------- Evolución por habilidad ---------- */
   .skill-evo-row{display:flex; align-items:center; gap:10px; padding:7px 0; border-top:1px solid var(--line);}
@@ -865,6 +957,8 @@
 
       <div class="level-card" id="level-widget" onclick="goTo('progreso')"></div>
 
+      <div id="fit-test-wrap"></div>
+
       <div id="coach-wrap"></div>
       <div id="goal-widget-wrap"></div>
       <div id="weekly-challenge-wrap"></div>
@@ -911,6 +1005,9 @@
       <div class="section-label" style="margin-top:0;">Nivel de entrenador</div>
       <div class="level-card" id="level-widget-progreso"></div>
 
+      <div class="section-label">Nivel físico</div>
+      <div id="fit-test-wrap-progreso"></div>
+
       <div class="section-label">Tu carta</div>
       <div id="player-card-wrap"></div>
 
@@ -950,6 +1047,9 @@
 
       <div class="section-label">Récords personales</div>
       <div id="records-wrap"></div>
+
+      <div class="section-label">Insignias</div>
+      <div id="badges-wrap"></div>
 
       <div class="section-label">Diario del jugador</div>
       <div class="card" id="journal-history-wrap"></div>
@@ -1084,6 +1184,16 @@
   </div>
 </div>
 
+<!-- Popup: elegir si el remate fue atajado o gol (reemplaza confirm() nativo, poco confiable en apps instaladas) -->
+<div class="shot-choice-bg" id="shot-choice-bg" onclick="if(event.target===this) cancelShotChoice()">
+  <div class="shot-choice-card">
+    <div class="shot-choice-title">¿Qué pasó con ese remate?</div>
+    <button class="shot-choice-btn save" onclick="resolveShotChoice(true)">🧤 Atajada</button>
+    <button class="shot-choice-btn miss" onclick="resolveShotChoice(false)">⚽ Gol recibido</button>
+    <button class="shot-choice-cancel" onclick="cancelShotChoice()">Cancelar</button>
+  </div>
+</div>
+
 <!-- Modal: registrar / editar partido -->
 <div class="modal-bg" id="match-modal">
   <div class="modal">
@@ -1107,6 +1217,47 @@
       <button class="cta-btn ghost" style="margin-top:0;" onclick="closeMatchModal()">Cancelar</button>
       <button class="cta-btn" style="margin-top:0;" onclick="saveMatch()">Guardar partido</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal: test físico inicial -->
+<div class="modal-bg" id="fit-test-modal">
+  <div class="modal">
+    <h2>Test físico inicial</h2>
+    <div class="sub">Hacé estas 5 pruebas y cargá tus resultados. Con eso te recomendamos un nivel de entrenamiento.</div>
+
+    <div class="field-row"><label>🏃 Sprint 20 m (segundos)</label><input type="number" min="0" step="0.1" inputmode="decimal" id="fit-sprint" class="field-input" placeholder="Ej: 3.4"></div>
+    <div class="field-row"><label>🦵 Salto vertical (cm)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-jump" class="field-input" placeholder="Ej: 38"></div>
+    <div class="field-row"><label>💪 Flexiones (máx. reps)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-pushups" class="field-input" placeholder="Ej: 22"></div>
+    <div class="field-row"><label>🔥 Abdominales (máx. reps)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-situps" class="field-input" placeholder="Ej: 30"></div>
+    <div class="field-row"><label>🧗 Dominadas (máx. reps)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-pullups" class="field-input" placeholder="Ej: 5"></div>
+
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="cta-btn ghost" style="margin-top:0;" onclick="closeFitTestModal()">Cancelar</button>
+      <button class="cta-btn" style="margin-top:0;" onclick="saveFitTest()">Ver mi nivel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: resultado del test físico -->
+<div class="levelup-bg" id="fit-result-bg" onclick="if(event.target===this) closeFitResult()">
+  <div class="levelup-card">
+    <div class="levelup-eyebrow">Tu nivel de entrenamiento</div>
+    <div class="levelup-num" id="fit-result-icon" style="font-size:44px; margin:10px 0 4px;">🥅</div>
+    <div class="levelup-title" id="fit-result-title">Intermedio</div>
+    <div class="fit-breakdown" id="fit-result-breakdown" style="text-align:left; margin-bottom:18px;"></div>
+    <button class="cta-btn" style="margin-top:0;" onclick="closeFitResult()">Empezar a entrenar</button>
+  </div>
+</div>
+
+<!-- Modal: insignia desbloqueada -->
+<div class="badgeup-bg" id="badgeup-bg" onclick="if(event.target===this) closeBadgeUnlock()">
+  <div class="badgeup-card">
+    <div class="badgeup-eyebrow">¡Nueva insignia!</div>
+    <div class="badgeup-icon" id="badgeup-icon">🏅</div>
+    <div class="badgeup-title" id="badgeup-title">Primer desafío</div>
+    <div class="badgeup-desc" id="badgeup-desc"></div>
+    <button class="cta-btn" style="margin-top:0;" onclick="closeBadgeUnlock()">Genial</button>
   </div>
 </div>
 
@@ -1550,9 +1701,29 @@ const FIREBASE_CONFIG = {
 const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "TU_API_KEY";
 let fbApp=null, fbAuth=null, fbDb=null, currentUser=null;
 
-function initFirebase(){
-  if(!FIREBASE_READY || typeof firebase==='undefined') return;
+function loadScript(src){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = ()=>reject(new Error('No se pudo cargar '+src));
+    document.head.appendChild(s);
+  });
+}
+async function loadFirebaseScripts(){
+  if(typeof firebase!=='undefined') return;
+  const base = 'https://www.gstatic.com/firebasejs/10.12.2/';
+  // se cargan en orden porque auth y firestore dependen de app
+  await loadScript(base+'firebase-app-compat.js');
+  await Promise.all([
+    loadScript(base+'firebase-auth-compat.js'),
+    loadScript(base+'firebase-firestore-compat.js')
+  ]);
+}
+async function initFirebase(){
+  if(!FIREBASE_READY) return;
   try{
+    await loadFirebaseScripts();
     fbApp = firebase.initializeApp(FIREBASE_CONFIG);
     fbAuth = firebase.auth();
     fbDb = firebase.firestore();
@@ -1594,9 +1765,10 @@ async function doSignOut(){
 function openAuthMenu(){
   if(!currentUser) return;
   const box = document.getElementById('auth-menu-user');
+  const photo = currentUser.photoURL && /^https:\/\//.test(currentUser.photoURL) ? currentUser.photoURL : '';
   box.innerHTML = `
-    ${currentUser.photoURL ? `<img src="${currentUser.photoURL}">` : `<div class="ph">${(currentUser.displayName||'?')[0]}</div>`}
-    <div><div class="un">${currentUser.displayName||'Tu cuenta'}</div><div class="ue">${currentUser.email||''}</div></div>`;
+    ${photo ? `<img src="${escapeHtml(photo)}">` : `<div class="ph">${escapeHtml((currentUser.displayName||'?')[0])}</div>`}
+    <div><div class="un">${escapeHtml(currentUser.displayName||'Tu cuenta')}</div><div class="ue">${escapeHtml(currentUser.email||'')}</div></div>`;
   document.getElementById('auth-menu-bg').classList.add('open');
 }
 function closeAuthMenu(){ document.getElementById('auth-menu-bg').classList.remove('open'); }
@@ -1672,9 +1844,10 @@ function renderAuthWidget(){
   const el = document.getElementById('auth-widget');
   if(!el) return;
   if(currentUser){
-    el.innerHTML = currentUser.photoURL
-      ? `<img class="auth-avatar" src="${currentUser.photoURL}" onclick="openAuthMenu()">`
-      : `<div class="auth-avatar" onclick="openAuthMenu()">${(currentUser.displayName||'?')[0]}</div>`;
+    const photo = currentUser.photoURL && /^https:\/\//.test(currentUser.photoURL) ? currentUser.photoURL : '';
+    el.innerHTML = photo
+      ? `<img class="auth-avatar" src="${escapeHtml(photo)}" onclick="openAuthMenu()">`
+      : `<div class="auth-avatar" onclick="openAuthMenu()">${escapeHtml((currentUser.displayName||'?')[0])}</div>`;
   }else if(FIREBASE_READY){
     el.innerHTML = `<button class="auth-btn" onclick="signInWithGoogle()">${iconSvg('target',14)} Iniciar sesión</button>`;
   }else{
@@ -1726,9 +1899,11 @@ let communityPosts = [];         // caché en memoria del feed (no se persiste l
 // ---- IA Coach / memoria / diario / récords / objetivo / OVR histórico ----
 let journal = [];                 // {id, sessionId, date, position, mood, best, hardest, discomfort, comment}
 let manualRecords = {};           // {dominadas:{value,date}, sprint:{value,date}, distancia:{value,date}}
+let physicalTest = null;          // {sprint,jump,pushups,situps,pullups,date,levelId,score} — test físico inicial
 let seasonGoal = null;            // id de SEASON_GOALS, o null
 let ovrHistory = [];              // {date, position, ovr, attrs?}
-let weeklyChallenges = [];        // {id, week, position, type, catId?, target, text}
+let weeklyChallenges = [];        // {id, week, position, type, catId?, target, text, reward}
+let weeklyLogs = {};              // { [weekKey]: {passes:number, distanceKm:number} } — carga manual para desafíos
 let lastWeather = null;           // {temp, code, desc, tip, fetchedAt} — no se persiste, se vuelve a pedir
 let pendingSessionForJournal = null; // sesión recién terminada, mientras se completa el diario
 
@@ -1741,7 +1916,7 @@ function contextById(id){ return MATCH_CONTEXTS.find(c=>c.id===id) || MATCH_CONT
 
 function currentStateObject(){
   return {sessions, matches, draft, activePosition, selectedArchetype, spacePref, weekProgress,
-    journal, manualRecords, seasonGoal, ovrHistory, weeklyChallenges};
+    journal, manualRecords, seasonGoal, ovrHistory, weeklyChallenges, physicalTest, weeklyLogs};
 }
 
 async function loadState(){
@@ -1774,6 +1949,8 @@ async function loadState(){
   seasonGoal = (data && data.seasonGoal) || null;
   ovrHistory = (data && data.ovrHistory) || [];
   weeklyChallenges = (data && data.weeklyChallenges) || [];
+  physicalTest = (data && data.physicalTest) || null;
+  weeklyLogs = (data && data.weeklyLogs) || {};
   POSITIONS.forEach(p=>{ if(!draft[p.id]) draft[p.id]=[]; if(selectedArchetype[p.id]===undefined) selectedArchetype[p.id]=null; });
 }
 
@@ -1883,15 +2060,27 @@ function renderGoalGrid(container, zonesData, clickable){
   container.appendChild(wrap);
 }
 
+let pendingShotZone = null; // {zoneId, cellEl} — remate esperando que el usuario elija atajada/gol
+
 function tapZone(zoneId, cellEl){
-  const choice = confirm('¿Fue atajada?\n\nAceptar = Atajada\nCancelar = Gol recibido');
+  pendingShotZone = {zoneId, cellEl};
+  document.getElementById('shot-choice-bg').classList.add('open');
+}
+function cancelShotChoice(){
+  pendingShotZone = null;
+  document.getElementById('shot-choice-bg').classList.remove('open');
+}
+function resolveShotChoice(isSave){
+  if(!pendingShotZone) return;
+  const {zoneId, cellEl} = pendingShotZone;
   if(!shotlogTemp[zoneId]) shotlogTemp[zoneId] = {s:0,g:0};
-  if(choice) shotlogTemp[zoneId].s++; else shotlogTemp[zoneId].g++;
+  if(isSave) shotlogTemp[zoneId].s++; else shotlogTemp[zoneId].g++;
   const total = shotlogTemp[zoneId].s + shotlogTemp[zoneId].g;
   const pct = Math.round((shotlogTemp[zoneId].s/total)*100);
   cellEl.style.background = zoneColor(pct,total);
   cellEl.style.color = zoneTextColor(pct,total);
   cellEl.innerHTML = `<div class="pct">${pct}%</div><div class="n">${total} tiros</div>`;
+  cancelShotChoice();
 }
 
 // tally de categorías entrenadas para posiciones que no son arquero
@@ -2189,6 +2378,63 @@ async function selectSeasonGoal(id){
   refreshCurrentView();
 }
 
+/* ============================================================
+   ⭐ ANÁLISIS SEMANAL (para el informe del entrenador)
+   Detecta cuándo se entrenó mucho una categoría en los últimos 7 días
+   mientras otra quedó descuidada, y arma una frase específica y personal
+   en vez de una recomendación genérica.
+============================================================ */
+function buildWeeklyInsight(posId){
+  const cats = CATEGORIES[posId];
+  if(!cats || cats.length<2) return null;
+  const now = new Date();
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  const posSessions = sessions.filter(s=>s.position===posId);
+  const weekSessions = posSessions.filter(s=> new Date(s.date) >= weekAgo);
+
+  const weekCounts = {};
+  cats.forEach(c=> weekCounts[c.id]=0);
+  weekSessions.forEach(s=> s.drillIds.forEach(id=>{
+    const d = drillById(id);
+    if(d && weekCounts[d.cat]!==undefined) weekCounts[d.cat]++;
+  }));
+
+  const daysSinceCat = {};
+  cats.forEach(c=>{
+    const last = [...posSessions].reverse().find(s=> s.drillIds.some(id=>{ const d=drillById(id); return d && d.cat===c.id; }));
+    daysSinceCat[c.id] = last ? Math.floor((now-new Date(last.date).getTime())/86400000) : null;
+  });
+
+  // categoría más entrenada esta semana (necesita al menos 2 ejercicios para que valga mencionarla como "mucho")
+  const topWeekCat = [...cats].filter(c=>weekCounts[c.id]>=2).sort((a,b)=>weekCounts[b.id]-weekCounts[a.id])[0];
+  if(!topWeekCat) return null;
+
+  // entre las demás categorías, la más descuidada: prioriza "nunca entrenada" y luego más días sin practicar
+  const candidates = cats.filter(c=>c.id!==topWeekCat.id);
+  const neglected = [...candidates].sort((a,b)=>{
+    const da = daysSinceCat[a.id], db = daysSinceCat[b.id];
+    if(da===null && db===null) return 0;
+    if(da===null) return -1;
+    if(db===null) return 1;
+    return db-da;
+  })[0];
+  if(!neglected) return null;
+
+  const neglectedDays = daysSinceCat[neglected.id];
+  // si la "descuidada" también se viene trabajando hace poco, no hay desequilibrio real que avisar
+  if(neglectedDays!==null && neglectedDays<4) return null;
+
+  const topName = topWeekCat.name.toLowerCase();
+  const negName = neglected.name.toLowerCase();
+  const weekN = weekCounts[topWeekCat.id];
+
+  const text = neglectedDays===null
+    ? `Entrenaste bastante ${topName} esta semana (${weekN} ejercicios), pero todavía no probaste nada de ${negName}. Te conviene dedicar la próxima sesión a esa habilidad.`
+    : `Entrenaste mucho ${topName} esta semana (${weekN} ejercicios), pero hace ${neglectedDays} día${neglectedDays===1?'':'s'} que no practicás ${negName}. Te conviene dedicar la próxima sesión a esa habilidad.`;
+
+  return {topCat: topWeekCat.id, neglectedCat: neglected.id, neglectedDays, text};
+}
+
 /* ---------- Memoria del jugador ---------- */
 function computeConsecutiveDayStreak(){
   if(sessions.length===0) return 0;
@@ -2253,36 +2499,63 @@ function renderWeaknessWidget(){
 ============================================================ */
 function currentWeekKey(){ return weekKey(new Date()); }
 
+const CHALLENGE_REWARD = {sessions:50, category:20, saves:45, passes:35, distance:40};
+
+const CHALLENGE_GEN_VERSION = 2; // subir este número fuerza a regenerar los desafíos de la semana actual
+
 function generateWeeklyChallenges(){
   const wk = currentWeekKey();
   const posId = activePosition;
   const already = weeklyChallenges.filter(c=>c.week===wk && c.position===posId);
-  if(already.length>0) return;
-  // saca desafíos viejos de otras semanas para no acumular basura
-  weeklyChallenges = weeklyChallenges.filter(c=>c.week===wk);
+  if(already.length>0 && already.every(c=>c.v===CHALLENGE_GEN_VERSION)) return;
+  // si ya había desafíos de esta semana/posición pero de una versión vieja del generador, los tira para recrearlos
+  weeklyChallenges = weeklyChallenges.filter(c => !(c.week===wk && c.position===posId));
+  // conserva historial reciente (para insignias) pero descarta lo muy viejo
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 20*7);
+  weeklyChallenges = weeklyChallenges.filter(c => new Date(c.week+'T00:00:00') >= cutoff);
 
   const mem = buildMemory(posId);
   const cats = CATEGORIES[posId];
   const list = [];
+  const daySeed = (new Date(wk+'T00:00:00').getDate() + posId.length);
 
-  list.push({id:'sessions_'+wk+'_'+posId, week:wk, position:posId, type:'sessions', target:3,
-    text:'Completá 3 entrenamientos esta semana.'});
+  list.push({id:'sessions_'+wk+'_'+posId, week:wk, position:posId, type:'sessions', target:4,
+    text:'Entrená 4 días esta semana.', reward:CHALLENGE_REWARD.sessions});
 
+  if(posId==='ARQ'){
+    // el objetivo de atajadas varía un poco semana a semana para que no sea siempre el mismo número
+    const savesTargets = [80, 100, 120];
+    const savesTarget = savesTargets[daySeed % savesTargets.length];
+    list.push({id:'saves_'+wk+'_'+posId, week:wk, position:posId, type:'saves', target:savesTarget,
+      text:`Atajá ${savesTarget} tiros esta semana.`, reward:CHALLENGE_REWARD.saves});
+  }
+
+  // desafío de categoría más floja — para todas las posiciones, incluido arquero
   if(mem.weakest[0]){
     const cat = catById(posId, mem.weakest[0]);
     list.push({id:'cat_'+mem.weakest[0]+'_'+wk+'_'+posId, week:wk, position:posId, type:'category', catId:mem.weakest[0], target:2,
-      text:`Entrená ${cat.name.toLowerCase()} 2 veces.`});
+      text:`Entrená ${cat.name.toLowerCase()} 2 veces.`, reward:CHALLENGE_REWARD.category});
   }
 
+  // alterna entre desafío de pases y de distancia semana a semana
+  if(daySeed % 2 === 0){
+    list.push({id:'passes_'+wk+'_'+posId, week:wk, position:posId, type:'passes', target:500,
+      text:'Hacé 500 pases esta semana.', reward:CHALLENGE_REWARD.passes});
+  } else {
+    list.push({id:'distance_'+wk+'_'+posId, week:wk, position:posId, type:'distance', target:15,
+      text:'Corré 15 km esta semana.', reward:CHALLENGE_REWARD.distance});
+  }
+
+  // desafío de segunda categoría — solo para jugadores de campo, así arquero mantiene la misma cantidad de desafíos (4)
   const otherCats = cats.filter(c=> !mem.weakest.includes(c.id));
-  if(otherCats.length>0){
-    const seed = (new Date().getDate() + posId.length) % otherCats.length;
+  if(otherCats.length>0 && posId!=='ARQ'){
+    const seed = daySeed % otherCats.length;
     const pick = otherCats[seed];
     list.push({id:'cat2_'+pick.id+'_'+wk+'_'+posId, week:wk, position:posId, type:'category', catId:pick.id, target:1,
-      text:`Sumá al menos 1 ejercicio de ${pick.name.toLowerCase()}.`});
+      text:`Sumá al menos 1 ejercicio de ${pick.name.toLowerCase()}.`, reward:CHALLENGE_REWARD.category});
   }
 
-  weeklyChallenges = weeklyChallenges.concat(list);
+  weeklyChallenges = weeklyChallenges.concat(list.map(c=>({...c, v:CHALLENGE_GEN_VERSION})));
   persistState();
 }
 
@@ -2299,7 +2572,20 @@ function challengeProgress(ch){
     weekSessions.forEach(s=> s.drillIds.forEach(id=>{ const d=drillById(id); if(d && d.cat===ch.catId) n++; }));
     return Math.min(ch.target, n);
   }
+  if(ch.type==='saves'){
+    let n = 0;
+    weekSessions.forEach(s=>{ if(s.zones) n += Object.values(s.zones).reduce((a,z)=>a+(z.s||0),0); });
+    return Math.min(ch.target, n);
+  }
+  if(ch.type==='passes') return Math.min(ch.target, (weeklyLogs[ch.week] && weeklyLogs[ch.week].passes) || 0);
+  if(ch.type==='distance') return Math.min(ch.target, (weeklyLogs[ch.week] && weeklyLogs[ch.week].distanceKm) || 0);
   return 0;
+}
+function challengeCompleted(ch){ return challengeProgress(ch) >= ch.target; }
+
+// suma de XP de todos los desafíos ya cumplidos, de cualquier semana registrada
+function challengeXP(){
+  return weeklyChallenges.reduce((sum,ch)=> sum + (challengeCompleted(ch) ? (ch.reward||0) : 0), 0);
 }
 
 function renderWeeklyChallengeWidget(){
@@ -2309,22 +2595,137 @@ function renderWeeklyChallengeWidget(){
   const posId = activePosition;
   const list = weeklyChallenges.filter(c=>c.week===currentWeekKey() && c.position===posId);
   if(list.length===0){ wrap.innerHTML=''; return; }
-  const doneCount = list.filter(c=> challengeProgress(c)>=c.target).length;
+  const doneCount = list.filter(c=> challengeCompleted(c)).length;
   const rows = list.map(ch=>{
     const prog = challengeProgress(ch);
-    const done = prog>=ch.target;
+    const done = challengeCompleted(ch);
+    const loggable = (ch.type==='passes' || ch.type==='distance') && !done;
     return `<div class="challenge-row">
       <div class="challenge-top">
         <div class="challenge-text ${done?'done':''}">${ch.text}</div>
         <div class="challenge-check ${done?'done':''}">${done?'✓':prog+'/'+ch.target}</div>
       </div>
       <div class="challenge-track"><div class="challenge-fill ${done?'done':''}" style="width:${(prog/ch.target)*100}%;"></div></div>
+      <div class="challenge-bottom">
+        <div class="challenge-reward">+${ch.reward||0} XP${done?' · ✓ cumplido':''}</div>
+        ${loggable ? `<button class="challenge-add-btn" onclick="promptWeeklyLog('${ch.type}','${ch.week}')">+ Cargar</button>` : ''}
+      </div>
     </div>`;
   }).join('');
   wrap.innerHTML = `<div class="challenge-card">
     <div class="challenge-card-title"><span>🏅 Desafíos de la semana</span><span>${doneCount}/${list.length}</span></div>
     ${rows}
   </div>`;
+}
+
+// carga manual de progreso (pases hechos / km corridos) para los desafíos que lo requieren
+async function promptWeeklyLog(type, week){
+  const label = type==='passes' ? 'pases hechos' : 'km corridos';
+  const input = prompt(`¿Cuántos ${label} sumás? (se suma a lo ya cargado esta semana)`);
+  if(input===null || input.trim()==='') return;
+  const delta = parseFloat(input.replace(',','.'));
+  if(isNaN(delta) || delta<=0) return;
+
+  const before = snapshotProgress();
+  if(!weeklyLogs[week]) weeklyLogs[week] = {passes:0, distanceKm:0};
+  if(type==='passes') weeklyLogs[week].passes = (weeklyLogs[week].passes||0) + delta;
+  else weeklyLogs[week].distanceKm = (weeklyLogs[week].distanceKm||0) + delta;
+  await persistState();
+  refreshCurrentView();
+  celebrateProgress(before);
+}
+
+/* ============================================================
+   ⭐ INSIGNIAS
+============================================================ */
+const BADGE_DEFS = [
+  {id:'primer_desafio', icon:'🏅', name:'Primer desafío', desc:'Completá tu primer desafío semanal.',
+    check: st => st.totalCompleted >= 1},
+  {id:'cazador', icon:'🎯', name:'Cazador de desafíos', desc:'Completá 10 desafíos semanales en total.',
+    check: st => st.totalCompleted >= 10},
+  {id:'leyenda_desafios', icon:'👑', name:'Leyenda de los desafíos', desc:'Completá 25 desafíos semanales en total.',
+    check: st => st.totalCompleted >= 25},
+  {id:'semana_perfecta', icon:'⭐', name:'Semana perfecta', desc:'Cumplí todos los desafíos de una misma semana.',
+    check: st => st.perfectWeeks >= 1},
+  {id:'constancia_hierro', icon:'🛡️', name:'Constancia de hierro', desc:'Tené 4 semanas perfectas.',
+    check: st => st.perfectWeeks >= 4},
+  {id:'maquina_pases', icon:'🎯', name:'Máquina de pases', desc:'Cumplí 3 desafíos de pases.',
+    check: st => (st.byType.passes||0) >= 3},
+  {id:'muro_imbatible', icon:'🧤', name:'Muro imbatible', desc:'Cumplí 3 desafíos de atajadas.',
+    check: st => (st.byType.saves||0) >= 3},
+  {id:'fondista', icon:'🏃', name:'Fondista', desc:'Cumplí 3 desafíos de distancia recorrida.',
+    check: st => (st.byType.distance||0) >= 3},
+];
+
+function computeChallengeStats(){
+  const byType = {};
+  let totalCompleted = 0;
+  const byWeekPos = {};
+  weeklyChallenges.forEach(ch=>{
+    const key = ch.week+'_'+ch.position;
+    if(!byWeekPos[key]) byWeekPos[key] = [];
+    byWeekPos[key].push(ch);
+    if(challengeCompleted(ch)){
+      totalCompleted++;
+      byType[ch.type] = (byType[ch.type]||0) + 1;
+    }
+  });
+  let perfectWeeks = 0;
+  Object.values(byWeekPos).forEach(list=>{
+    if(list.length>0 && list.every(ch=>challengeCompleted(ch))) perfectWeeks++;
+  });
+  return {totalCompleted, byType, perfectWeeks};
+}
+function computeEarnedBadges(){
+  const stats = computeChallengeStats();
+  return BADGE_DEFS.map(b=>({...b, earned: b.check(stats)}));
+}
+function renderBadges(){
+  const wrap = document.getElementById('badges-wrap');
+  if(!wrap) return;
+  const badges = computeEarnedBadges();
+  wrap.innerHTML = `<div class="badge-grid">${badges.map(b=>`
+    <div class="badge-tile ${b.earned?'earned':''}">
+      <div class="bt-icon">${b.earned ? b.icon : '🔒'}</div>
+      <div class="bt-name">${b.name}</div>
+      <div class="bt-desc">${b.desc}</div>
+    </div>`).join('')}</div>`;
+}
+
+// snapshot de nivel + insignias, para detectar qué se desbloqueó tras una acción
+function snapshotProgress(){
+  return {
+    level: computeLevelInfo(totalXP()).level,
+    badges: computeEarnedBadges().filter(b=>b.earned).map(b=>b.id),
+  };
+}
+let pendingBadgeQueue = [];
+function celebrateProgress(before){
+  const after = snapshotProgress();
+  const newBadges = after.badges.filter(id=>!before.badges.includes(id));
+  if(after.level > before.level){
+    pendingBadgeQueue = newBadges;
+    showLevelUp(after.level);
+  } else if(newBadges.length){
+    showBadgeUnlock(newBadges);
+  }
+}
+function showBadgeUnlock(ids){
+  if(!ids || ids.length===0) return;
+  const id = ids[0];
+  const rest = ids.slice(1);
+  const b = BADGE_DEFS.find(x=>x.id===id);
+  if(!b){ if(rest.length) showBadgeUnlock(rest); return; }
+  document.getElementById('badgeup-icon').textContent = b.icon;
+  document.getElementById('badgeup-title').textContent = b.name;
+  document.getElementById('badgeup-desc').textContent = b.desc;
+  pendingBadgeQueue = rest;
+  document.getElementById('badgeup-bg').classList.add('open');
+}
+function closeBadgeUnlock(){
+  document.getElementById('badgeup-bg').classList.remove('open');
+  if(pendingBadgeQueue.length){ const next = pendingBadgeQueue; pendingBadgeQueue=[]; showBadgeUnlock(next); }
+  else { renderBadges(); }
 }
 
 /* ============================================================
@@ -2511,6 +2912,12 @@ function generateCoachPreMessage(posId){
   if(mem.totalSessions===0){
     text = catNames.length ? `Arrancamos de cero. Hoy vamos a trabajar <b>${catNames.join(' y ')}</b> para conocer tu nivel real.`
       : `Arrancamos de cero. Elegí una plantilla o arquetipo para armar tu primera sesión.`;
+    if(physicalTest){
+      const fl = fitnessLevelForScore(computeFitnessResult(physicalTest).avg);
+      text += ` Según tu test físico inicial arrancás en nivel <b>${fl.name}</b>: vamos a ajustar el ritmo de las sesiones a eso.`;
+    } else {
+      text += ` Te recomiendo hacer el test físico inicial (arriba) para que ajustemos mejor tu nivel de entrenamiento.`;
+    }
   } else if(catNames.length){
     text = `Hoy vamos a trabajar <b>${catNames.join(' y ')}</b>.`;
     const weakInSmart = smartCats.find(c=> mem.weakest.includes(c));
@@ -2597,6 +3004,7 @@ function renderInicio(){
   document.getElementById('today-date').textContent = fmtDate(new Date()).toUpperCase();
   document.getElementById('streak-num').textContent = computeStreakWeeks(sessions);
   renderLevelWidget('level-widget');
+  renderFitTestWidget('fit-test-wrap');
 
   const hour = new Date().getHours();
   const greet = hour < 12 ? 'Buen día' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
@@ -2906,9 +3314,10 @@ function renderCommunityFeed(){
   feedEl.innerHTML = communityPosts.map(p=>{
     const liked = (p.likes||[]).includes(currentUser.uid);
     const when = p.createdAt && p.createdAt.toDate ? fmtDate(p.createdAt.toDate()) : '';
+    const safePhoto = p.photoURL && /^https:\/\//.test(p.photoURL) ? escapeHtml(p.photoURL) : '';
     return `<div class="community-post">
       <div class="cp-head">
-        ${p.photoURL ? `<img class="cp-avatar" src="${p.photoURL}">` : `<div class="cp-avatar">${escapeHtml((p.name||'?')[0])}</div>`}
+        ${safePhoto ? `<img class="cp-avatar" src="${safePhoto}">` : `<div class="cp-avatar">${escapeHtml((p.name||'?')[0])}</div>`}
         <div>
           <div class="cp-name">${escapeHtml(p.name||'Usuario')}</div>
           <div class="cp-time">${when}</div>
@@ -2919,10 +3328,12 @@ function renderCommunityFeed(){
     </div>`;
   }).join('');
 }
+let communityPosting = false;
 async function postToCommunity(){
   const input = document.getElementById('community-input');
   const text = input.value.trim();
-  if(!text || !fbDb || !currentUser) return;
+  if(!text || !fbDb || !currentUser || communityPosting) return;
+  communityPosting = true;
   try{
     await fbDb.collection('community').add({
       uid: currentUser.uid,
@@ -2937,6 +3348,8 @@ async function postToCommunity(){
   }catch(e){
     console.error(e);
     alert('No se pudo publicar. Revisá tu conexión o las reglas de Firestore.');
+  }finally{
+    communityPosting = false;
   }
 }
 async function toggleLike(postId){
@@ -3161,7 +3574,7 @@ function openShotlog(){
   renderGoalGrid(document.getElementById('modal-goal-grid'), {}, true);
   document.getElementById('shotlog-modal').classList.add('open');
 }
-function closeShotlog(){ document.getElementById('shotlog-modal').classList.remove('open'); }
+function closeShotlog(){ document.getElementById('shotlog-modal').classList.remove('open'); cancelShotChoice(); }
 
 function computeDuration(){
   const mins = Math.round((Date.now() - activeSession.startedAt)/60000);
@@ -3198,7 +3611,7 @@ async function finishSessionSimple(){
 }
 
 async function pushSession(){
-  const levelBefore = computeLevelInfo(totalXP()).level;
+  const before = snapshotProgress();
   const finishedSession = activeSession;
   sessions.push(finishedSession);
   const report = generateTrainingReport(finishedSession);
@@ -3212,15 +3625,17 @@ async function pushSession(){
   draft[finishedPos] = [];
   await saveDraft();
   goTo('inicio');
-  const levelAfter = computeLevelInfo(totalXP()).level;
+  const after = snapshotProgress();
   pendingSessionForJournal = finishedSession;
-  openReportModal(finishedSession, report, levelAfter > levelBefore ? levelAfter : null);
+  const newBadges = after.badges.filter(id=>!before.badges.includes(id));
+  openReportModal(finishedSession, report, after.level > before.level ? after.level : null, newBadges);
 }
 
 /* ============================================================
    ⭐ INFORME INTELIGENTE POST-ENTRENAMIENTO + DIARIO DEL JUGADOR
 ============================================================ */
 let reportModalPendingLevelUp = null;
+let reportModalPendingBadges = [];
 let reportModalMood = null;
 
 function generateTrainingReport(session){
@@ -3257,9 +3672,19 @@ function generateTrainingReport(session){
     else rest = `${days} días sin entrenar esta posición — bastante descanso, buen momento para retomar el ritmo.`;
   }
 
-  let recommendation = `Para la próxima sesión, sumá trabajo de ${needsWork[0].toLowerCase()}`;
-  if(seasonGoal) recommendation += ` — te acerca a tu objetivo de "${goalById(seasonGoal).name.toLowerCase()}".`;
-  else recommendation += '.';
+  const weeklyInsight = buildWeeklyInsight(session.position);
+  let recommendation;
+  let recommendationLabel;
+  if(weeklyInsight){
+    recommendation = weeklyInsight.text;
+    recommendationLabel = 'Lo que notó tu entrenador esta semana';
+    if(seasonGoal) recommendation += ` De paso, te acerca a tu objetivo de "${goalById(seasonGoal).name.toLowerCase()}".`;
+  } else {
+    recommendationLabel = 'Recomendación para la próxima sesión';
+    recommendation = `Para la próxima sesión, sumá trabajo de ${needsWork[0].toLowerCase()}`;
+    if(seasonGoal) recommendation += ` — te acerca a tu objetivo de "${goalById(seasonGoal).name.toLowerCase()}".`;
+    else recommendation += '.';
+  }
   if(intensity==='Alta') recommendation += ' Dale prioridad a la recuperación: hidratación, estiramiento y buen descanso.';
 
   const streak = computeConsecutiveDayStreak();
@@ -3273,15 +3698,16 @@ function generateTrainingReport(session){
   if(streak>=3) motivational = `${streak} días seguidos entrenando. Esa constancia es lo que te va a hacer destacar. ¡No aflojes ahora!`;
 
   return {
-    intensity, performance, rest, recommendation, motivational,
+    intensity, performance, rest, recommendation, recommendationLabel, motivational, weeklyInsight,
     improved: improved.length ? improved : ['—'],
     needsWork,
     completionPct: Math.round(ratio*100),
   };
 }
 
-function openReportModal(session, report, levelUpTo){
+function openReportModal(session, report, levelUpTo, newBadges){
   reportModalPendingLevelUp = levelUpTo || null;
+  reportModalPendingBadges = newBadges || [];
   reportModalMood = null;
   const pos = posById(session.position);
   const body = document.getElementById('report-modal-body');
@@ -3312,8 +3738,8 @@ function openReportModal(session, report, levelUpTo){
       <div class="report-block-label">Habilidades a trabajar</div>
       <div class="report-tag-row">${report.needsWork.map(s=>`<span class="report-tag work">${escapeHtml(s)}</span>`).join('')}</div>
     </div>
-    <div class="report-block">
-      <div class="report-block-label">Recomendación para la próxima sesión</div>
+    <div class="report-block${report.weeklyInsight ? ' report-block-highlight' : ''}">
+      <div class="report-block-label">${report.weeklyInsight ? '🧠 ' : ''}${escapeHtml(report.recommendationLabel)}</div>
       <div class="report-block-text">${escapeHtml(report.recommendation)}</div>
     </div>
     <div class="report-motivation">"${escapeHtml(report.motivational)}"</div>
@@ -3382,9 +3808,12 @@ async function saveJournalAndCloseReport(){
 function closeReportModal(){
   document.getElementById('report-modal-bg').classList.remove('open');
   const lvl = reportModalPendingLevelUp;
+  const badges = reportModalPendingBadges;
   pendingSessionForJournal = null;
   reportModalPendingLevelUp = null;
-  if(lvl){ showLevelUp(lvl); }
+  reportModalPendingBadges = [];
+  if(lvl){ pendingBadgeQueue = badges; showLevelUp(lvl); }
+  else if(badges && badges.length){ showBadgeUnlock(badges); }
   else if(sessions.length>0 && sessions.length%10===0){ showBackupReminder(); }
   refreshCurrentView();
 }
@@ -3433,7 +3862,7 @@ function xpForMatch(m){
 function totalXP(){
   const sessXP = sessions.reduce((sum,s)=>sum + xpForSession(s), 0);
   const matchXP = matches.reduce((sum,m)=>sum + xpForMatch(m), 0);
-  return sessXP + matchXP;
+  return sessXP + matchXP + challengeXP();
 }
 function xpNeededForLevel(level){
   return 100 + (level-1)*40; // cada nivel pide un poco más que el anterior
@@ -3467,7 +3896,10 @@ function showLevelUp(level){
   document.getElementById('levelup-title').textContent = titleForLevel(level);
   document.getElementById('levelup-bg').classList.add('open');
 }
-function closeLevelUp(){ document.getElementById('levelup-bg').classList.remove('open'); }
+function closeLevelUp(){
+  document.getElementById('levelup-bg').classList.remove('open');
+  if(pendingBadgeQueue.length){ const next = pendingBadgeQueue; pendingBadgeQueue=[]; showBadgeUnlock(next); }
+}
 
 /* ---------- Editar / eliminar sesiones del historial ---------- */
 function deleteSession(id){
@@ -3501,6 +3933,9 @@ async function resetAllProgress(){
   manualRecords = {};
   seasonGoal = null;
   ovrHistory = [];
+  physicalTest = null;
+  weeklyChallenges = [];
+  weeklyLogs = {};
   await persistState();
   closeBackupMenu();
   renderPositionBar();
@@ -3542,6 +3977,139 @@ async function shareHistory(){
   a.download = `arquero-plus-historial-${new Date().toISOString().slice(0,10)}.txt`;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   🧠 TEST FÍSICO INICIAL
+   Referencias generales para jugadores amateur/juveniles.
+   Cada prueba se puntúa de 1 a 5 y el promedio define el nivel
+   de entrenamiento recomendado.
+============================================================ */
+const FITNESS_TESTS = [
+  {id:'sprint',   label:'Sprint 20 m',        unit:'seg', icon:'🏃', lowerBetter:true,
+    thresholds:[3.0, 3.3, 3.6, 4.0]},   // <=3.0→5 · <=3.3→4 · <=3.6→3 · <=4.0→2 · si no →1
+  {id:'jump',     label:'Salto vertical',     unit:'cm',  icon:'🦵', lowerBetter:false,
+    thresholds:[55, 45, 35, 25]},       // >=55→5 · >=45→4 · >=35→3 · >=25→2 · si no →1
+  {id:'pushups',  label:'Flexiones',          unit:'reps',icon:'💪', lowerBetter:false,
+    thresholds:[40, 30, 20, 10]},
+  {id:'situps',   label:'Abdominales',        unit:'reps',icon:'🔥', lowerBetter:false,
+    thresholds:[50, 40, 30, 20]},
+  {id:'pullups',  label:'Dominadas',          unit:'reps',icon:'🧗', lowerBetter:false,
+    thresholds:[15, 10, 6, 3]},
+];
+const FITNESS_LEVELS = [
+  {id:'iniciacion', min:0,   max:1.49, name:'Iniciación',  icon:'🌱', color:'#9AA5B1',
+    desc:'Vamos a arrancar con volúmenes bajos y foco en técnica y base física, sumando carga de a poco.'},
+  {id:'principiante', min:1.5, max:2.49, name:'Principiante', icon:'🥅', color:'#5BC8FF',
+    desc:'Nivel base sólido. Trabajamos técnica con series cortas y buena progresión de intensidad.'},
+  {id:'intermedio', min:2.5, max:3.49, name:'Intermedio',  icon:'⚙️', color:'#FFD35B',
+    desc:'Buen nivel físico general. Podés sumar más volumen e intensidad en los ejercicios explosivos.'},
+  {id:'avanzado', min:3.5, max:4.49, name:'Avanzado',      icon:'🔥', color:'#FF6B35',
+    desc:'Nivel físico alto. Las sesiones van a priorizar intensidad, velocidad y ejercicios más exigentes.'},
+  {id:'elite', min:4.5, max:5.01, name:'Élite',            icon:'👑', color:'#C99BFF',
+    desc:'Nivel físico destacado. Entrenamientos de alta exigencia con foco en rendimiento competitivo.'},
+];
+function scoreForTest(def, value){
+  if(value===null || value===undefined || value==='' || isNaN(value)) return null;
+  const v = parseFloat(value);
+  const t = def.thresholds;
+  if(def.lowerBetter){
+    if(v<=t[0]) return 5; if(v<=t[1]) return 4; if(v<=t[2]) return 3; if(v<=t[3]) return 2; return 1;
+  }
+  if(v>=t[0]) return 5; if(v>=t[1]) return 4; if(v>=t[2]) return 3; if(v>=t[3]) return 2; return 1;
+}
+function fitnessLevelForScore(avg){
+  return FITNESS_LEVELS.find(l=> avg>=l.min && avg<=l.max) || FITNESS_LEVELS[0];
+}
+function computeFitnessResult(results){
+  const breakdown = FITNESS_TESTS.map(def=>({def, value:results[def.id], score:scoreForTest(def, results[def.id])}));
+  const scored = breakdown.filter(b=>b.score!==null);
+  const avg = scored.length ? scored.reduce((a,b)=>a+b.score,0)/scored.length : 0;
+  const level = fitnessLevelForScore(avg);
+  return {breakdown, avg, level};
+}
+
+function openFitTestModal(){
+  const t = physicalTest || {};
+  document.getElementById('fit-sprint').value = t.sprint ?? '';
+  document.getElementById('fit-jump').value = t.jump ?? '';
+  document.getElementById('fit-pushups').value = t.pushups ?? '';
+  document.getElementById('fit-situps').value = t.situps ?? '';
+  document.getElementById('fit-pullups').value = t.pullups ?? '';
+  document.getElementById('fit-test-modal').classList.add('open');
+}
+function closeFitTestModal(){ document.getElementById('fit-test-modal').classList.remove('open'); }
+
+async function saveFitTest(){
+  const results = {
+    sprint: document.getElementById('fit-sprint').value,
+    jump: document.getElementById('fit-jump').value,
+    pushups: document.getElementById('fit-pushups').value,
+    situps: document.getElementById('fit-situps').value,
+    pullups: document.getElementById('fit-pullups').value,
+  };
+  const anyFilled = Object.values(results).some(v=>v!=='' && v!==null && v!==undefined);
+  if(!anyFilled){ alert('Cargá al menos un resultado para calcular tu nivel.'); return; }
+
+  const { level } = computeFitnessResult(results);
+  physicalTest = {
+    ...results,
+    date: new Date().toISOString(),
+    levelId: level.id,
+  };
+  await persistState();
+  closeFitTestModal();
+  renderFitTestWidget('fit-test-wrap');
+  renderFitTestWidget('fit-test-wrap-progreso');
+  showFitResult();
+}
+
+function showFitResult(){
+  if(!physicalTest) return;
+  const { breakdown, level } = computeFitnessResult(physicalTest);
+  document.getElementById('fit-result-icon').textContent = level.icon;
+  document.getElementById('fit-result-title').textContent = level.name;
+  let html = `<p style="font-size:13px; color:var(--chalk-dim); line-height:1.5; margin-bottom:14px;">${level.desc}</p>`;
+  breakdown.forEach(b=>{
+    const dots = [1,2,3,4,5].map(n=>`<div class="fit-dot ${b.score && n<=b.score ? 'on':''}" style="--fit-color:${level.color}"></div>`).join('');
+    const valTxt = (b.value!==null && b.value!==undefined && b.value!=='') ? `${b.value} ${b.def.unit}` : '—';
+    html += `<div class="fit-row"><span>${b.def.icon}</span><span class="fr-label">${b.def.label}</span><span class="fr-val mono">${valTxt}</span><div class="fit-dots">${dots}</div></div>`;
+  });
+  document.getElementById('fit-result-breakdown').innerHTML = html;
+  document.getElementById('fit-result-bg').classList.add('open');
+}
+function closeFitResult(){ document.getElementById('fit-result-bg').classList.remove('open'); }
+
+function renderFitTestWidget(elId){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!physicalTest){
+    el.innerHTML = `
+      <div class="fit-card" onclick="openFitTestModal()">
+        <div class="fit-card-top">
+          <div class="fit-badge">🧠</div>
+          <div class="fit-info">
+            <div class="fit-eyebrow">Paso 1</div>
+            <div class="fit-title">Hacé tu test físico</div>
+            <div class="fit-sub">Sprint 20m · salto · flexiones · abdominales · dominadas — tocá para cargar tus resultados.</div>
+          </div>
+        </div>
+      </div>`;
+    return;
+  }
+  const { level } = computeFitnessResult(physicalTest);
+  el.innerHTML = `
+    <div class="fit-card" style="--fit-color:${level.color}" onclick="showFitResult()">
+      <div class="fit-card-top">
+        <div class="fit-badge" style="--fit-color:${level.color}">${level.icon}</div>
+        <div class="fit-info">
+          <div class="fit-eyebrow">Nivel de entrenamiento recomendado</div>
+          <div class="fit-title">${level.name}</div>
+          <div class="fit-sub">Test realizado el ${fmtDate(new Date(physicalTest.date))}</div>
+        </div>
+      </div>
+      <button class="fit-retake-btn" onclick="event.stopPropagation(); openFitTestModal();">Repetir test</button>
+    </div>`;
 }
 
 /* ============================================================
@@ -3726,6 +4294,7 @@ async function fetchWeatherAdaptation(){
       const {latitude, longitude} = pos.coords;
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weathercode`;
       const res = await fetch(url);
+      if(!res.ok) throw new Error('respuesta no válida del servicio de clima');
       const data = await res.json();
       const temp = data.current ? data.current.temperature_2m : null;
       const code = data.current ? data.current.weathercode : 0;
@@ -3748,6 +4317,7 @@ function renderProgreso(){
   document.getElementById('prog-total').textContent = sessions.length;
   document.getElementById('prog-streak').textContent = computeStreakWeeks(sessions);
   renderLevelWidget('level-widget-progreso');
+  renderFitTestWidget('fit-test-wrap-progreso');
 
   renderPlayerCard(document.getElementById('player-card-wrap'), activePosition, true);
 
@@ -3795,6 +4365,7 @@ function renderProgreso(){
   renderSkillEvolutionWidget();
   renderPotentialWidget();
   renderRecords();
+  renderBadges();
   renderJournalHistory();
 
   const hist = document.getElementById('history-list');
@@ -3982,7 +4553,7 @@ function deleteMatch(id){
    INIT
 ============================================================ */
 (async function init(){
-  initFirebase();
+  await initFirebase();
   renderAuthWidget();
   await loadState();
   renderPositionBar();
@@ -4007,6 +4578,7 @@ function cerrarBienvenida(){
     try{ localStorage.setItem(WELCOME_STORAGE_KEY, '1'); }catch(e){}
   }
   bg.classList.remove('open');
+  if(!physicalTest) openFitTestModal();
 }
 
 function initBienvenida(){
