@@ -3002,7 +3002,7 @@ function goTo(view){
 ============================================================ */
 function renderInicio(){
   document.getElementById('today-date').textContent = fmtDate(new Date()).toUpperCase();
-  document.getElementById('streak-num').textContent = computeStreakWeeks(sessions);
+  document.getElementById('streak-num').textContent = computeConsecutiveDayStreak();
   renderLevelWidget('level-widget');
   renderFitTestWidget('fit-test-wrap');
 
