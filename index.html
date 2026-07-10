@@ -863,10 +863,24 @@
     border:1.5px dashed var(--line-strong); border-radius:var(--radius); padding:22px 16px;
     text-align:center; margin-bottom:14px;
   }
-  .video-tip{
-    background:var(--surface); border-left:3px solid var(--accent); border-radius:0 10px 10px 0;
-    padding:12px 14px; margin-bottom:10px; font-size:13px; line-height:1.4;
+  .video-player{width:100%; border-radius:var(--radius); overflow:hidden; margin-bottom:10px; background:#000;}
+  .video-player video{width:100%; display:block; max-height:340px;}
+  .speed-row{display:flex; gap:8px; margin-bottom:8px;}
+  .speed-btn{
+    flex:1; padding:9px 0; border-radius:10px; border:1px solid var(--line-strong);
+    background:var(--surface); color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;
+    font-size:12px; cursor:pointer;
   }
+  .speed-btn.active{background:var(--accent); border-color:var(--accent); color:#1A1207; font-weight:600;}
+  .check-item{display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-top:1px solid var(--line); cursor:pointer;}
+  .check-item:first-child{border-top:none;}
+  .check-item .cbox{
+    width:20px; height:20px; border-radius:6px; border:2px solid var(--line-strong); flex-shrink:0; margin-top:1px;
+    display:flex; align-items:center; justify-content:center; font-size:12px; color:transparent;
+  }
+  .check-item.checked .cbox{background:var(--save); border-color:var(--save); color:#0a1a0a;}
+  .check-item .txt{font-size:13px; color:var(--chalk-dim); line-height:1.4;}
+  .check-item.checked .txt{color:var(--chalk-faint); text-decoration:line-through;}
 
   .community-post{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px;}
   .cp-head{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
@@ -3201,7 +3215,7 @@ function startWeekDay(pos, weekId, dayIndex){
   goTo('entrenar');
 }
 
-/* ---------- GPS / espacio + Video análisis (demo) ---------- */
+/* ---------- GPS / espacio + Repetición de video (cámara lenta, sin IA ni costos) ---------- */
 function renderCarreraExtra(content){
   content.innerHTML = `
     <div class="section-label" style="margin-top:0;">🌤 Clima y entrenamiento</div>
@@ -3216,15 +3230,15 @@ function renderCarreraExtra(content){
     <div id="gps-status" style="font-size:11.5px; color:var(--chalk-dim); margin-bottom:10px;">${spacePref ? `Preferencia actual: ${spacePref==='amplio'?'cancha grande':'espacio reducido'}.` : ''}</div>
     <p style="font-size:11.5px; color:var(--chalk-faint); line-height:1.4; margin-bottom:24px;">El GPS confirma tu ubicación, pero no puede medir el espacio libre real de una cancha. Por eso elegís manualmente arriba, y la app va a tener en cuenta esa preferencia como referencia para tus próximos entrenamientos.</p>
 
-    <div class="section-label">🎥 Análisis de video (demo)</div>
+    <div class="section-label">🎥 Repetición y autoanálisis</div>
     <div class="video-box">
       <div style="font-size:32px; margin-bottom:8px;">🎥</div>
-      <p style="font-size:12.5px; color:var(--chalk-dim); margin-bottom:14px;">Grabá o subí un clip corto de una atajada, barrida o remate.</p>
-      <input type="file" accept="video/*" capture="camcorder" id="video-input" style="display:none;" onchange="simulateVideoAnalysis()">
+      <p style="font-size:12.5px; color:var(--chalk-dim); margin-bottom:14px;">Grabá o subí un clip corto y volvé a verlo en cámara lenta para revisar tu propia técnica. El video no se sube a ningún lado, queda en tu teléfono.</p>
+      <input type="file" accept="video/*" id="video-input" style="display:none;" onchange="loadVideoClip(event)">
       <button class="cta-btn ghost" style="margin-top:0;" onclick="document.getElementById('video-input').click()">Grabar / subir clip</button>
     </div>
-    <div id="video-result"></div>
-    <p style="font-size:11px; color:var(--chalk-faint); line-height:1.4;">Esta es una vista previa: un análisis de video con IA real necesita un servidor con un modelo de visión conectado, algo que un archivo suelto como este no puede hacer por sí solo. Lo dejamos simulado para mostrar cómo se sentiría.</p>
+    <div id="video-player-wrap"></div>
+    <div id="video-checklist-wrap"></div>
   `;
   renderWeatherWidget();
 }
@@ -3243,39 +3257,67 @@ function detectLocation(){
     {timeout:8000}
   );
 }
-const VIDEO_TIPS = {
+const CHECK_POINTS = {
   ARQ: [
-    'Entraste muy de frente en la barrida — probá perfilarte un poco más para reducir el rebote.',
-    'En la atajada llegaste con las manos bajas: subilas antes del contacto para cubrir el ángulo alto.',
-    'El apoyo de la pierna quedó muy lejos del cuerpo — acercalo para ganar estabilidad en la caída.',
-    'Buen tiempo de reacción, pero el primer paso salió cruzado. Trabajá salidas laterales cortas.',
-    'La estirada llegó bien, pero el balón quedó suelto — cerrá más los dedos en el último instante.',
+    '¿Te perfilaste antes de la barrida, en vez de entrar de frente?',
+    '¿Llegaste con las manos arriba para cubrir el ángulo alto?',
+    '¿El apoyo de la pierna quedó cerca del cuerpo, para tener estabilidad en la caída?',
+    '¿El primer paso de la salida fue directo, sin cruzarte?',
+    '¿Cerraste bien los dedos en el último instante de la atajada?',
   ],
   DEF: [
-    'Entraste al duelo con el cuerpo muy adelantado — retrasá el apoyo para no perder el equilibrio.',
-    'Buen anticipo, pero el salto aéreo fue tarde. Adelantá la carrera de aproximación.',
-    'La marca se abrió en el último paso — mantené la distancia corta hasta el contacto.',
+    '¿El apoyo quedó firme, sin el cuerpo muy adelantado en el duelo?',
+    '¿La carrera de aproximación al salto aéreo arrancó a tiempo?',
+    '¿Mantuviste distancia corta con el rival hasta el contacto?',
   ],
   MED: [
-    'El primer toque te alejó del cuerpo — orientalo más cerca para salir jugando rápido.',
-    'Buena visión de pase, pero el apoyo del pie de sostén quedó corto.',
-    'La recuperación llegó de frente — probá entrar de costado para ganar el balón limpio.',
+    '¿El primer toque quedó cerca del cuerpo para salir jugando rápido?',
+    '¿El apoyo del pie de sostén acompañó bien el pase?',
+    '¿Entraste de costado en la recuperación, en vez de frente?',
   ],
   DEL: [
-    'La definición salió con el cuerpo muy erguido — bajá el centro de gravedad antes del remate.',
-    'Buen desmarque, pero el timing de la carrera fue un paso tarde.',
-    'El último toque del regate se alejó demasiado del cuerpo.',
+    '¿Bajaste el centro de gravedad antes de definir?',
+    '¿El timing del desmarque fue a tiempo, no un paso tarde?',
+    '¿El último toque del regate quedó cerca del cuerpo?',
   ],
 };
-function simulateVideoAnalysis(){
-  const tips = VIDEO_TIPS[activePosition] || VIDEO_TIPS.ARQ;
-  const resultEl = document.getElementById('video-result');
-  resultEl.innerHTML = `<div class="video-tip">⏳ Analizando el clip… (demo)</div>`;
-  setTimeout(()=>{
-    const picked = [...tips].sort(()=>Math.random()-0.5).slice(0, 2);
-    resultEl.innerHTML = picked.map(t=>`<div class="video-tip">🎯 ${t}</div>`).join('') +
-      `<p style="font-size:10.5px; color:var(--chalk-faint);">Feedback de ejemplo — todavía no es un análisis real de tu video.</p>`;
-  }, 1400);
+let currentVideoURL = null;
+function loadVideoClip(evt){
+  const file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  if(currentVideoURL) URL.revokeObjectURL(currentVideoURL); // libera el clip anterior de memoria
+  currentVideoURL = URL.createObjectURL(file);
+  const playerWrap = document.getElementById('video-player-wrap');
+  playerWrap.innerHTML = `
+    <div class="video-player"><video id="clip-video" src="${currentVideoURL}" controls playsinline></video></div>
+    <div class="speed-row">
+      <button class="speed-btn" onclick="setClipSpeed(0.25,this)">0.25x</button>
+      <button class="speed-btn" onclick="setClipSpeed(0.5,this)">0.5x</button>
+      <button class="speed-btn active" onclick="setClipSpeed(1,this)">1x</button>
+    </div>`;
+  renderVideoChecklist();
+  evt.target.value = '';
+}
+function setClipSpeed(rate, btn){
+  const video = document.getElementById('clip-video');
+  if(video) video.playbackRate = rate;
+  document.querySelectorAll('.speed-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function renderVideoChecklist(){
+  const wrap = document.getElementById('video-checklist-wrap');
+  if(!wrap) return;
+  const points = CHECK_POINTS[activePosition] || CHECK_POINTS.ARQ;
+  wrap.innerHTML = `
+    <div class="section-label" style="margin-top:20px;">✅ Mientras lo repetís, fijate</div>
+    <div class="card">
+      ${points.map(p=>`
+        <div class="check-item" onclick="this.classList.toggle('checked')">
+          <div class="cbox">✓</div>
+          <div class="txt">${escapeHtml(p)}</div>
+        </div>`).join('')}
+    </div>
+    <p style="font-size:10.5px; color:var(--chalk-faint); margin-top:8px;">Guía para tu propio ojo — marcá lo que ya te sale bien mientras repasás el clip.</p>`;
 }
 
 /* ---------- Comunidad (real, vía Firebase) ---------- */
