@@ -13,7 +13,7 @@
    todavía no cargaste sesión). No cambia el comportamiento del SW en
    sí, pero fuerza a los dispositivos a bajar la versión nueva del HTML. */
 
-const CACHE_NAME = 'arqueroplus-v8';
+const CACHE_NAME = 'arqueroplus-v11';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

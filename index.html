@@ -2,6 +2,15 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>
+  // Aplica el tema guardado ANTES de pintar la página, para que no haya
+  // un parpadeo del tema incorrecto al cargar.
+  try{
+    if(localStorage.getItem('arqueroplus_theme') === 'light'){
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+  }catch(e){}
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
 <meta name="description" content="ARQUERO+ — Entrená como profesional: ejercicios por posición, seguimiento de partidos, plan semanal y progreso físico.">
 <meta name="color-scheme" content="dark">
@@ -38,12 +47,31 @@
     --miss:#E4483B;
     --miss-dim:rgba(228,72,59,0.16);
     --radius:16px;
+    --body-glow:rgba(255,255,255,0.05);
+  }
+  html[data-theme="light"]{
+    --bg:#F3F1E7;
+    --bg-2:#E9E6D6;
+    --surface:#FFFFFF;
+    --surface-2:#F1EFE4;
+    --line:rgba(14,42,28,0.10);
+    --line-strong:rgba(14,42,28,0.20);
+    --chalk:#132316;
+    --chalk-dim:rgba(19,35,22,0.62);
+    --chalk-faint:rgba(19,35,22,0.40);
+    --accent:#E85A2A;
+    --accent-dim:rgba(232,90,42,0.14);
+    --save:#2E9E4F;
+    --save-dim:rgba(46,158,79,0.14);
+    --miss:#C6362A;
+    --miss-dim:rgba(198,54,42,0.12);
+    --body-glow:rgba(14,42,28,0.05);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
   body{
     background:
-      radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,0.05), transparent 60%),
+      radial-gradient(1200px 600px at 50% -10%, var(--body-glow), transparent 60%),
       linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
     color:var(--chalk);
     font-family:'IBM Plex Sans', sans-serif;
@@ -958,6 +986,34 @@
   .check-item .txt{font-size:13px; color:var(--chalk-dim); line-height:1.4;}
   .check-item.checked .txt{color:var(--chalk-faint); text-decoration:line-through;}
 
+  /* ---------- Ranking de rachas (comunidad) ---------- */
+  .streak-row{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line);}
+  .streak-row:first-child{border-top:none;}
+  .streak-row.me{background:var(--accent-dim); margin:0 -16px; padding:9px 16px; border-radius:10px;}
+  .streak-rank{width:18px; flex-shrink:0; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--chalk-faint); text-align:center;}
+  .streak-avatar{width:30px; height:30px; border-radius:50%; object-fit:cover; flex-shrink:0;}
+  .streak-avatar.ph{
+    display:flex; align-items:center; justify-content:center; background:var(--surface-2); color:var(--chalk);
+    font-weight:600; font-size:13px;
+  }
+  .streak-name{flex:1; min-width:0; font-size:13px; color:var(--chalk); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .streak-num{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--chalk); flex-shrink:0;}
+
+  /* ---------- Exportar historial a PDF (vía diálogo de impresión del navegador) ---------- */
+  #print-export{display:none;}
+  @media print{
+    body > *:not(#print-export){display:none !important;}
+    #print-export{
+      display:block !important; color:#111; background:#fff; padding:0; font-family:'IBM Plex Sans',sans-serif;
+    }
+    #print-export h1{font-family:'Oswald',sans-serif; font-size:22px; margin:0 0 4px;}
+    #print-export .pe-sub{font-size:11px; color:#555; margin-bottom:18px;}
+    #print-export h2{font-family:'Oswald',sans-serif; font-size:15px; margin:22px 0 8px; border-bottom:1px solid #ccc; padding-bottom:4px;}
+    #print-export table{width:100%; border-collapse:collapse; font-size:11px; margin-bottom:6px;}
+    #print-export td, #print-export th{border-bottom:1px solid #ddd; padding:5px 6px; text-align:left; vertical-align:top;}
+    #print-export th{color:#555; font-weight:600; font-size:10px; text-transform:uppercase;}
+  }
+
   .community-post{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:10px;}
   .cp-head{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
   .cp-avatar{width:26px; height:26px; border-radius:50%; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0; object-fit:cover;}
@@ -1150,7 +1206,7 @@
       <div class="section-label">Diario del jugador</div>
       <div class="card" id="journal-history-wrap"></div>
 
-      <div class="section-label">Historial<button class="hist-share-btn" onclick="shareHistory()">📤 Compartir</button></div>
+      <div class="section-label">Historial<span><button class="hist-share-btn" onclick="shareHistory()">📤 Compartir</button> <button class="hist-share-btn" onclick="exportHistoryPDF()">🖨 PDF</button></span></div>
       <div class="card" id="history-list"></div>
     </section>
 
@@ -1222,6 +1278,17 @@
     <div id="backup-msg" style="font-size:12px; margin-top:12px; text-align:center; min-height:16px;"></div>
 
     <div class="danger-zone" style="border-top:1px solid var(--line); margin-top:16px; padding-top:14px;">
+      <div class="danger-zone-label" style="color:var(--chalk-dim); border:none; margin-bottom:0;">Apariencia</div>
+      <div class="settings-row">
+        <div class="settings-row-body">
+          <div class="settings-row-title">☀️ Modo claro</div>
+          <div class="settings-row-sub">Cambiá entre el tema oscuro (por defecto) y uno claro.</div>
+        </div>
+        <div class="toggle-switch" id="theme-toggle" onclick="toggleTheme()"></div>
+      </div>
+    </div>
+
+    <div class="danger-zone" style="border-top:1px solid var(--line); margin-top:16px; padding-top:14px;">
       <div class="danger-zone-label" style="color:var(--chalk-dim); border:none; margin-bottom:0;">Recordatorios</div>
       <div class="settings-row">
         <div class="settings-row-body">
@@ -1290,7 +1357,8 @@
       <div class="quick-add-chip" onclick="beginRestCountdown(60)">60s</div>
       <div class="quick-add-chip" onclick="beginRestCountdown(90)">90s</div>
     </div>
-    <button class="cta-btn ghost" style="margin-top:16px;" onclick="closeRestTimer()">Cerrar</button>
+    <button class="cta-btn ghost" id="rest-skip-btn" style="margin-top:16px;" onclick="skipRestTimer()">⏭ Saltar descanso</button>
+    <button class="cta-btn ghost" style="margin-top:8px;" onclick="closeRestTimer()">Cerrar</button>
   </div>
 </div>
 
@@ -1314,6 +1382,25 @@
     <button class="shot-choice-btn save" onclick="resolveShotChoice(true)">🧤 Atajada</button>
     <button class="shot-choice-btn miss" onclick="resolveShotChoice(false)">⚽ Gol recibido</button>
     <button class="shot-choice-cancel" onclick="cancelShotChoice()">Cancelar</button>
+  </div>
+</div>
+
+<!-- Popup genérico: confirmar una acción (reemplaza confirm() nativo en toda la app) -->
+<div class="shot-choice-bg" id="confirm-modal-bg" onclick="if(event.target===this) resolveConfirmModal(false)">
+  <div class="shot-choice-card">
+    <div class="shot-choice-title" id="confirm-modal-text">¿Confirmás?</div>
+    <button class="shot-choice-btn miss" onclick="resolveConfirmModal(true)">Sí, confirmar</button>
+    <button class="shot-choice-cancel" onclick="resolveConfirmModal(false)">Cancelar</button>
+  </div>
+</div>
+
+<!-- Popup genérico: pedir un texto/número corto (reemplaza prompt() nativo en toda la app) -->
+<div class="shot-choice-bg" id="prompt-modal-bg" onclick="if(event.target===this) resolvePromptModal(null)">
+  <div class="shot-choice-card">
+    <div class="shot-choice-title" id="prompt-modal-text">Ingresá un valor</div>
+    <input type="text" id="prompt-modal-input" class="field-input" style="width:100%; margin-bottom:14px; text-align:center;" onkeydown="if(event.key==='Enter') resolvePromptModalFromInput()">
+    <button class="shot-choice-btn save" onclick="resolvePromptModalFromInput()">Guardar</button>
+    <button class="shot-choice-cancel" onclick="resolvePromptModal(null)">Cancelar</button>
   </div>
 </div>
 
@@ -1786,7 +1873,7 @@ const ZONES = [
 ];
 
 /* ============================================================
-   FIREBASE (login con Google + guardado en la nube)
+   FIREBASE (login con Google + guardado en la nube + comunidad + ranking de rachas)
    ------------------------------------------------------------
    PASO A PASO PARA ACTIVARLO (gratis, ~10 min):
    1. Entrá a https://console.firebase.google.com y creá un proyecto.
@@ -1804,6 +1891,17 @@ const ZONES = [
             match /usuarios/{userId} {
               allow read, write: if request.auth != null && request.auth.uid == userId;
             }
+            match /community/{postId} {
+              allow read: if request.auth != null;
+              allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+              allow update: if request.auth != null &&
+                request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes']);
+              allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+            }
+            match /streaks/{userId} {
+              allow read: if request.auth != null;
+              allow write: if request.auth != null && request.auth.uid == userId;
+            }
           }
         }
    6. Guardá el archivo y abrilo en el navegador (no dentro de Claude,
@@ -1814,12 +1912,12 @@ const ZONES = [
    local (localStorage) sin pedir login.
 ============================================================ */
 const FIREBASE_CONFIG = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyCI8dOCHHyQAdgnTDrB1HjyEE42YMIswVg",
+  authDomain: "arquero-3e679.firebaseapp.com",
+  projectId: "arquero-3e679",
+  storageBucket: "arquero-3e679.firebasestorage.app",
+  messagingSenderId: "789211464977",
+  appId: "1:789211464977:web:e55989e3b516a0ed5db8b0"
 };
 const FIREBASE_READY = FIREBASE_CONFIG.apiKey !== "TU_API_KEY";
 let fbApp=null, fbAuth=null, fbDb=null, currentUser=null;
@@ -1909,6 +2007,24 @@ function openBackupMenu(){
 function closeBackupMenu(){ document.getElementById('backup-menu-bg').classList.remove('open'); }
 
 /* ============================================================
+   ☀️ MODO CLARO / OSCURO
+============================================================ */
+const THEME_KEY = 'arqueroplus_theme';
+function isLightTheme(){
+  try{ return localStorage.getItem(THEME_KEY) === 'light'; }catch(e){ return false; }
+}
+function toggleTheme(){
+  const turningLight = !isLightTheme();
+  try{ localStorage.setItem(THEME_KEY, turningLight ? 'light' : 'dark'); }catch(e){}
+  document.documentElement.setAttribute('data-theme', turningLight ? 'light' : 'dark');
+  renderThemeToggleUI();
+}
+function renderThemeToggleUI(){
+  const el = document.getElementById('theme-toggle');
+  if(el) el.classList.toggle('on', isLightTheme());
+}
+
+/* ============================================================
    🔔 RECORDATORIO DIARIO DE ENTRENAMIENTO
 ============================================================ */
 const REMINDER_KEY = 'arqueroplus_reminder_enabled';
@@ -1987,6 +2103,10 @@ function maybeShowOSNotification(customBody){
 function initReminderCheck(){
   renderReminderToggleUI();
   renderReminderBanner();
+  // recheck cada 5 minutos: si alguien deja la app abierta y llega la hora del
+  // recordatorio (o cambia de día), el banner aparece solo sin que haga falta
+  // recargar la página o cambiar de pestaña
+  setInterval(()=>{ renderReminderBanner(); renderLoadBanner(); }, 5*60*1000);
 }
 
 function downloadBackup(){
@@ -2026,7 +2146,7 @@ async function restoreBackup(evt){
     const warnCloud = currentUser
       ? ' Como estás con la cuenta de Google conectada, esto también va a reemplazar lo que tenés guardado en la nube.'
       : '';
-    const ok = confirm('Esto va a reemplazar el progreso actual de la app por el del archivo.' + warnCloud + ' ¿Continuar?');
+    const ok = await showConfirmModal('Esto va a reemplazar el progreso actual de la app por el del archivo.' + warnCloud + ' ¿Continuar?');
     if(!ok) return;
     sessions = incoming.sessions || [];
     draft = incoming.draft || {ARQ:[],DEF:[],MED:[],DEL:[]};
@@ -2930,7 +3050,7 @@ function renderWeeklyChallengeWidget(){
 // carga manual de progreso (pases hechos / km corridos) para los desafíos que lo requieren
 async function promptWeeklyLog(type, week){
   const label = type==='passes' ? 'pases hechos' : 'km corridos';
-  const input = prompt(`¿Cuántos ${label} sumás? (se suma a lo ya cargado esta semana)`);
+  const input = await showPromptModal(`¿Cuántos ${label} sumás? (se suma a lo ya cargado esta semana)`);
   if(input===null || input.trim()==='') return;
   const delta = parseFloat(input.replace(',','.'));
   if(isNaN(delta) || delta<=0) return;
@@ -3630,12 +3750,53 @@ function renderCarreraComunidad(content){
     return;
   }
   content.innerHTML = `
+    <div id="streak-leaderboard"></div>
     <div class="community-compose"><textarea id="community-input" placeholder="Compartí un entrenamiento o una jugada..." maxlength="280"></textarea></div>
     <button class="cta-btn" style="margin-top:0; margin-bottom:18px;" onclick="postToCommunity()">Publicar</button>
     <div id="community-feed"><div class="empty-state">Cargando comunidad…</div></div>
     <p style="font-size:10.5px; color:var(--chalk-faint); margin-top:8px;">Lo que publiques acá es visible para cualquier otra persona que use esta app con su cuenta de Google.</p>
   `;
   loadCommunityFeed();
+  syncMyStreak().then(loadStreakLeaderboard);
+}
+
+/* ---------- Ranking de rachas (comparar con otros arqueros) ---------- */
+async function syncMyStreak(){
+  if(!fbDb || !currentUser) return;
+  try{
+    await fbDb.collection('streaks').doc(currentUser.uid).set({
+      name: currentUser.displayName || 'Arquero',
+      photoURL: currentUser.photoURL || null,
+      streak: computeConsecutiveDayStreak(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }, {merge:true});
+  }catch(e){ console.warn('No se pudo sincronizar la racha', e); }
+}
+async function loadStreakLeaderboard(){
+  const wrap = document.getElementById('streak-leaderboard');
+  if(!wrap || !fbDb) return;
+  try{
+    const snap = await fbDb.collection('streaks').orderBy('streak','desc').limit(10).get();
+    const rows = snap.docs.map(d=>({uid:d.id, ...d.data()}));
+    if(!rows.length || !rows.some(r=>r.streak>0)){ wrap.innerHTML=''; return; }
+    wrap.innerHTML = `
+      <div class="section-label" style="margin-top:0;">🔥 Ranking de rachas</div>
+      <div class="card" style="margin-bottom:20px;">
+        ${rows.map((r,i)=>{
+          const safePhoto = r.photoURL && /^https:\/\//.test(r.photoURL) ? escapeHtml(r.photoURL) : '';
+          const isMe = currentUser && r.uid === currentUser.uid;
+          return `<div class="streak-row${isMe ? ' me' : ''}">
+            <div class="streak-rank">${i+1}</div>
+            ${safePhoto ? `<img class="streak-avatar" src="${safePhoto}">` : `<div class="streak-avatar ph">${escapeHtml((r.name||'?')[0])}</div>`}
+            <div class="streak-name">${escapeHtml(r.name||'Arquero')}${isMe ? ' (vos)' : ''}</div>
+            <div class="streak-num">🔥 ${r.streak||0}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }catch(e){
+    console.warn('No se pudo cargar el ranking de rachas', e);
+    wrap.innerHTML = '';
+  }
 }
 async function loadCommunityFeed(){
   if(!fbDb) return;
@@ -3927,6 +4088,43 @@ function openShotlog(){
 }
 function closeShotlog(){ document.getElementById('shotlog-modal').classList.remove('open'); cancelShotChoice(); }
 
+/* ---------- Popups genéricos: confirmar / pedir texto (reemplazan confirm()/prompt() nativos) ---------- */
+let confirmModalResolver = null;
+function showConfirmModal(message){
+  return new Promise(resolve=>{
+    confirmModalResolver = resolve;
+    document.getElementById('confirm-modal-text').textContent = message;
+    document.getElementById('confirm-modal-bg').classList.add('open');
+  });
+}
+function resolveConfirmModal(value){
+  document.getElementById('confirm-modal-bg').classList.remove('open');
+  const resolve = confirmModalResolver;
+  confirmModalResolver = null;
+  if(resolve) resolve(value);
+}
+
+let promptModalResolver = null;
+function showPromptModal(message, defaultValue){
+  return new Promise(resolve=>{
+    promptModalResolver = resolve;
+    document.getElementById('prompt-modal-text').textContent = message;
+    const input = document.getElementById('prompt-modal-input');
+    input.value = (defaultValue!==undefined && defaultValue!==null) ? defaultValue : '';
+    document.getElementById('prompt-modal-bg').classList.add('open');
+    setTimeout(()=>{ input.focus(); input.select(); }, 60);
+  });
+}
+function resolvePromptModalFromInput(){
+  resolvePromptModal(document.getElementById('prompt-modal-input').value);
+}
+function resolvePromptModal(value){
+  document.getElementById('prompt-modal-bg').classList.remove('open');
+  const resolve = promptModalResolver;
+  promptModalResolver = null;
+  if(resolve) resolve(value);
+}
+
 function computeDuration(){
   const mins = Math.round((Date.now() - activeSession.startedAt)/60000);
   return mins < 3 ? (10 + Math.floor(Math.random()*15)) : mins;
@@ -3952,6 +4150,16 @@ function stopSessionClock(){ clearInterval(sessionClockInterval); sessionClockIn
 /* ---------- Temporizador de descanso ---------- */
 let restTimerInterval = null;
 let restTimerRemaining = 0;
+let restAudioCtx = null;
+function ensureRestAudioCtx(){
+  // se crea/reanuda acá, en el toque del usuario, para que el navegador (sobre todo iOS)
+  // permita reproducir el sonido más tarde cuando termine la cuenta regresiva
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if(!restAudioCtx) restAudioCtx = new Ctx();
+    if(restAudioCtx.state === 'suspended') restAudioCtx.resume();
+  }catch(e){ /* audio no disponible */ }
+}
 function openRestTimer(){
   clearInterval(restTimerInterval);
   restTimerRemaining = 60;
@@ -3961,11 +4169,14 @@ function openRestTimer(){
   document.getElementById('rest-timer-modal').classList.add('open');
 }
 function beginRestCountdown(seconds){
+  ensureRestAudioCtx();
   clearInterval(restTimerInterval);
   restTimerRemaining = seconds;
   const disp = document.getElementById('rest-timer-display');
   disp.classList.remove('done');
   disp.textContent = String(restTimerRemaining);
+  const skipBtn = document.getElementById('rest-skip-btn');
+  if(skipBtn) skipBtn.style.display = '';
   restTimerInterval = setInterval(()=>{
     restTimerRemaining--;
     if(restTimerRemaining<=0){
@@ -3976,21 +4187,28 @@ function beginRestCountdown(seconds){
     }
   }, 1000);
 }
+function skipRestTimer(){
+  if(restTimerRemaining<=0 && !restTimerInterval) return; // ya terminó, no hay nada que saltar
+  clearInterval(restTimerInterval);
+  onRestTimerDone();
+}
 function onRestTimerDone(){
   const disp = document.getElementById('rest-timer-display');
   disp.textContent = '¡Listo!';
   disp.classList.add('done');
+  const skipBtn = document.getElementById('rest-skip-btn');
+  if(skipBtn) skipBtn.style.display = 'none';
   if(navigator.vibrate) navigator.vibrate([180,90,180,90,180]);
   try{
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine'; osc.frequency.value = 880;
-    osc.connect(gain); gain.connect(ctx.destination);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.4);
+    if(restAudioCtx){
+      const osc = restAudioCtx.createOscillator();
+      const gain = restAudioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.value = 880;
+      osc.connect(gain); gain.connect(restAudioCtx.destination);
+      gain.gain.setValueAtTime(0.15, restAudioCtx.currentTime);
+      osc.start();
+      osc.stop(restAudioCtx.currentTime + 0.4);
+    }
   }catch(e){ /* audio no disponible */ }
 }
 function closeRestTimer(){
@@ -3998,8 +4216,8 @@ function closeRestTimer(){
   document.getElementById('rest-timer-modal').classList.remove('open');
 }
 
-function addOptionalNote(){
-  const note = prompt('¿Alguna nota de esta sesión? (opcional — dejalo vacío para omitir)');
+async function addOptionalNote(){
+  const note = await showPromptModal('¿Alguna nota de esta sesión? (opcional — dejalo vacío para omitir)');
   if(note && note.trim()) activeSession.note = note.trim();
 }
 
@@ -4015,7 +4233,7 @@ async function finishSessionWithZones(){
   activeSession.durationMin = computeDuration();
   activeSession.zones = shotlogTemp;
   activeSession.completionRatio = computeCompletionRatio();
-  addOptionalNote();
+  await addOptionalNote();
   await pushSession();
   closeShotlog();
 }
@@ -4023,7 +4241,7 @@ async function finishSessionWithZones(){
 async function finishSessionSimple(){
   activeSession.durationMin = computeDuration();
   activeSession.completionRatio = computeCompletionRatio();
-  addOptionalNote();
+  await addOptionalNote();
   await pushSession();
 }
 
@@ -4321,16 +4539,16 @@ function closeLevelUp(){
 }
 
 /* ---------- Editar / eliminar sesiones del historial ---------- */
-function deleteSession(id){
-  if(!confirm('¿Eliminar esta sesión del historial? No se puede deshacer.')) return;
+async function deleteSession(id){
+  if(!(await showConfirmModal('¿Eliminar esta sesión del historial? No se puede deshacer.'))) return;
   sessions = sessions.filter(s=>s.id!==id);
   saveSessions();
   renderProgreso();
 }
-function editSessionNote(id){
+async function editSessionNote(id){
   const s = sessions.find(x=>x.id===id);
   if(!s) return;
-  const note = prompt('Nota de la sesión:', s.note || '');
+  const note = await showPromptModal('Nota de la sesión:', s.note || '');
   if(note===null) return; // canceló
   const trimmed = note.trim();
   if(trimmed) s.note = trimmed; else delete s.note;
@@ -4340,9 +4558,9 @@ function editSessionNote(id){
 
 /* ---------- Borrar todo el progreso ---------- */
 async function resetAllProgress(){
-  const step1 = confirm('Esto borra TODAS tus sesiones, ejercicios elegidos y arquetipos. No se puede deshacer. ¿Seguro que querés continuar?');
+  const step1 = await showConfirmModal('Esto borra TODAS tus sesiones, ejercicios elegidos y arquetipos. No se puede deshacer. ¿Seguro que querés continuar?');
   if(!step1) return;
-  const step2 = confirm('Última confirmación: se va a borrar todo tu progreso de Arquero+ (te recomendamos descargar un respaldo antes). ¿Confirmás?');
+  const step2 = await showConfirmModal('Última confirmación: se va a borrar todo tu progreso de Arquero+ (te recomendamos descargar un respaldo antes). ¿Confirmás?');
   if(!step2) return;
   sessions = [];
   draft = {ARQ:[],DEF:[],MED:[],DEL:[]};
@@ -4396,6 +4614,61 @@ async function shareHistory(){
   a.download = `arquero-plus-historial-${new Date().toISOString().slice(0,10)}.txt`;
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
+}
+
+/* ---------- Exportar historial a PDF (vía el diálogo de impresión del navegador —
+   "Guardar como PDF" está disponible de forma nativa en Android y iOS, sin costo
+   ni librerías externas) ---------- */
+function exportHistoryPDF(){
+  if(sessions.length===0){ alert('Todavía no tenés sesiones para exportar.'); return; }
+  const today = fmtDate(new Date());
+
+  const sessionRows = [...sessions].reverse().map(s=>{
+    const p = posById(s.position);
+    const drillNames = s.drillIds.map(id=>{ const d=drillById(id); return d ? d.name : id; }).join(', ');
+    let shots = '—';
+    if(s.zones){
+      const totalShots = Object.values(s.zones).reduce((a,z)=>a+z.s+z.g,0);
+      const saves = Object.values(s.zones).reduce((a,z)=>a+z.s,0);
+      if(totalShots>0) shots = `${saves}/${totalShots}`;
+    }
+    return `<tr>
+      <td>${escapeHtml(fmtDate(new Date(s.date)))}</td>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${s.durationMin} min</td>
+      <td>${shots}</td>
+      <td>${escapeHtml(drillNames || '—')}${s.note ? '<br><em>' + escapeHtml(s.note) + '</em>' : ''}</td>
+    </tr>`;
+  }).join('');
+
+  const matchRows = (matches||[]).length ? [...matches].reverse().map(m=>{
+    const ctx = contextById(m.context);
+    const stats = [];
+    if(m.goals) stats.push(`⚽ ${m.goals}`);
+    if(m.assists) stats.push(`🅰️ ${m.assists}`);
+    if(m.tackles) stats.push(`🛡️ ${m.tackles}`);
+    if(m.saves) stats.push(`🧤 ${m.saves}`);
+    return `<tr>
+      <td>${escapeHtml(fmtDate(new Date(m.date)))}</td>
+      <td>${escapeHtml(ctx ? ctx.name : '—')}</td>
+      <td>${stats.join(' · ') || '—'}${m.note ? '<br><em>' + escapeHtml(m.note) + '</em>' : ''}</td>
+    </tr>`;
+  }).join('') : '';
+
+  const totalMin = sessions.reduce((a,s)=>a+(s.durationMin||0),0);
+  const streak = computeConsecutiveDayStreak();
+
+  document.getElementById('print-export').innerHTML = `
+    <h1>ARQUERO+ — Informe de entrenamiento</h1>
+    <div class="pe-sub">Generado el ${escapeHtml(today)} · ${sessions.length} sesiones · ${totalMin} min totales · racha actual: ${streak} día${streak===1?'':'s'}</div>
+    <h2>Sesiones de entrenamiento</h2>
+    <table>
+      <tr><th>Fecha</th><th>Posición</th><th>Duración</th><th>Atajadas</th><th>Ejercicios</th></tr>
+      ${sessionRows}
+    </table>
+    ${matchRows ? `<h2>Partidos</h2><table><tr><th>Fecha</th><th>Contexto</th><th>Estadísticas</th></tr>${matchRows}</table>` : ''}
+  `;
+  setTimeout(()=>window.print(), 80); // pequeño delay para que el navegador termine de pintar la tabla antes del diálogo
 }
 
 /* ============================================================
@@ -4591,7 +4864,7 @@ function renderRecords(){
 }
 async function editManualRecord(id){
   const def = MANUAL_RECORD_DEFS.find(d=>d.id===id);
-  const input = prompt(`${def.label} (${def.unit})`);
+  const input = await showPromptModal(`${def.label} (${def.unit})`);
   if(input===null || input.trim()==='') return;
   const value = parseFloat(input.replace(',','.'));
   if(isNaN(value)) return;
@@ -4963,8 +5236,8 @@ async function saveMatch(){
   if(!editingMatchId && levelAfter > levelBefore) showLevelUp(levelAfter);
 }
 
-function deleteMatch(id){
-  if(!confirm('¿Eliminar este partido del historial? No se puede deshacer.')) return;
+async function deleteMatch(id){
+  if(!(await showConfirmModal('¿Eliminar este partido del historial? No se puede deshacer.'))) return;
   matches = matches.filter(m=>m.id!==id);
   saveMatches();
   renderPartidos();
@@ -4980,6 +5253,8 @@ function deleteMatch(id){
   renderPositionBar();
   renderInicio();
   initBienvenida();
+  initReminderCheck();
+  renderThemeToggleUI();
 })();
 
 /* ---------- Tutorial de bienvenida ---------- */
@@ -5026,5 +5301,8 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<!-- Contenedor invisible: se llena dinámicamente y solo se ve al imprimir / exportar a PDF -->
+<div id="print-export"></div>
 </body>
 </html>
