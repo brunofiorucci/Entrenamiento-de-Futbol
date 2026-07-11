@@ -819,6 +819,82 @@
   .badge-tile .bt-name{font-size:10.5px; color:var(--chalk); line-height:1.25; font-weight:600;}
   .badge-tile .bt-desc{font-size:9px; color:var(--chalk-faint); line-height:1.3; margin-top:3px;}
 
+  /* ---------- Cronómetro de sesión y descanso ---------- */
+  .session-clock-row{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:var(--radius);
+    padding:16px; margin-bottom:14px; text-align:center;
+  }
+  .session-clock{font-family:'IBM Plex Mono',monospace; font-size:34px; color:var(--accent); letter-spacing:0.02em; line-height:1;}
+  .session-clock-label{font-size:10px; letter-spacing:0.1em; color:var(--chalk-faint); text-transform:uppercase; margin-top:4px;}
+  .active-session .drill-check{gap:10px;}
+  .drill-check-body{flex:1; min-width:0;}
+  .rest-timer-btn{
+    flex-shrink:0; width:38px; height:38px; border-radius:10px; border:1px solid var(--line-strong);
+    background:var(--surface-2); color:var(--chalk-dim); font-size:16px; cursor:pointer;
+  }
+  .rest-timer-display{
+    font-family:'IBM Plex Mono',monospace; font-size:52px; color:var(--chalk); margin:18px 0 6px;
+  }
+  .rest-timer-display.done{color:var(--save);}
+  .quick-add-row{display:flex; gap:8px; margin:14px 0 4px; flex-wrap:wrap; justify-content:center;}
+  .quick-add-chip{
+    flex:1; min-width:70px; background:var(--surface); border:1px solid var(--line-strong); color:var(--chalk);
+    padding:12px 8px; border-radius:12px; text-align:center; font-family:'IBM Plex Mono',monospace;
+    font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .quick-add-chip:active{background:var(--accent-dim); border-color:var(--accent);}
+
+  /* ---------- Recordatorio diario ---------- */
+  .reminder-banner{
+    background:linear-gradient(135deg, rgba(255,107,53,0.14), var(--surface));
+    border:1px solid var(--line-strong); border-radius:var(--radius); padding:14px 16px; margin-bottom:16px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .reminder-banner .rb-icon{font-size:22px; flex-shrink:0;}
+  .reminder-banner .rb-body{flex:1; min-width:0;}
+  .reminder-banner .rb-title{font-size:13.5px; font-weight:600; color:var(--chalk);}
+  .reminder-banner .rb-sub{font-size:11.5px; color:var(--chalk-dim); margin-top:2px;}
+  .reminder-banner .rb-close{background:none; border:none; color:var(--chalk-faint); font-size:18px; cursor:pointer; flex-shrink:0; padding:4px;}
+
+  .settings-row{display:flex; align-items:center; gap:12px; padding:10px 0;}
+  .settings-row-body{flex:1; min-width:0;}
+  .settings-row-title{font-size:13.5px; font-weight:600; color:var(--chalk);}
+  .settings-row-sub{font-size:11px; color:var(--chalk-dim); margin-top:2px; line-height:1.4;}
+  .toggle-switch{
+    flex-shrink:0; width:46px; height:26px; border-radius:999px; background:var(--surface);
+    border:1px solid var(--line-strong); position:relative; cursor:pointer; transition:background .2s;
+  }
+  .toggle-switch::after{
+    content:''; position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%;
+    background:var(--chalk-dim); transition:transform .2s;
+  }
+  .toggle-switch.on{background:var(--accent-dim); border-color:var(--accent);}
+  .toggle-switch.on::after{transform:translateX(20px); background:var(--accent);}
+
+  /* ---------- Carga de entrenamiento (prevención de sobrecarga) ---------- */
+  .load-card{background:var(--surface); border:1px solid var(--line-strong); border-radius:var(--radius); padding:16px; margin-bottom:16px;}
+  .load-header{display:flex; justify-content:space-between; align-items:baseline; gap:10px;}
+  .load-zone-label{font-family:'Oswald',sans-serif; font-size:15px; text-transform:uppercase; letter-spacing:0.02em; color:var(--chalk);}
+  .load-ratio{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--chalk-dim); flex-shrink:0;}
+  .load-gauge{position:relative; height:10px; border-radius:6px; overflow:visible; display:flex; margin:14px 0 8px;}
+  .load-gauge-seg{height:100%;}
+  .load-gauge-seg:first-child{border-radius:6px 0 0 6px;}
+  .load-gauge-seg:last-child{border-radius:0 6px 6px 0;}
+  .load-gauge-marker{
+    position:absolute; top:-5px; width:3px; height:20px; background:var(--chalk); border-radius:2px;
+    transform:translateX(-50%); box-shadow:0 0 0 2px rgba(0,0,0,0.3);
+  }
+  .load-scale-lbls{display:flex; justify-content:space-between; font-size:8.5px; color:var(--chalk-faint); font-family:'IBM Plex Mono',monospace; margin-bottom:4px;}
+  .load-advice{font-size:12.5px; color:var(--chalk-dim); line-height:1.5; margin-top:12px;}
+  .load-stats-row{display:flex; gap:10px; margin-top:14px;}
+  .load-stat{flex:1; background:var(--surface-2); border-radius:10px; padding:10px; text-align:center;}
+  .load-stat .ls-num{font-family:'IBM Plex Mono',monospace; font-size:16px; color:var(--chalk);}
+  .load-stat .ls-lbl{font-size:9px; color:var(--chalk-faint); text-transform:uppercase; letter-spacing:0.05em; margin-top:2px;}
+
+  .reminder-banner.risk{background:linear-gradient(135deg, rgba(228,72,59,0.16), var(--surface)); border-color:rgba(228,72,59,0.4);}
+  .reminder-banner.streak{background:linear-gradient(135deg, rgba(255,159,10,0.16), var(--surface)); border-color:rgba(255,159,10,0.4);}
+
   .badgeup-bg{
     position:fixed; inset:0; z-index:81; display:none; align-items:center; justify-content:center;
     background:rgba(6,16,10,0.82); backdrop-filter:blur(3px);
@@ -969,6 +1045,9 @@
       <div class="greeting" id="greeting-text">Hola</div>
       <div class="greeting-sub" id="greeting-sub">Listo para sumar otro entrenamiento.</div>
 
+      <div id="load-banner-wrap"></div>
+      <div id="reminder-banner-wrap"></div>
+
       <div class="level-card" id="level-widget" onclick="goTo('progreso')"></div>
 
       <div id="fit-test-wrap"></div>
@@ -1046,6 +1125,9 @@
 
       <div class="section-label">Últimas 6 semanas</div>
       <div class="card"><div class="bars" id="week-bars"></div></div>
+
+      <div class="section-label">Carga de entrenamiento</div>
+      <div id="load-widget-wrap"></div>
 
       <div class="section-label">Mapa de atajadas · Arquero</div>
       <div id="prog-goal-grid"></div>
@@ -1138,6 +1220,18 @@
     <button class="cta-btn ghost" onclick="document.getElementById('backup-file-input').click()">⬆ Restaurar desde archivo</button>
     <input type="file" id="backup-file-input" accept="application/json,.json" style="display:none;" onchange="restoreBackup(event)">
     <div id="backup-msg" style="font-size:12px; margin-top:12px; text-align:center; min-height:16px;"></div>
+
+    <div class="danger-zone" style="border-top:1px solid var(--line); margin-top:16px; padding-top:14px;">
+      <div class="danger-zone-label" style="color:var(--chalk-dim); border:none; margin-bottom:0;">Recordatorios</div>
+      <div class="settings-row">
+        <div class="settings-row-body">
+          <div class="settings-row-title">🔔 Recordatorio de entrenamiento</div>
+          <div class="settings-row-sub">Si a la tarde todavía no entrenaste, te avisamos al abrir la app (y con notificación, si la permitís).</div>
+        </div>
+        <div class="toggle-switch" id="reminder-toggle" onclick="toggleReminder()"></div>
+      </div>
+    </div>
+
     <button class="cta-btn ghost" style="margin-top:6px;" onclick="closeBackupMenu()">Cerrar</button>
 
     <div class="danger-zone">
@@ -1182,6 +1276,21 @@
     <div class="levelup-num" id="levelup-num">2</div>
     <div class="levelup-title" id="levelup-title">Amateur</div>
     <button class="cta-btn" style="margin-top:0;" onclick="closeLevelUp()">Seguir entrenando</button>
+  </div>
+</div>
+
+<!-- Modal: temporizador de descanso -->
+<div class="modal-bg" id="rest-timer-modal" onclick="if(event.target===this) closeRestTimer()">
+  <div class="modal" style="text-align:center;">
+    <h2 id="rest-timer-title">Descanso</h2>
+    <div class="sub" id="rest-timer-sub">Elegí cuánto descansás y arrancamos la cuenta regresiva.</div>
+    <div class="rest-timer-display" id="rest-timer-display">60</div>
+    <div class="quick-add-row" id="rest-timer-presets">
+      <div class="quick-add-chip" onclick="beginRestCountdown(30)">30s</div>
+      <div class="quick-add-chip" onclick="beginRestCountdown(60)">60s</div>
+      <div class="quick-add-chip" onclick="beginRestCountdown(90)">90s</div>
+    </div>
+    <button class="cta-btn ghost" style="margin-top:16px;" onclick="closeRestTimer()">Cerrar</button>
   </div>
 </div>
 
@@ -1794,9 +1903,91 @@ function openBackupMenu(){
   countEl.textContent = sessions.length===0
     ? 'Todavía no tenés sesiones guardadas.'
     : `Tenés ${sessions.length} sesión${sessions.length===1?'':'es'} guardada${sessions.length===1?'':'s'} lista${sessions.length===1?'':'s'} para respaldar.`;
+  renderReminderToggleUI();
   document.getElementById('backup-menu-bg').classList.add('open');
 }
 function closeBackupMenu(){ document.getElementById('backup-menu-bg').classList.remove('open'); }
+
+/* ============================================================
+   🔔 RECORDATORIO DIARIO DE ENTRENAMIENTO
+============================================================ */
+const REMINDER_KEY = 'arqueroplus_reminder_enabled';
+const REMINDER_DISMISS_KEY = 'arqueroplus_reminder_dismissed_date';
+const REMINDER_NOTIF_KEY = 'arqueroplus_reminder_notif_date';
+
+function isReminderEnabled(){
+  try{ return localStorage.getItem(REMINDER_KEY) === '1'; }catch(e){ return false; }
+}
+function toggleReminder(){
+  const turningOn = !isReminderEnabled();
+  try{ localStorage.setItem(REMINDER_KEY, turningOn ? '1' : '0'); }catch(e){}
+  if(turningOn && 'Notification' in window && Notification.permission === 'default'){
+    Notification.requestPermission();
+  }
+  renderReminderToggleUI();
+  renderReminderBanner();
+}
+function renderReminderToggleUI(){
+  const el = document.getElementById('reminder-toggle');
+  if(el) el.classList.toggle('on', isReminderEnabled());
+}
+function trainedToday(){
+  const today = new Date().toDateString();
+  return sessions.some(s => new Date(s.date).toDateString() === today);
+}
+function reminderDismissedToday(){
+  try{ return localStorage.getItem(REMINDER_DISMISS_KEY) === new Date().toDateString(); }catch(e){ return false; }
+}
+function dismissReminderBanner(){
+  try{ localStorage.setItem(REMINDER_DISMISS_KEY, new Date().toDateString()); }catch(e){}
+  const wrap = document.getElementById('reminder-banner-wrap');
+  if(wrap) wrap.innerHTML = '';
+}
+function renderReminderBanner(){
+  const wrap = document.getElementById('reminder-banner-wrap');
+  if(!wrap) return;
+  const hour = new Date().getHours();
+  const inRisk = computeTrainingLoad().id === 'riesgo' && !loadBannerDismissedToday();
+  const streak = computeConsecutiveDayStreak();
+  const streakAtRisk = streak >= 3 && !trainedToday();
+  const earliestHour = streakAtRisk ? 15 : 17;
+  const shouldShow = isReminderEnabled() && !trainedToday() && hour>=earliestHour && !reminderDismissedToday() && !inRisk;
+  if(!shouldShow){ wrap.innerHTML = ''; return; }
+
+  const icon = streakAtRisk ? '🔥' : '🔔';
+  const title = streakAtRisk ? `No pierdas tu racha de ${streak} día${streak===1?'':'s'}` : '¿Entrenás hoy?';
+  const sub = streakAtRisk ? 'Todavía no entrenaste hoy. Una sesión corta alcanza para mantenerla.'
+    : 'Todavía no cargaste ninguna sesión. Un ratito alcanza para sumar.';
+  wrap.innerHTML = `<div class="reminder-banner ${streakAtRisk?'streak':''}">
+    <div class="rb-icon">${icon}</div>
+    <div class="rb-body">
+      <div class="rb-title">${title}</div>
+      <div class="rb-sub">${sub}</div>
+    </div>
+    <button class="rb-close" onclick="dismissReminderBanner()">✕</button>
+  </div>`;
+  maybeShowOSNotification(streakAtRisk ? `No pierdas tu racha de ${streak} días — todavía no entrenaste hoy.` : null);
+}
+function maybeShowOSNotification(customBody){
+  try{
+    if(!('Notification' in window) || Notification.permission!=='granted') return;
+    const today = new Date().toDateString();
+    if(localStorage.getItem(REMINDER_NOTIF_KEY) === today) return;
+    localStorage.setItem(REMINDER_NOTIF_KEY, today);
+    const body = customBody || 'Todavía no entrenaste hoy. ¿Le metemos una sesión rápida?';
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){
+      navigator.serviceWorker.ready.then(reg => reg.showNotification('ARQUERO+', {
+        body, icon: 'icon-192.png', badge: 'icon-192.png', tag: 'arqueroplus-reminder'
+      })).catch(()=>{});
+    } else {
+      new Notification('ARQUERO+', {body});
+    }
+  }catch(e){ /* notificaciones no disponibles */ }
+}
+function initReminderCheck(){
+  renderReminderToggleUI();
+  renderReminderBanner();
+}
 
 function downloadBackup(){
   const payload = {
@@ -2459,6 +2650,110 @@ function computeConsecutiveDayStreak(){
   while(days.has(cursor.toDateString())){ streak++; cursor.setDate(cursor.getDate()-1); }
   return streak;
 }
+
+/* ============================================================
+   🛡️ CARGA DE ENTRENAMIENTO — prevención de sobrecarga
+   Compara los minutos entrenados en los últimos 7 días (carga aguda)
+   contra el promedio semanal de las últimas 4 semanas (carga crónica).
+   Esto es el ratio agudo:crónico (ACWR), una métrica estándar en
+   ciencias del deporte para estimar riesgo de lesión por sobrecarga.
+============================================================ */
+const LOAD_ZONES = [
+  {id:'baja',    max:0.8,  name:'Carga baja',              color:'#5BC8FF',
+    advice:'Estás entrenando bastante menos que tu promedio reciente. Si te sentís bien, podés sumar algo de volumen.'},
+  {id:'optima',  max:1.3,  name:'Carga óptima',            color:'var(--save)',
+    advice:'Tu carga de esta semana está en la zona ideal respecto a tus últimas semanas. Buen equilibrio entre exigencia y recuperación.'},
+  {id:'atencion',max:1.5,  name:'Atención: carga en aumento', color:'#FFD35B',
+    advice:'Esta semana entrenaste bastante más que tu promedio reciente. No está mal, pero prestá atención a cómo responde tu cuerpo y priorizá el descanso entre sesiones.'},
+  {id:'riesgo',  max:Infinity, name:'Riesgo de sobrecarga', color:'var(--miss)',
+    advice:'Tu carga subió mucho y de golpe respecto a tus últimas semanas — es la zona asociada a mayor riesgo de lesión. Considerá una sesión más suave, o directamente un día de descanso.'},
+];
+function computeTrainingLoad(){
+  const now = new Date();
+  const dayMs = 86400000;
+  const minutesSince = (daysAgo) => {
+    const cutoff = new Date(now.getTime() - daysAgo*dayMs);
+    return sessions.filter(s=>{ const d=new Date(s.date); return d>=cutoff && d<=now; })
+      .reduce((sum,s)=> sum + (s.durationMin||0), 0);
+  };
+  const acute = minutesSince(7);
+  const chronic = minutesSince(28) / 4;
+  const ratio = chronic > 0 ? acute/chronic : null;
+
+  const oldest = sessions.reduce((min,s)=> Math.min(min, new Date(s.date).getTime()), Infinity);
+  const daysOfHistory = oldest===Infinity ? 0 : Math.floor((now - oldest)/dayMs);
+  const enoughData = daysOfHistory >= 14 && sessions.length >= 4 && chronic > 0;
+
+  if(!enoughData){
+    return {acute, chronic, ratio, enoughData:false, id:'sin_datos', name:'Necesitamos más historial',
+      color:'var(--chalk-faint)', advice:'Entrená un par de semanas más (con al menos 4 sesiones) para que podamos calcular tu carga con confianza.'};
+  }
+  const zone = LOAD_ZONES.find(z=> ratio <= z.max);
+  return {acute, chronic, ratio, enoughData:true, ...zone};
+}
+
+function renderLoadWidget(){
+  const wrap = document.getElementById('load-widget-wrap');
+  if(!wrap) return;
+  const load = computeTrainingLoad();
+  const acuteTxt = Math.round(load.acute);
+  const chronicTxt = Math.round(load.chronic);
+  const ratioTxt = load.ratio!==null ? load.ratio.toFixed(2) : '—';
+
+  let gaugeHtml = '';
+  if(load.enoughData){
+    const maxScale = 2.0; // tope visual del gauge
+    const bounds = [0, 0.8, 1.3, 1.5, maxScale];
+    const colors = ['#5BC8FF','var(--save)','#FFD35B','var(--miss)'];
+    const segs = colors.map((c,i)=>{
+      const widthPct = ((Math.min(bounds[i+1],maxScale)-bounds[i])/maxScale)*100;
+      return `<div class="load-gauge-seg" style="width:${widthPct}%; background:${c}; opacity:0.55;"></div>`;
+    }).join('');
+    const markerPct = Math.min(load.ratio, maxScale)/maxScale*100;
+    gaugeHtml = `
+      <div class="load-gauge">${segs}<div class="load-gauge-marker" style="left:${markerPct}%; background:${load.color};"></div></div>
+      <div class="load-scale-lbls"><span>0</span><span>0.8</span><span>1.3</span><span>1.5</span><span>2+</span></div>`;
+  }
+
+  wrap.innerHTML = `<div class="load-card">
+    <div class="load-header">
+      <div class="load-zone-label" style="color:${load.color}">${load.name}</div>
+      ${load.enoughData ? `<div class="load-ratio">ratio ${ratioTxt}</div>` : ''}
+    </div>
+    ${gaugeHtml}
+    <div class="load-advice">${load.advice}</div>
+    <div class="load-stats-row">
+      <div class="load-stat"><div class="ls-num mono">${acuteTxt}'</div><div class="ls-lbl">Últimos 7 días</div></div>
+      <div class="load-stat"><div class="ls-num mono">${chronicTxt}'</div><div class="ls-lbl">Promedio semanal (4 sem)</div></div>
+    </div>
+  </div>`;
+}
+
+const LOAD_DISMISS_KEY = 'arqueroplus_load_dismissed_date';
+function loadBannerDismissedToday(){
+  try{ return localStorage.getItem(LOAD_DISMISS_KEY) === new Date().toDateString(); }catch(e){ return false; }
+}
+function dismissLoadBanner(){
+  try{ localStorage.setItem(LOAD_DISMISS_KEY, new Date().toDateString()); }catch(e){}
+  const wrap = document.getElementById('load-banner-wrap');
+  if(wrap) wrap.innerHTML = '';
+  renderReminderBanner();
+}
+function renderLoadBanner(){
+  const wrap = document.getElementById('load-banner-wrap');
+  if(!wrap) return;
+  const load = computeTrainingLoad();
+  if(load.id!=='riesgo' || loadBannerDismissedToday()){ wrap.innerHTML=''; return; }
+  wrap.innerHTML = `<div class="reminder-banner risk">
+    <div class="rb-icon">🛡️</div>
+    <div class="rb-body">
+      <div class="rb-title">Riesgo de sobrecarga</div>
+      <div class="rb-sub">${load.advice}</div>
+    </div>
+    <button class="rb-close" onclick="dismissLoadBanner()">✕</button>
+  </div>`;
+}
+
 function buildMemory(posId){
   const posSessions = sessions.filter(s=>s.position===posId).sort((a,b)=> new Date(a.date)-new Date(b.date));
   const cats = CATEGORIES[posId];
@@ -2948,6 +3243,9 @@ function generateCoachPreMessage(posId){
     text = `Elegí ejercicios o una plantilla para arrancar la sesión de ${pos.name.toLowerCase()}.`;
   }
   if(lastWeather && lastWeather.tip) text += ` ${lastWeather.tip}`;
+  const load = computeTrainingLoad();
+  if(load.id==='riesgo') text += ` ⚠️ Ojo: tu carga de la semana está alta respecto a tus últimas semanas — hoy priorizá una sesión suave o técnica antes que volumen.`;
+  else if(load.id==='atencion') text += ` Tu carga viene en aumento esta semana, así que prestá atención a cómo te sentís y no te fuerces si notás cansancio.`;
   return text;
 }
 function renderCoachCard(containerId, posId){
@@ -3019,6 +3317,8 @@ function renderInicio(){
   document.getElementById('streak-num').textContent = computeConsecutiveDayStreak();
   renderLevelWidget('level-widget');
   renderFitTestWidget('fit-test-wrap');
+  renderLoadBanner();
+  renderReminderBanner();
 
   const hour = new Date().getHours();
   const greet = hour < 12 ? 'Buen día' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
@@ -3486,7 +3786,11 @@ function renderEntrenar(){
 
   if(activeSession){
     title.textContent = 'Sesión en curso · ' + pos.name;
-    let html = `<div class="coach-card" style="margin-bottom:14px;">
+    let html = `<div class="session-clock-row">
+      <div class="session-clock" id="session-clock">00:00</div>
+      <div class="session-clock-label">tiempo de sesión</div>
+    </div>
+    <div class="coach-card" style="margin-bottom:14px;">
       <div class="coach-eyebrow">🧑‍🏫 COACH</div>
       <div class="coach-text">Vamos con todo. Priorizá la técnica antes que la velocidad y completá cada ejercicio de la lista.</div>
     </div><div class="active-session">`;
@@ -3495,7 +3799,8 @@ function renderEntrenar(){
       const done = !!activeChecked[id];
       html += `<div class="drill-check ${done?'done':''}" data-id="${id}">
         <div class="check-circle"></div>
-        <div><div class="name">${d.name}</div><div class="drill-dose">${d.dose}</div></div>
+        <div class="drill-check-body"><div class="name">${d.name}</div><div class="drill-dose">${d.dose}</div></div>
+        <button class="rest-timer-btn" data-timer-for="${id}" title="Temporizador de descanso">⏱</button>
       </div>`;
     });
     html += '</div>';
@@ -3503,11 +3808,15 @@ function renderEntrenar(){
     content.querySelectorAll('.drill-check').forEach(el=>{
       el.addEventListener('click', ()=>{ activeChecked[el.dataset.id] = !activeChecked[el.dataset.id]; renderEntrenar(); });
     });
+    content.querySelectorAll('.rest-timer-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{ e.stopPropagation(); openRestTimer(); });
+    });
     const finishBtn = document.createElement('button');
     finishBtn.className = 'cta-btn';
     finishBtn.textContent = activeSession.position==='ARQ' ? 'Terminar y registrar remates' : 'Terminar sesión';
     finishBtn.onclick = activeSession.position==='ARQ' ? openShotlog : finishSessionSimple;
     content.appendChild(finishBtn);
+    startSessionClock();
     return;
   }
 
@@ -3623,6 +3932,72 @@ function computeDuration(){
   return mins < 3 ? (10 + Math.floor(Math.random()*15)) : mins;
 }
 
+/* ---------- Cronómetro en vivo de la sesión ---------- */
+function fmtMMSS(totalSeconds){
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const m = Math.floor(s/60), r = s%60;
+  return String(m).padStart(2,'0')+':'+String(r).padStart(2,'0');
+}
+let sessionClockInterval = null;
+function startSessionClock(){
+  clearInterval(sessionClockInterval);
+  sessionClockInterval = setInterval(()=>{
+    const el = document.getElementById('session-clock');
+    if(!el || !activeSession){ clearInterval(sessionClockInterval); return; }
+    el.textContent = fmtMMSS((Date.now()-activeSession.startedAt)/1000);
+  }, 1000);
+}
+function stopSessionClock(){ clearInterval(sessionClockInterval); sessionClockInterval = null; }
+
+/* ---------- Temporizador de descanso ---------- */
+let restTimerInterval = null;
+let restTimerRemaining = 0;
+function openRestTimer(){
+  clearInterval(restTimerInterval);
+  restTimerRemaining = 60;
+  const disp = document.getElementById('rest-timer-display');
+  disp.classList.remove('done');
+  disp.textContent = '60';
+  document.getElementById('rest-timer-modal').classList.add('open');
+}
+function beginRestCountdown(seconds){
+  clearInterval(restTimerInterval);
+  restTimerRemaining = seconds;
+  const disp = document.getElementById('rest-timer-display');
+  disp.classList.remove('done');
+  disp.textContent = String(restTimerRemaining);
+  restTimerInterval = setInterval(()=>{
+    restTimerRemaining--;
+    if(restTimerRemaining<=0){
+      clearInterval(restTimerInterval);
+      onRestTimerDone();
+    } else {
+      disp.textContent = String(restTimerRemaining);
+    }
+  }, 1000);
+}
+function onRestTimerDone(){
+  const disp = document.getElementById('rest-timer-display');
+  disp.textContent = '¡Listo!';
+  disp.classList.add('done');
+  if(navigator.vibrate) navigator.vibrate([180,90,180,90,180]);
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new Ctx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine'; osc.frequency.value = 880;
+    osc.connect(gain); gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  }catch(e){ /* audio no disponible */ }
+}
+function closeRestTimer(){
+  clearInterval(restTimerInterval);
+  document.getElementById('rest-timer-modal').classList.remove('open');
+}
+
 function addOptionalNote(){
   const note = prompt('¿Alguna nota de esta sesión? (opcional — dejalo vacío para omitir)');
   if(note && note.trim()) activeSession.note = note.trim();
@@ -3653,6 +4028,8 @@ async function finishSessionSimple(){
 }
 
 async function pushSession(){
+  stopSessionClock();
+  clearInterval(restTimerInterval);
   const before = snapshotProgress();
   const finishedSession = activeSession;
   sessions.push(finishedSession);
@@ -4400,6 +4777,8 @@ function renderProgreso(){
       <div class="bar-lbl">${w.label}</div>`;
     barsEl.appendChild(col);
   });
+
+  renderLoadWidget();
 
   renderGoalGrid(document.getElementById('prog-goal-grid'), aggregateZones(), false);
 

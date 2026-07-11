@@ -6,9 +6,14 @@
 
    Nota: el login con Google (Firebase) y el guardado en la nube
    necesitan internet SÍ o SÍ. Sin conexión, la app sigue funcionando
-   con el progreso guardado localmente en el dispositivo. */
+   con el progreso guardado localmente en el dispositivo.
 
-const CACHE_NAME = 'arqueroplus-v5';
+   v8: agrega el aviso de "racha en riesgo" (variante del recordatorio
+   diario que avisa antes si tenés una racha de días entrenando y hoy
+   todavía no cargaste sesión). No cambia el comportamiento del SW en
+   sí, pero fuerza a los dispositivos a bajar la versión nueva del HTML. */
+
+const CACHE_NAME = 'arqueroplus-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -64,6 +69,20 @@ self.addEventListener('fetch', event => {
         .catch(() => cached);
 
       return cached || networkFetch;
+    })
+  );
+});
+
+// Recordatorio diario de entrenamiento: al tocar la notificación,
+// enfoca una pestaña de la app ya abierta o abre una nueva.
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if ('focus' in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow('./');
     })
   );
 });
