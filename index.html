@@ -119,7 +119,7 @@
     padding:6px 12px; border-radius:999px;
     font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--accent);
   }
-  .header-right{display:flex; align-items:center; gap:8px;}
+  .header-right{display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end;}
 
   /* ---------- Auth widget ---------- */
   .auth-btn{
@@ -158,6 +158,51 @@
   }
   .auth-menu-user .un{font-size:15px; font-weight:600; color:var(--chalk);}
   .auth-menu-user .ue{font-size:12px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- Acerca del desarrollador ---------- */
+  .dev-card-head{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:4px 0 18px;
+  }
+  .dev-avatar-wrap{
+    width:84px; height:84px; border-radius:50%; padding:3px;
+    background:linear-gradient(135deg, var(--accent), var(--save));
+    margin-bottom:14px; flex-shrink:0;
+  }
+  .dev-avatar{
+    width:100%; height:100%; border-radius:50%; object-fit:cover;
+    background:var(--surface); border:2px solid var(--surface-2);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:26px; color:var(--accent);
+  }
+  .dev-name{font-family:'Oswald',sans-serif; font-size:20px; font-weight:700; color:var(--chalk); line-height:1.2;}
+  .dev-role{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--accent); margin-top:4px;
+  }
+  .dev-bio{
+    font-size:13px; line-height:1.55; color:var(--chalk-dim);
+    text-align:center; padding:0 4px 20px; border-bottom:1px solid var(--line); margin-bottom:18px;
+  }
+  .dev-social-row{display:flex; gap:10px; margin-bottom:20px;}
+  .dev-social-btn{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:7px;
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:14px;
+    padding:12px 6px; text-decoration:none; color:var(--chalk);
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.02em;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .dev-social-btn:active{border-color:var(--accent); background:var(--accent-dim);}
+  .dev-social-btn svg{width:20px; height:20px; flex-shrink:0; color:var(--accent);}
+  .dev-footer{
+    display:flex; align-items:center; justify-content:space-between;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--chalk-faint);
+    padding-top:2px;
+  }
+  .dev-version-tag{
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:999px;
+    padding:4px 10px; color:var(--chalk-dim); font-size:10.5px;
+  }
 
   /* ---------- Position bar ---------- */
   .position-bar{
@@ -604,6 +649,18 @@
   }
   .nav-btn.active{color:var(--accent);}
   .nav-ico{width:20px; height:20px; position:relative;}
+
+  /* ---------- Pie de página: crédito del desarrollador ---------- */
+  .dev-footer-credit{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    margin:28px 0 4px; padding:12px 14px;
+    background:var(--surface); border:1px solid var(--line);
+    border-radius:14px; cursor:pointer;
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--chalk-faint);
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .dev-footer-credit:active{border-color:var(--accent); color:var(--chalk-dim);}
+  .dev-footer-credit strong{color:var(--accent); font-weight:600;}
 
   /* modal */
   .modal-bg{
@@ -1089,6 +1146,7 @@
     <div class="header-right">
       <div class="streak-pill">🔥<span id="streak-num" class="mono">0</span></div>
       <button class="auth-btn" title="Respaldo" onclick="openBackupMenu()" style="padding:6px 10px;">💾</button>
+      <button class="auth-btn" title="Acerca del desarrollador" onclick="openAboutDev()">ⓘ Info</button>
       <div id="auth-widget"></div>
     </div>
   </header>
@@ -1230,6 +1288,11 @@
       <div class="subtab-row" id="carrera-subtabs"></div>
       <div id="carrera-content"></div>
     </section>
+
+    <!-- Crédito persistente del desarrollador (visible al pie de cualquier pantalla) -->
+    <div class="dev-footer-credit" onclick="openAboutDev()">
+      💻 Hecho por <strong>Bruno Fiorucci</strong>
+    </div>
   </main>
 
 
@@ -1305,6 +1368,52 @@
       <div class="danger-zone-label">Zona de peligro</div>
       <button class="cta-btn ghost" style="margin-top:0; border-color:rgba(228,72,59,0.5); color:var(--miss);" onclick="resetAllProgress()">🗑 Borrar todo mi progreso</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal: Acerca del desarrollador -->
+<div class="auth-menu-bg" id="about-dev-menu-bg" onclick="if(event.target===this) closeAboutDev()">
+  <div class="auth-menu">
+
+    <div class="dev-card-head">
+      <div class="dev-avatar-wrap">
+        <!-- 📸 Reemplazá src por la foto real del desarrollador (o dejá el placeholder con iniciales) -->
+        <div class="dev-avatar" id="dev-avatar">
+          <!-- <img src="TU_FOTO_AQUI.jpg" alt="Bruno Fiorucci" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"> -->
+          BF
+        </div>
+      </div>
+      <div class="dev-name">👨‍💻 Bruno Fiorucci</div>
+      <div class="dev-role">Desarrollador de aplicaciones web</div>
+    </div>
+
+    <div class="dev-bio">
+      <!-- ✏️ Editá este texto de presentación libremente -->
+      Apasionado por crear herramientas simples y útiles para deportistas. Arquero+ nació de las ganas de unir tecnología y fútbol para que cada entrenamiento cuente.
+    </div>
+
+    <div class="dev-social-row">
+      <!-- ✏️ Reemplazá los href por tus enlaces reales -->
+      <a class="dev-social-btn" href="https://instagram.com/Fiorucci.Dev" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+        Instagram
+      </a>
+      <a class="dev-social-btn" href="https://github.com/brunofiorucci" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.5 5.73.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.1-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.7-1.28-1.7-1.04-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.05 11.05 0 0 1 5.78 0c2.21-1.5 3.18-1.18 3.18-1.18.63 1.6.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.4-5.27 5.69.42.36.78 1.08.78 2.17 0 1.57-.01 2.83-.01 3.22 0 .3.2.66.79.55A10.52 10.52 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5z"/></svg>
+        GitHub
+      </a>
+      <a class="dev-social-btn" href="mailto:brunofiorucci8@gmail.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="4.5" width="19" height="15" rx="3"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>
+        Email
+      </a>
+    </div>
+
+    <div class="dev-footer">
+      <span>© <span id="dev-copyright-year">2026</span> Bruno Fiorucci</span>
+      <span class="dev-version-tag" id="dev-version-tag">v1.0.0</span>
+    </div>
+
+    <button class="cta-btn ghost" style="margin-top:16px;" onclick="closeAboutDev()">Cerrar</button>
   </div>
 </div>
 
@@ -2005,6 +2114,16 @@ function openBackupMenu(){
   document.getElementById('backup-menu-bg').classList.add('open');
 }
 function closeBackupMenu(){ document.getElementById('backup-menu-bg').classList.remove('open'); }
+
+/* ---------- Acerca del desarrollador ---------- */
+// ✏️ Editá esta constante cuando publiques una nueva versión de la app
+const APP_VERSION = '1.0.0';
+function openAboutDev(){
+  document.getElementById('dev-version-tag').textContent = 'v' + APP_VERSION;
+  document.getElementById('dev-copyright-year').textContent = new Date().getFullYear();
+  document.getElementById('about-dev-menu-bg').classList.add('open');
+}
+function closeAboutDev(){ document.getElementById('about-dev-menu-bg').classList.remove('open'); }
 
 /* ============================================================
    ☀️ MODO CLARO / OSCURO
