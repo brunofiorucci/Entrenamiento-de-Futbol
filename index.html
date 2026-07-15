@@ -401,10 +401,14 @@
   }
 
   .active-session .drill-check{
-    display:flex; align-items:center; gap:12px;
+    display:flex; align-items:center; flex-wrap:wrap; gap:12px;
     background:var(--surface); border:1px solid var(--line); border-radius:12px;
     padding:12px 14px; margin-bottom:8px;
   }
+  .active-session .drill-check .drill-desc{
+    flex-basis:100%; margin-top:0; padding-left:36px;
+  }
+  .active-session .drill-check.open .drill-desc{display:block;}
   .check-circle{
     width:24px; height:24px; border-radius:50%; border:2px solid var(--line-strong);
     flex-shrink:0; cursor:pointer; position:relative;
@@ -1130,6 +1134,135 @@
     color:#1a0d03; font-family:'Oswald', sans-serif; font-size:14px; font-weight:600;
     text-transform:uppercase; letter-spacing:.03em; cursor:pointer;
   }
+
+  /* ---------- Minijuego de reflejos (Atajá el Remate) ---------- */
+  .reflex-card{
+    background:linear-gradient(135deg, var(--surface-2), var(--surface));
+    border:1px solid var(--line-strong); border-radius:var(--radius);
+    padding:16px; margin-bottom:18px; display:flex; align-items:center; gap:14px;
+    cursor:pointer;
+  }
+  .reflex-card:active{transform:scale(0.99);}
+  .reflex-card-ico{
+    width:46px; height:46px; border-radius:12px; flex-shrink:0;
+    background:var(--accent-dim); display:flex; align-items:center; justify-content:center; font-size:22px;
+  }
+  .reflex-card-body{flex:1; min-width:0;}
+  .reflex-card-title{font-family:'Oswald',sans-serif; font-size:14.5px; letter-spacing:.02em; color:var(--chalk); text-transform:uppercase;}
+  .reflex-card-sub{font-size:12px; color:var(--chalk-dim); margin-top:3px; line-height:1.4;}
+  .reflex-card-best{
+    flex-shrink:0; text-align:right; font-family:'IBM Plex Mono',monospace;
+  }
+  .reflex-card-best .n{font-size:16px; color:var(--accent); font-weight:600;}
+  .reflex-card-best .l{font-size:9px; color:var(--chalk-faint); letter-spacing:.06em; text-transform:uppercase;}
+
+  .reflex-bg{
+    position:fixed; inset:0; z-index:80; display:none;
+    background:linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    flex-direction:column;
+  }
+  .reflex-bg.open{display:flex;}
+  .reflex-top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:calc(16px + env(safe-area-inset-top)) 18px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  .reflex-top h3{font-size:15px; color:var(--chalk);}
+  .reflex-close{
+    background:var(--surface); border:1px solid var(--line-strong); color:var(--chalk-dim);
+    width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; line-height:1;
+  }
+  .reflex-stats-row{
+    display:flex; justify-content:space-around; padding:12px 18px; gap:8px;
+  }
+  .reflex-stat{text-align:center; font-family:'IBM Plex Mono',monospace;}
+  .reflex-stat .n{font-size:18px; color:var(--chalk); font-weight:600;}
+  .reflex-stat .l{font-size:9.5px; color:var(--chalk-faint); letter-spacing:.06em; text-transform:uppercase; margin-top:2px;}
+
+  .reflex-field{
+    flex:1; display:flex; align-items:center; justify-content:center; padding:10px 22px 22px;
+  }
+  .reflex-goal{
+    width:100%; max-width:340px; aspect-ratio:3/2;
+    border:5px solid var(--chalk); border-bottom:none; border-radius:6px 6px 0 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 24px, var(--line) 24px, var(--line) 25px),
+      repeating-linear-gradient(90deg, transparent, transparent 24px, var(--line) 24px, var(--line) 25px);
+    position:relative;
+    display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr; gap:6px; padding:6px;
+  }
+  .reflex-zone{
+    border-radius:10px; background:rgba(243,241,231,0.04); border:1px dashed var(--line);
+    display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden;
+  }
+  .reflex-ball{
+    width:38%; aspect-ratio:1; border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, #fff, #d8d4c4 40%, #8a8672 100%);
+    box-shadow:0 0 0 2px rgba(0,0,0,0.15) inset;
+    animation:reflex-pop .15s ease-out;
+  }
+  @keyframes reflex-pop{ from{transform:scale(0.3); opacity:0;} to{transform:scale(1); opacity:1;} }
+  .reflex-zone.fake .reflex-ball{
+    background:radial-gradient(circle at 32% 28%, #fff, #f0c9c2 40%, var(--miss) 100%);
+  }
+  .reflex-ball.fake-ball{
+    background:var(--miss) !important;
+    box-shadow:0 0 0 4px rgba(228,72,59,0.35), 0 0 0 2px rgba(0,0,0,0.15) inset;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:18px; font-family:'IBM Plex Sans',sans-serif;
+    animation:reflex-pop .15s ease-out, reflex-shake .32s ease-in-out .15s 2;
+  }
+  @keyframes reflex-shake{
+    0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);}
+  }
+  .reflex-zone.hit{background:var(--save-dim);}
+  .reflex-zone.hit-fake{background:var(--miss-dim);}
+  .reflex-zone.miss{background:var(--miss-dim);}
+
+  .reflex-msg{
+    text-align:center; padding:0 22px 6px; font-size:13px; color:var(--chalk-dim); min-height:18px;
+  }
+  .reflex-intro, .reflex-result{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:20px 26px calc(30px + env(safe-area-inset-bottom));
+  }
+  .reflex-intro .ico, .reflex-result .ico{font-size:44px; margin-bottom:12px;}
+  .reflex-intro h2, .reflex-result h2{font-size:20px; color:var(--chalk); margin-bottom:8px;}
+  .reflex-intro p, .reflex-result p{font-size:13px; color:var(--chalk-dim); line-height:1.55; max-width:300px; margin-bottom:22px;}
+
+  .reflex-diff-label{font-size:10.5px; color:var(--chalk-faint); letter-spacing:.08em; text-transform:uppercase; margin-bottom:10px; font-family:'IBM Plex Mono',monospace;}
+  .reflex-diff-row{display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap; justify-content:center; max-width:320px;}
+  .reflex-diff-chip{
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    background:var(--surface); border:1.5px solid var(--line-strong); border-radius:14px;
+    padding:10px 14px; cursor:pointer; min-width:72px;
+  }
+  .reflex-diff-chip .ico{font-size:18px; margin:0;}
+  .reflex-diff-chip .lbl{font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--chalk-dim); letter-spacing:.02em;}
+  .reflex-diff-chip.active{border-color:var(--accent); background:var(--accent-dim);}
+  .reflex-diff-chip.active .lbl{color:var(--accent); font-weight:600;}
+  .reflex-diff-chip.locked{opacity:0.5;}
+  .reflex-diff-chip.locked .lbl{color:var(--chalk-faint);}
+  .reflex-diff-chip.legend:not(.locked){border-color:#D4AF37; background:rgba(212,175,55,0.14);}
+  .reflex-diff-chip.legend:not(.locked).active{border-color:#D4AF37; background:rgba(212,175,55,0.22);}
+  .reflex-diff-chip.legend:not(.locked) .lbl{color:#D4AF37;}
+  .reflex-unlock-hint{font-size:11px; color:var(--chalk-faint); margin-top:-14px; margin-bottom:20px; max-width:280px;}
+
+  .reflex-legend-unlock{
+    background:linear-gradient(135deg, rgba(212,175,55,0.20), rgba(212,175,55,0.06));
+    border:1px solid rgba(212,175,55,0.5); border-radius:14px; padding:14px; margin-top:-8px; margin-bottom:20px;
+    font-size:12.5px; color:var(--chalk); line-height:1.5; max-width:300px;
+  }
+  .reflex-legend-unlock b{color:#D4AF37;}
+  .reflex-result .result-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; max-width:300px; margin-bottom:22px;
+  }
+  .reflex-result .result-card{
+    background:var(--surface); border:1px solid var(--line-strong); border-radius:14px; padding:14px 8px;
+  }
+  .reflex-result .result-card .n{font-family:'IBM Plex Mono',monospace; font-size:20px; color:var(--accent); font-weight:600;}
+  .reflex-result .result-card .l{font-size:10px; color:var(--chalk-dim); margin-top:2px; letter-spacing:.03em; text-transform:uppercase;}
+  .reflex-result .new-best{color:var(--save); font-size:12px; font-family:'IBM Plex Mono',monospace; margin-top:-14px; margin-bottom:18px;}
 </style>
 </head>
 <body>
@@ -1196,6 +1329,7 @@
     <section class="view" id="view-ejercicios">
       <h2 style="font-size:22px; margin-bottom:16px;" id="ejercicios-title">Biblioteca de ejercicios</h2>
       <div class="filter-row" id="filter-row"></div>
+      <div class="filter-row" id="mode-filter-row" style="margin-top:-4px;"></div>
       <div id="drill-list"></div>
     </section>
 
@@ -1362,6 +1496,25 @@
       </div>
     </div>
 
+    <div class="danger-zone" style="border-top:1px solid var(--line); margin-top:16px; padding-top:14px;">
+      <div class="danger-zone-label" style="color:var(--chalk-dim); border:none; margin-bottom:0;">Entrenamiento</div>
+      <div class="settings-row">
+        <div class="settings-row-body">
+          <div class="settings-row-title">🔥 Calentamiento antes de entrenar</div>
+          <div class="settings-row-sub">Ofrece una rutina corta de activación (arquero) antes de empezar cada sesión. Siempre podés saltarla desde ahí.</div>
+        </div>
+        <div class="toggle-switch" id="warmup-toggle" onclick="toggleWarmup()"></div>
+      </div>
+      <div class="settings-row" style="margin-top:10px;">
+        <div class="settings-row-body">
+          <div class="settings-row-title">🧘 Elongación al terminar</div>
+          <div class="settings-row-sub">Al terminar cada sesión, propone una rutina corta de estiramiento. Siempre podés saltarla desde ahí.</div>
+        </div>
+        <div class="toggle-switch" id="cooldown-toggle" onclick="toggleCooldown()"></div>
+      </div>
+      <button class="cta-btn ghost" style="margin-top:10px;" onclick="closeBackupMenu(); openStretchModal();">🧘 Ver rutina de elongación ahora</button>
+    </div>
+
     <button class="cta-btn ghost" style="margin-top:6px;" onclick="closeBackupMenu()">Cerrar</button>
 
     <div class="danger-zone">
@@ -1471,6 +1624,16 @@
   </div>
 </div>
 
+<!-- Modal: elongación / estiramiento, disponible en cualquier momento -->
+<div class="modal-bg" id="stretch-modal" onclick="if(event.target===this) closeStretchModal()">
+  <div class="modal">
+    <h2>🧘 Elongación</h2>
+    <div class="sub">Usala cuando quieras: después de entrenar, antes o después de picaditos, remates sueltos o cualquier práctica extra.</div>
+    <div id="stretch-modal-list"></div>
+    <button class="cta-btn ghost" style="margin-top:14px;" onclick="closeStretchModal()">Cerrar</button>
+  </div>
+</div>
+
 <!-- Modal: registrar tiros -->
 <div class="modal-bg" id="shotlog-modal">
   <div class="modal">
@@ -1510,6 +1673,60 @@
     <input type="text" id="prompt-modal-input" class="field-input" style="width:100%; margin-bottom:14px; text-align:center;" onkeydown="if(event.key==='Enter') resolvePromptModalFromInput()">
     <button class="shot-choice-btn save" onclick="resolvePromptModalFromInput()">Guardar</button>
     <button class="shot-choice-cancel" onclick="resolvePromptModal(null)">Cancelar</button>
+  </div>
+</div>
+
+<!-- Minijuego: Atajá el Remate (reflejos, solo Arquero) -->
+<div class="reflex-bg" id="reflex-bg">
+  <div class="reflex-top">
+    <h3>🧤 Atajá el Remate</h3>
+    <button class="reflex-close" onclick="closeReflexGame()">×</button>
+  </div>
+
+  <div id="reflex-intro" class="reflex-intro">
+    <div class="ico">⚡</div>
+    <h2>Poné a prueba tus reflejos</h2>
+    <p>Van a aparecer 12 remates en distintas zonas del arco. Tocá la zona antes de que se vaya. Ojo: pueden aparecer amagues — se ven bien rojos, con una ✕ — y a esos NO hay que tocarlos.</p>
+    <div class="reflex-diff-label">Dificultad</div>
+    <div class="reflex-diff-row" id="reflex-diff-row"></div>
+    <div class="reflex-unlock-hint" id="reflex-unlock-hint" style="display:none;">🔒 Leyenda se desbloquea al promediar 500ms o menos (con buena precisión) en Difícil.</div>
+    <button class="cta-btn" style="margin-top:0; width:100%; max-width:260px;" onclick="startReflexGame()">Empezar</button>
+  </div>
+
+  <div id="reflex-play" style="display:none; flex:1; flex-direction:column;">
+    <div class="reflex-stats-row">
+      <div class="reflex-stat"><div class="n" id="reflex-round">0/12</div><div class="l">Remate</div></div>
+      <div class="reflex-stat"><div class="n" id="reflex-hits">0</div><div class="l">Atajadas</div></div>
+      <div class="reflex-stat"><div class="n" id="reflex-avg">—</div><div class="l">Prom. ms</div></div>
+    </div>
+    <div class="reflex-msg" id="reflex-msg">Preparate...</div>
+    <div class="reflex-field">
+      <div class="reflex-goal" id="reflex-goal">
+        <div class="reflex-zone" data-zone="0"></div>
+        <div class="reflex-zone" data-zone="1"></div>
+        <div class="reflex-zone" data-zone="2"></div>
+        <div class="reflex-zone" data-zone="3"></div>
+        <div class="reflex-zone" data-zone="4"></div>
+        <div class="reflex-zone" data-zone="5"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="reflex-result" class="reflex-result" style="display:none;">
+    <div class="ico" id="rr-ico">🏆</div>
+    <h2 id="rr-title">Resultado</h2>
+    <div class="result-grid">
+      <div class="result-card"><div class="n" id="rr-avg">—</div><div class="l">Reacción prom.</div></div>
+      <div class="result-card"><div class="n" id="rr-acc">—</div><div class="l">Precisión</div></div>
+    </div>
+    <div class="new-best" id="rr-newbest" style="display:none;">🎉 ¡Nuevo récord personal!</div>
+    <div class="reflex-legend-unlock" id="rr-legend-unlock" style="display:none;">
+      👑 <b>¡Desbloqueaste el nivel Leyenda!</b><br>Promediaste 500ms o menos en Difícil. Ya podés elegirlo la próxima vez.
+    </div>
+    <p id="rr-msg"></p>
+    <div class="reflex-unlock-hint" id="rr-ref-bonus" style="display:none; margin-top:-14px;"></div>
+    <button class="cta-btn" style="margin-top:0; width:100%; max-width:260px;" onclick="startReflexGame()">Jugar de nuevo</button>
+    <button class="cta-btn ghost" style="width:100%; max-width:260px;" onclick="closeReflexGame()">Cerrar</button>
   </div>
 </div>
 
@@ -1687,8 +1904,111 @@ const CATEGORY_ICON = {
 };
 
 /* ============================================================
-   POSITIONS
+   CALENTAMIENTO PREVIO (por ahora, específico de Arquero)
 ============================================================ */
+const WARMUP_DRILLS = {
+  ARQ: [
+    {id:'wu_1', name:'Movilidad de tobillos y muñecas', dur:45, desc:'Círculos suaves de tobillos y muñecas hacia los dos lados, para activar las articulaciones que más trabajan bajo los tres palos.'},
+    {id:'wu_2', name:'Skipping suave', dur:40, desc:'Trote suave en el lugar, alternando talones a la cola y rodillas al pecho, sin exigir.'},
+    {id:'wu_3', name:'Rotación de cadera y tronco', dur:40, desc:'Rotaciones controladas de cadera y torso hacia ambos lados, para ganar amplitud antes de las caídas.'},
+    {id:'wu_4', name:'Sentadillas dinámicas', dur:40, desc:'Sentadillas suaves con ritmo, sin peso ni salto exigido, para activar piernas y glúteos.'},
+    {id:'wu_5', name:'Caídas laterales sin balón', dur:45, desc:'4-5 caídas laterales técnicas de baja intensidad, solo para activar el patrón de movimiento del blocaje.'},
+    {id:'wu_6', name:'Elongación dinámica de piernas', dur:40, desc:'Zancadas o balanceos de pierna controlados, sin forzar, para terminar de activar el tren inferior.'},
+  ],
+};
+function totalWarmupSeconds(pos){ return (WARMUP_DRILLS[pos]||[]).reduce((a,w)=>a+w.dur,0); }
+
+const WARMUP_KEY = 'arqueroplus_warmup_enabled';
+function isWarmupEnabled(){
+  try{ const v = localStorage.getItem(WARMUP_KEY); return v===null ? true : v==='1'; }catch(e){ return true; }
+}
+function toggleWarmup(){
+  const turningOn = !isWarmupEnabled();
+  try{ localStorage.setItem(WARMUP_KEY, turningOn ? '1' : '0'); }catch(e){}
+  renderWarmupToggleUI();
+}
+function renderWarmupToggleUI(){
+  const el = document.getElementById('warmup-toggle');
+  if(el) el.classList.toggle('on', isWarmupEnabled());
+}
+
+/* ============================================================
+   ELONGACIÓN / ESTIRAMIENTO (misma rutina para todas las posiciones)
+   Se ofrece al terminar cada sesión, y además queda disponible como
+   sección aparte (botón fijo en Entrenar + acceso desde Ajustes) para
+   quien la quiera usar suelta, sin haber pasado por una sesión formal
+   (por ej. después de tirar unos remates sueltos con alguien).
+============================================================ */
+const COOLDOWN_DRILLS = [
+  {id:'cd_1', name:'Elongación de gemelos', dur:30, desc:'Apoyate contra una pared, una pierna atrás con el talón en el piso, y llevá el peso hacia adelante. Cambiá de lado.'},
+  {id:'cd_2', name:'Elongación de isquiotibiales', dur:30, desc:'Sentado o de pie, pierna estirada y tronco hacia adelante sin rebotar, buscando la parte de atrás del muslo.'},
+  {id:'cd_3', name:'Elongación de cuádriceps', dur:30, desc:'De pie, llevá el talón hacia el glúteo sosteniendo el pie con la mano, rodillas juntas. Cambiá de lado.'},
+  {id:'cd_4', name:'Elongación de aductores', dur:30, desc:'Piernas bien abiertas, llevá el peso hacia un costado flexionando esa rodilla, la otra pierna estirada.'},
+  {id:'cd_5', name:'Elongación de espalda baja y cadera', dur:30, desc:'Acostado boca arriba, llevá una rodilla hacia el pecho y después cruzada hacia el lado contrario.'},
+  {id:'cd_6', name:'Respiración y relajación', dur:40, desc:'Sentado o parado, respiración profunda y pausada para bajar pulsaciones antes de terminar.'},
+];
+function totalCooldownSeconds(){ return COOLDOWN_DRILLS.reduce((a,w)=>a+w.dur,0); }
+
+const COOLDOWN_KEY = 'arqueroplus_cooldown_enabled';
+function isCooldownEnabled(){
+  try{ const v = localStorage.getItem(COOLDOWN_KEY); return v===null ? true : v==='1'; }catch(e){ return true; }
+}
+function toggleCooldown(){
+  const turningOn = !isCooldownEnabled();
+  try{ localStorage.setItem(COOLDOWN_KEY, turningOn ? '1' : '0'); }catch(e){}
+  renderCooldownToggleUI();
+}
+function renderCooldownToggleUI(){
+  const el = document.getElementById('cooldown-toggle');
+  if(el) el.classList.toggle('on', isCooldownEnabled());
+}
+
+/* ---------- Modal standalone: se puede abrir en cualquier momento,
+   sin depender de estar en medio de una sesión ---------- */
+function renderStretchList(container, checked, onToggle){
+  let html = '<div class="active-session">';
+  COOLDOWN_DRILLS.forEach(w=>{
+    const done = !!checked[w.id];
+    html += `<div class="drill-check ${done?'done':''}" data-id="${w.id}">
+      <div class="check-circle"></div>
+      <div class="drill-check-body"><div class="name">${w.name}</div><div class="drill-dose">${w.dur}s</div></div>
+      <button class="info-btn" title="Ver de qué se trata">i</button>
+      <div class="drill-desc">${w.desc}</div>
+    </div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+  container.querySelectorAll('.drill-check').forEach(el=>{
+    el.addEventListener('click', ()=>{ onToggle(el.dataset.id); });
+  });
+  container.querySelectorAll('.info-btn').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const card = btn.closest('.drill-check');
+      card.classList.toggle('open');
+      btn.classList.toggle('open');
+    });
+  });
+}
+
+let stretchModalChecked = {};
+function drawStretchModalList(){
+  const list = document.getElementById('stretch-modal-list');
+  renderStretchList(list, stretchModalChecked, (id)=>{
+    stretchModalChecked[id] = !stretchModalChecked[id];
+    drawStretchModalList();
+  });
+}
+function openStretchModal(){
+  stretchModalChecked = {};
+  drawStretchModalList();
+  document.getElementById('stretch-modal').classList.add('open');
+}
+function closeStretchModal(){
+  document.getElementById('stretch-modal').classList.remove('open');
+}
+
+
 const POSITIONS = [
   {id:'ARQ', name:'Arquero', color:'#FF6B35'},
   {id:'DEF', name:'Defensor', color:'#5BC8FF'},
@@ -1734,30 +2054,37 @@ Object.keys(CATEGORIES).forEach(pos=>{
 });
 function catById(pos, catId){ return CATEGORIES[pos].find(c=>c.id===catId); }
 
+// modo del ejercicio: si se puede hacer solo, necesita un compañero, o admite ambos
+const DRILL_MODE_LABEL = {
+  solo:   {short:'Solo',              full:'Se hace solo',                icon:'🧍'},
+  pareja: {short:'Con compañero',     full:'Necesita un compañero',       icon:'👥'},
+  ambos:  {short:'Solo o en pareja',  full:'Se puede hacer solo o con compañero', icon:'🧍👥'},
+};
+
 /* ============================================================
    DRILLS (per position) — ids prefijados por posición
 ============================================================ */
 const DRILLS = {
   ARQ: [
-    {id:'arq_ref1', cat:'REF', name:'Reacción a rebotes de pared', dose:'4 series x 45s', desc:'Parado a 2-3m de una pared, lanzá el balón con fuerza variando el ángulo y reaccioná al rebote con las manos. Prioridad: primer paso rápido, no anticipar.'},
-    {id:'arq_ref2', cat:'REF', name:'Reflejos con dos balones', dose:'3 series x 10 reps', desc:'Un compañero lanza alternadamente a ambos lados a corta distancia. Foco en manos blandas y recuperación inmediata de postura.'},
-    {id:'arq_ref3', cat:'REF', name:'Cambios de dirección explosivos', dose:'5 series x 20s', desc:'Desplazamientos laterales cortos y explosivos entre conos, terminando cada repetición con una estirada simulada.'},
-    {id:'arq_blq1', cat:'BLQ', name:'Caída lateral controlada', dose:'4 series x 6 reps', desc:'Desde posición básica, caída lateral técnica sobre colchoneta o césped, apoyando cadera-costado y protegiendo el balón con ambas manos.'},
-    {id:'arq_blq2', cat:'BLQ', name:'Blocaje bajo de rodillas', dose:'3 series x 8 reps', desc:'Remates rasos dirigidos al cuerpo. Trabajar la técnica de "cesta" con manos y antebrazos, rodillas juntas, sin dejar rebote.'},
-    {id:'arq_blq3', cat:'BLQ', name:'Estirada a media altura', dose:'4 series x 6 reps c/lado', desc:'Remates a media altura fuera del alcance directo. Foco en el paso de carga previo y extensión completa del cuerpo.'},
-    {id:'arq_blq4', cat:'BLQ', name:'Palomas a esquina alta', dose:'3 series x 5 reps c/lado', desc:'Remates altos a las escuadras. Trabajar el salto vertical-lateral y el desvío con la punta de los dedos por encima del travesaño.'},
-    {id:'arq_ach1', cat:'ACH', name:'Achique 1 vs. delantero', dose:'6 repeticiones', desc:'Un atacante encara desde media distancia. Practicar el achique progresivo, reduciendo el ángulo sin anticipar la caída.'},
-    {id:'arq_ach2', cat:'ACH', name:'Salida a centros cruzados', dose:'8 centros por lado', desc:'Centros desde ambas bandas al área chica. Trabajar lectura de trayectoria, timing de salto y despeje con puños o atrape.'},
-    {id:'arq_ach3', cat:'ACH', name:'Achique y recuperación de posición', dose:'5 series', desc:'Salir rápido ante un pase filtrado y, si no llega, recuperar la posición bajo los tres palos con pasos cortos hacia atrás.'},
-    {id:'arq_pie1', cat:'PIE', name:'Control orientado bajo presión', dose:'10 repeticiones', desc:'Recibir con un rival cerca aplicando presión leve, orientar el primer control hacia el espacio libre y salir jugando en dos toques.'},
-    {id:'arq_pie2', cat:'PIE', name:'Pase corto y largo a dos pies', dose:'20 pases (10+10)', desc:'Circuito de pases cortos precisos y saques largos rasos, alternando pie hábil y pie menos hábil.'},
-    {id:'arq_pie3', cat:'PIE', name:'Salida jugada bajo presión', dose:'6 secuencias', desc:'Simular una salida con el balón desde el fondo ante presión de un rival, buscando siempre la opción más segura antes que el despeje.'},
-    {id:'arq_saq1', cat:'SAQ', name:'Saque de mano a bandas', dose:'8 saques por lado', desc:'Precisión de saque lateral rápido apuntando a un compañero o cono en la banda para iniciar el contraataque.'},
-    {id:'arq_saq2', cat:'SAQ', name:'Saque de meta largo (drop kick)', dose:'10 saques', desc:'Trabajar el saque de volea larga con contacto limpio, priorizando altura y distancia consistente hacia un blanco.'},
-    {id:'arq_saq3', cat:'SAQ', name:'Distribución rápida en contraataque', dose:'6 secuencias', desc:'Tras una atajada, ejecutar la distribución más rápida posible según la situación (mano corta, saque largo o pase con el pie).'},
-    {id:'arq_1v1a', cat:'1v1', name:'Duelo mano a mano frontal', dose:'8 duelos', desc:'Enfrentamiento directo con un atacante desde el borde del área. Trabajar el momento exacto de la salida y mantenerse "grande" en la línea de tiro.'},
-    {id:'arq_1v1b', cat:'1v1', name:'Achique en profundidad', dose:'6 repeticiones', desc:'Ante un pase filtrado en profundidad, salir a cortar el balón antes que el atacante, decidiendo rápido entre despejar o atrapar.'},
-    {id:'arq_1v1c', cat:'1v1', name:'Cierre de ángulo en carrera', dose:'6 repeticiones', desc:'El atacante arranca desde una banda hacia el área; cerrar el ángulo de tiro con carrera diagonal controlada, sin llegar apurado.'},
+    {id:'arq_ref1', cat:'REF', mode:'solo', name:'Reacción a rebotes de pared', dose:'4 series x 45s', desc:'Parado a 2-3m de una pared, lanzá el balón con fuerza variando el ángulo y reaccioná al rebote con las manos. Prioridad: primer paso rápido, no anticipar.'},
+    {id:'arq_ref2', cat:'REF', mode:'pareja', name:'Reflejos con dos balones', dose:'3 series x 10 reps', desc:'Un compañero lanza alternadamente a ambos lados a corta distancia. Foco en manos blandas y recuperación inmediata de postura.'},
+    {id:'arq_ref3', cat:'REF', mode:'solo', name:'Cambios de dirección explosivos', dose:'5 series x 20s', desc:'Desplazamientos laterales cortos y explosivos entre conos, terminando cada repetición con una estirada simulada.'},
+    {id:'arq_blq1', cat:'BLQ', mode:'solo', name:'Caída lateral controlada', dose:'4 series x 6 reps', desc:'Desde posición básica, caída lateral técnica sobre colchoneta o césped, apoyando cadera-costado y protegiendo el balón con ambas manos.'},
+    {id:'arq_blq2', cat:'BLQ', mode:'pareja', name:'Blocaje bajo de rodillas', dose:'3 series x 8 reps', desc:'Remates rasos dirigidos al cuerpo. Trabajar la técnica de "cesta" con manos y antebrazos, rodillas juntas, sin dejar rebote.'},
+    {id:'arq_blq3', cat:'BLQ', mode:'pareja', name:'Estirada a media altura', dose:'4 series x 6 reps c/lado', desc:'Remates a media altura fuera del alcance directo. Foco en el paso de carga previo y extensión completa del cuerpo.'},
+    {id:'arq_blq4', cat:'BLQ', mode:'pareja', name:'Palomas a esquina alta', dose:'3 series x 5 reps c/lado', desc:'Remates altos a las escuadras. Trabajar el salto vertical-lateral y el desvío con la punta de los dedos por encima del travesaño.'},
+    {id:'arq_ach1', cat:'ACH', mode:'pareja', name:'Achique 1 vs. delantero', dose:'6 repeticiones', desc:'Un atacante encara desde media distancia. Practicar el achique progresivo, reduciendo el ángulo sin anticipar la caída.'},
+    {id:'arq_ach2', cat:'ACH', mode:'pareja', name:'Salida a centros cruzados', dose:'8 centros por lado', desc:'Centros desde ambas bandas al área chica. Trabajar lectura de trayectoria, timing de salto y despeje con puños o atrape.'},
+    {id:'arq_ach3', cat:'ACH', mode:'pareja', name:'Achique y recuperación de posición', dose:'5 series', desc:'Salir rápido ante un pase filtrado y, si no llega, recuperar la posición bajo los tres palos con pasos cortos hacia atrás.'},
+    {id:'arq_pie1', cat:'PIE', mode:'pareja', name:'Control orientado bajo presión', dose:'10 repeticiones', desc:'Recibir con un rival cerca aplicando presión leve, orientar el primer control hacia el espacio libre y salir jugando en dos toques.'},
+    {id:'arq_pie2', cat:'PIE', mode:'ambos', name:'Pase corto y largo a dos pies', dose:'20 pases (10+10)', desc:'Circuito de pases cortos precisos y saques largos rasos, alternando pie hábil y pie menos hábil. Solo: contra una pared. Con compañero: pases cruzados.'},
+    {id:'arq_pie3', cat:'PIE', mode:'pareja', name:'Salida jugada bajo presión', dose:'6 secuencias', desc:'Simular una salida con el balón desde el fondo ante presión de un rival, buscando siempre la opción más segura antes que el despeje.'},
+    {id:'arq_saq1', cat:'SAQ', mode:'ambos', name:'Saque de mano a bandas', dose:'8 saques por lado', desc:'Precisión de saque lateral rápido apuntando a un compañero o cono en la banda para iniciar el contraataque.'},
+    {id:'arq_saq2', cat:'SAQ', mode:'solo', name:'Saque de meta largo (drop kick)', dose:'10 saques', desc:'Trabajar el saque de volea larga con contacto limpio, priorizando altura y distancia consistente hacia un blanco.'},
+    {id:'arq_saq3', cat:'SAQ', mode:'pareja', name:'Distribución rápida en contraataque', dose:'6 secuencias', desc:'Tras una atajada, ejecutar la distribución más rápida posible según la situación (mano corta, saque largo o pase con el pie).'},
+    {id:'arq_1v1a', cat:'1v1', mode:'pareja', name:'Duelo mano a mano frontal', dose:'8 duelos', desc:'Enfrentamiento directo con un atacante desde el borde del área. Trabajar el momento exacto de la salida y mantenerse "grande" en la línea de tiro.'},
+    {id:'arq_1v1b', cat:'1v1', mode:'pareja', name:'Achique en profundidad', dose:'6 repeticiones', desc:'Ante un pase filtrado en profundidad, salir a cortar el balón antes que el atacante, decidiendo rápido entre despejar o atrapar.'},
+    {id:'arq_1v1c', cat:'1v1', mode:'pareja', name:'Cierre de ángulo en carrera', dose:'6 repeticiones', desc:'El atacante arranca desde una banda hacia el área; cerrar el ángulo de tiro con carrera diagonal controlada, sin llegar apurado.'},
   ],
   DEF: [
     {id:'def_mar1', cat:'MAR', name:'Marcación al hombre en carrera', dose:'6 carreras de 15m', desc:'Trabajar la distancia óptima de marca, no dejar girar al rival y achicar en el momento justo de la recepción.'},
@@ -2111,6 +2438,8 @@ function openBackupMenu(){
     ? 'Todavía no tenés sesiones guardadas.'
     : `Tenés ${sessions.length} sesión${sessions.length===1?'':'es'} guardada${sessions.length===1?'':'s'} lista${sessions.length===1?'':'s'} para respaldar.`;
   renderReminderToggleUI();
+  renderWarmupToggleUI();
+  renderCooldownToggleUI();
   document.getElementById('backup-menu-bg').classList.add('open');
 }
 function closeBackupMenu(){ document.getElementById('backup-menu-bg').classList.remove('open'); }
@@ -2329,7 +2658,13 @@ let draft = {ARQ:[],DEF:[],MED:[],DEL:[]};
 let activePosition = 'ARQ';
 let activeSession = null;
 let activeChecked = {};
+let warmupActive = false;
+let warmupChecked = {};
+let cooldownActive = false;
+let cooldownChecked = {};
+let pendingFinishFn = null;
 let filterCat = 'ALL';
+let filterMode = 'ALL';
 let matchFilterContext = 'ALL';
 let editingMatchId = null;
 let matchModalContext = 'club';
@@ -2576,6 +2911,11 @@ function categoryCounts(posId){
 // convierte conteo de ejercicios en un atributo estilo FIFA (40-99)
 function computeAttributes(posId){
   const counts = categoryCounts(posId);
+  if(posId==='ARQ' && counts['REF']!==undefined){
+    // el minijuego "Atajá el Remate" también entrena reflejos: cada sesión
+    // jugada con buena precisión suma como si fuera un ejercicio más.
+    counts['REF'] += getReflexRefBonus();
+  }
   const attrs = {};
   Object.keys(counts).forEach(catId=>{
     attrs[catId] = Math.min(99, 40 + counts[catId]*4);
@@ -2649,6 +2989,7 @@ function renderPlayerCard(container, posId, big){
       activePosition = posId;
       savePosition();
       filterCat='ALL';
+      filterMode='ALL';
       renderPositionBar();
       renderProgreso();
     };
@@ -3514,6 +3855,7 @@ function renderPositionBar(){
       activePosition = p.id;
       savePosition();
       filterCat = 'ALL';
+      filterMode = 'ALL';
       renderPositionBar();
       refreshCurrentView();
     };
@@ -4009,12 +4351,37 @@ function renderEjercicios(){
     fr.appendChild(chip);
   });
 
+  // ---- Filtro Solo / Con compañero (por ahora, disponible en los ejercicios de arquero) ----
+  const mfr = document.getElementById('mode-filter-row');
+  const hasModeData = DRILLS[activePosition].some(d=>d.mode);
+  mfr.style.display = hasModeData ? 'flex' : 'none';
+  mfr.innerHTML = '';
+  if(hasModeData){
+    const modeOptions = [
+      {id:'ALL', label:'Todos'},
+      {id:'solo', label:'🧍 Solo'},
+      {id:'pareja', label:'👥 Con compañero'},
+    ];
+    modeOptions.forEach(m=>{
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (filterMode===m.id ? ' active':'');
+      chip.textContent = m.label;
+      chip.onclick = ()=>{ filterMode=m.id; renderEjercicios(); };
+      mfr.appendChild(chip);
+    });
+  }
+
   const list = document.getElementById('drill-list');
   list.innerHTML = '';
-  const items = DRILLS[activePosition].filter(d=> filterCat==='ALL' || d.cat===filterCat);
+  const items = DRILLS[activePosition].filter(d=>{
+    if(filterCat!=='ALL' && d.cat!==filterCat) return false;
+    if(filterMode!=='ALL' && d.mode && d.mode!=='ambos' && d.mode!==filterMode) return false;
+    return true;
+  });
   items.forEach(d=>{
     const cat = catById(activePosition, d.cat);
     const inDraft = draft[activePosition].includes(d.id);
+    const modeInfo = d.mode ? DRILL_MODE_LABEL[d.mode] : null;
     const el = document.createElement('div');
     el.className = 'drill';
     el.innerHTML = `
@@ -4023,7 +4390,7 @@ function renderEjercicios(){
           <div class="badge" style="background:${cat.color}22; color:${cat.color};">${iconSvg(CATEGORY_ICON[d.cat],15,cat.color)}<span>${d.cat}</span></div>
           <div>
             <div class="drill-name">${d.name}</div>
-            <div class="drill-dose">${d.dose}</div>
+            <div class="drill-dose">${d.dose}${modeInfo ? ` · <span title="${modeInfo.full}">${modeInfo.icon} ${modeInfo.short}</span>` : ''}</div>
           </div>
         </div>
         <div class="drill-actions">
@@ -4064,6 +4431,91 @@ function renderEntrenar(){
   const title = document.getElementById('entrenar-title');
   const pos = posById(activePosition);
 
+  if(warmupActive){
+    title.textContent = 'Calentamiento · ' + pos.name;
+    const items = WARMUP_DRILLS[activePosition] || [];
+    let html = `<div class="coach-card" style="margin-bottom:14px;">
+      <div class="coach-eyebrow">🔥 CALENTAMIENTO</div>
+      <div class="coach-text">Unos minutos de activación antes de arrancar bajan el riesgo de lesión, sobre todo en caídas y estiradas. Marcá cada movimiento a medida que lo hacés.</div>
+    </div><div class="active-session">`;
+    items.forEach(w=>{
+      const done = !!warmupChecked[w.id];
+      html += `<div class="drill-check ${done?'done':''}" data-id="${w.id}">
+        <div class="check-circle"></div>
+        <div class="drill-check-body"><div class="name">${w.name}</div><div class="drill-dose">${w.dur}s</div></div>
+        <button class="info-btn" title="Ver de qué se trata">i</button>
+        <div class="drill-desc">${w.desc}</div>
+      </div>`;
+    });
+    html += '</div>';
+    content.innerHTML = html;
+    content.querySelectorAll('.drill-check').forEach(el=>{
+      el.addEventListener('click', ()=>{ warmupChecked[el.dataset.id] = !warmupChecked[el.dataset.id]; renderEntrenar(); });
+    });
+    content.querySelectorAll('.info-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const card = btn.closest('.drill-check');
+        card.classList.toggle('open');
+        btn.classList.toggle('open');
+      });
+    });
+    const doneCount = items.filter(w=>warmupChecked[w.id]).length;
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'cta-btn';
+    continueBtn.textContent = doneCount>=items.length ? 'Empezar entrenamiento' : `Continuar al entrenamiento (${doneCount}/${items.length})`;
+    continueBtn.onclick = finishWarmup;
+    content.appendChild(continueBtn);
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'cta-btn ghost';
+    skipBtn.textContent = 'Saltar calentamiento hoy';
+    skipBtn.onclick = finishWarmup;
+    content.appendChild(skipBtn);
+    return;
+  }
+
+  if(cooldownActive){
+    title.textContent = 'Elongación · ' + pos.name;
+    let html = `<div class="coach-card" style="margin-bottom:14px;">
+      <div class="coach-eyebrow">🧘 ELONGACIÓN FINAL</div>
+      <div class="coach-text">Terminaste la parte fuerte. Unos minutos de estiramiento ayudan a la recuperación y bajan el riesgo de lesión. Marcá cada uno a medida que lo hacés.</div>
+    </div><div class="active-session">`;
+    COOLDOWN_DRILLS.forEach(w=>{
+      const done = !!cooldownChecked[w.id];
+      html += `<div class="drill-check ${done?'done':''}" data-id="${w.id}">
+        <div class="check-circle"></div>
+        <div class="drill-check-body"><div class="name">${w.name}</div><div class="drill-dose">${w.dur}s</div></div>
+        <button class="info-btn" title="Ver de qué se trata">i</button>
+        <div class="drill-desc">${w.desc}</div>
+      </div>`;
+    });
+    html += '</div>';
+    content.innerHTML = html;
+    content.querySelectorAll('.drill-check').forEach(el=>{
+      el.addEventListener('click', ()=>{ cooldownChecked[el.dataset.id] = !cooldownChecked[el.dataset.id]; renderEntrenar(); });
+    });
+    content.querySelectorAll('.info-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const card = btn.closest('.drill-check');
+        card.classList.toggle('open');
+        btn.classList.toggle('open');
+      });
+    });
+    const doneCount = COOLDOWN_DRILLS.filter(w=>cooldownChecked[w.id]).length;
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'cta-btn';
+    continueBtn.textContent = doneCount>=COOLDOWN_DRILLS.length ? 'Finalizar entrenamiento' : `Finalizar entrenamiento (${doneCount}/${COOLDOWN_DRILLS.length})`;
+    continueBtn.onclick = finishCooldown;
+    content.appendChild(continueBtn);
+    const skipBtn = document.createElement('button');
+    skipBtn.className = 'cta-btn ghost';
+    skipBtn.textContent = 'Saltar elongación hoy';
+    skipBtn.onclick = finishCooldown;
+    content.appendChild(skipBtn);
+    return;
+  }
+
   if(activeSession){
     title.textContent = 'Sesión en curso · ' + pos.name;
     let html = `<div class="session-clock-row">
@@ -4080,13 +4532,33 @@ function renderEntrenar(){
       html += `<div class="drill-check ${done?'done':''}" data-id="${id}">
         <div class="check-circle"></div>
         <div class="drill-check-body"><div class="name">${d.name}</div><div class="drill-dose">${d.dose}</div></div>
+        <button class="info-btn" data-info-for="${id}" title="Ver de qué se trata">i</button>
         <button class="rest-timer-btn" data-timer-for="${id}" title="Temporizador de descanso">⏱</button>
+        <div class="drill-desc">${d.desc}</div>
       </div>`;
     });
     html += '</div>';
     content.innerHTML = html;
     content.querySelectorAll('.drill-check').forEach(el=>{
-      el.addEventListener('click', ()=>{ activeChecked[el.dataset.id] = !activeChecked[el.dataset.id]; renderEntrenar(); });
+      el.addEventListener('click', ()=>{
+        const id = el.dataset.id;
+        const wasDone = !!activeChecked[id];
+        activeChecked[id] = !wasDone;
+        const justFinished = !wasDone;
+        const quedanPendientes = activeSession.drillIds.some(dId => !activeChecked[dId]);
+        renderEntrenar();
+        // al marcar un ejercicio como terminado (no al desmarcarlo), ofrecemos
+        // el descanso antes del próximo — solo si todavía queda algo por hacer
+        if(justFinished && quedanPendientes) openRestTimer(true);
+      });
+    });
+    content.querySelectorAll('.info-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const card = btn.closest('.drill-check');
+        card.classList.toggle('open');
+        btn.classList.toggle('open');
+      });
     });
     content.querySelectorAll('.rest-timer-btn').forEach(btn=>{
       btn.addEventListener('click', (e)=>{ e.stopPropagation(); openRestTimer(); });
@@ -4108,6 +4580,31 @@ function renderEntrenar(){
     <div class="coach-eyebrow">🧑‍🏫 ENTRENADOR IA</div>
     <div class="coach-text">${generateCoachPreMessage(activePosition)}</div>
   </div>`;
+
+  // ---- Elongación, disponible siempre, sin depender de una sesión ----
+  html += `<div class="reflex-card" onclick="openStretchModal()">
+    <div class="reflex-card-ico">🧘</div>
+    <div class="reflex-card-body">
+      <div class="reflex-card-title">Elongación</div>
+      <div class="reflex-card-sub">Rutina de estiramiento · usala cuando quieras, no hace falta terminar una sesión acá</div>
+    </div>
+  </div>`;
+
+  // ---- Minijuego de reflejos (solo Arquero) ----
+  if(activePosition==='ARQ'){
+    const best = getOverallReflexBest();
+    html += `<div class="reflex-card" onclick="openReflexGame()">
+      <div class="reflex-card-ico">⚡</div>
+      <div class="reflex-card-body">
+        <div class="reflex-card-title">Atajá el Remate</div>
+        <div class="reflex-card-sub">Minijuego de reflejos · 12 remates, tocá antes que sea gol</div>
+      </div>
+      <div class="reflex-card-best">
+        <div class="n">${best ? best.avg+'ms' : '—'}</div>
+        <div class="l">${best ? REFLEX_DIFFS[best.diff].label : 'sin jugar'}</div>
+      </div>
+    </div>`;
+  }
 
   // ---- Selector de arquetipo ----
   const archeId = selectedArchetype[activePosition];
@@ -4168,7 +4665,7 @@ function renderEntrenar(){
     const startBtn = document.createElement('button');
     startBtn.className = 'cta-btn';
     startBtn.textContent = 'Iniciar sesión (' + currentDraft.length + ' ejercicios)';
-    startBtn.onclick = startSession;
+    startBtn.onclick = maybeStartWarmup;
     content.appendChild(startBtn);
     const clearBtn = document.createElement('button');
     clearBtn.className = 'cta-btn ghost';
@@ -4186,6 +4683,37 @@ function useTemplate(i){
   draft[activePosition] = [...TEMPLATES[activePosition][i].drills];
   saveDraft();
   renderEntrenar();
+}
+
+function maybeStartWarmup(){
+  if(activePosition==='ARQ' && isWarmupEnabled() && (WARMUP_DRILLS[activePosition]||[]).length>0){
+    warmupChecked = {};
+    warmupActive = true;
+    renderEntrenar();
+  } else {
+    startSession();
+  }
+}
+function finishWarmup(){
+  warmupActive = false;
+  startSession();
+}
+
+function maybeStartCooldown(fn){
+  pendingFinishFn = fn;
+  if(isCooldownEnabled() && COOLDOWN_DRILLS.length>0){
+    cooldownChecked = {};
+    cooldownActive = true;
+    renderEntrenar();
+  } else {
+    finishCooldown();
+  }
+}
+function finishCooldown(){
+  cooldownActive = false;
+  const fn = pendingFinishFn;
+  pendingFinishFn = null;
+  if(fn) fn();
 }
 
 function startSession(){
@@ -4279,12 +4807,15 @@ function ensureRestAudioCtx(){
     if(restAudioCtx.state === 'suspended') restAudioCtx.resume();
   }catch(e){ /* audio no disponible */ }
 }
-function openRestTimer(){
+function openRestTimer(auto){
   clearInterval(restTimerInterval);
   restTimerRemaining = 60;
   const disp = document.getElementById('rest-timer-display');
   disp.classList.remove('done');
   disp.textContent = '60';
+  document.getElementById('rest-timer-sub').textContent = auto
+    ? '¡Ejercicio completado! Elegí cuánto descansás antes del próximo.'
+    : 'Elegí cuánto descansás y arrancamos la cuenta regresiva.';
   document.getElementById('rest-timer-modal').classList.add('open');
 }
 function beginRestCountdown(seconds){
@@ -4353,15 +4884,15 @@ async function finishSessionWithZones(){
   activeSession.zones = shotlogTemp;
   activeSession.completionRatio = computeCompletionRatio();
   await addOptionalNote();
-  await pushSession();
   closeShotlog();
+  maybeStartCooldown(async ()=>{ await pushSession(); });
 }
 
 async function finishSessionSimple(){
   activeSession.durationMin = computeDuration();
   activeSession.completionRatio = computeCompletionRatio();
   await addOptionalNote();
-  await pushSession();
+  maybeStartCooldown(async ()=>{ await pushSession(); });
 }
 
 async function pushSession(){
@@ -5363,6 +5894,288 @@ async function deleteMatch(id){
 }
 
 /* ============================================================
+   MINIJUEGO: ATAJÁ EL REMATE (reflejos, solo Arquero)
+============================================================ */
+const REFLEX_ROUNDS = 12;
+const REFLEX_BESTS_KEY = 'arqueroplus_reflex_bests_v2';
+const REFLEX_LEGEND_KEY = 'arqueroplus_reflex_legend_unlocked';
+const REFLEX_DIFF_KEY = 'arqueroplus_reflex_diff';
+const REFLEX_REF_POINTS_KEY = 'arqueroplus_reflex_ref_points';
+const REFLEX_REF_POINTS_PER_BONUS = 10; // cuántos puntos equivalen a +1 en el atributo REF
+const REFLEX_REF_POINTS_BY_DIFF = {facil:1, medio:2, dificil:3, leyenda:4};
+const REFLEX_LEGEND_UNLOCK_MS = 500;
+const REFLEX_LEGEND_UNLOCK_ACC = 75;
+
+const REFLEX_DIFFS = {
+  facil:   {label:'Fácil',   icon:'🙂', windowStart:1150, windowStep:25, windowFloor:650, fakeStartRound:6, fakeProb:0.15},
+  medio:   {label:'Medio',   icon:'⚡', windowStart:1000, windowStep:30, windowFloor:550, fakeStartRound:4, fakeProb:0.22},
+  dificil: {label:'Difícil', icon:'🔥', windowStart:850,  windowStep:35, windowFloor:430, fakeStartRound:2, fakeProb:0.30},
+  leyenda: {label:'Leyenda', icon:'👑', windowStart:700,  windowStep:40, windowFloor:320, fakeStartRound:1, fakeProb:0.35}
+};
+
+let reflexState = null;
+let reflexGameOpen = false;
+let reflexListenerBound = false;
+let reflexDifficulty = 'medio';
+
+/* ---- persistencia (localStorage, por dispositivo) ---- */
+function getReflexBests(){
+  try{
+    const raw = localStorage.getItem(REFLEX_BESTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  }catch(e){ return {}; }
+}
+function getReflexBestFor(diffKey){ return getReflexBests()[diffKey] || null; }
+function saveReflexBestFor(diffKey, entry){
+  const all = getReflexBests();
+  all[diffKey] = entry;
+  try{ localStorage.setItem(REFLEX_BESTS_KEY, JSON.stringify(all)); }catch(e){}
+}
+function getOverallReflexBest(){
+  const all = getReflexBests();
+  let best = null;
+  Object.keys(all).forEach(k=>{
+    if(!best || all[k].avg < best.avg) best = {...all[k], diff:k};
+  });
+  return best;
+}
+function isLegendUnlocked(){
+  try{ return localStorage.getItem(REFLEX_LEGEND_KEY) === '1'; }catch(e){ return false; }
+}
+function unlockLegend(){
+  try{ localStorage.setItem(REFLEX_LEGEND_KEY, '1'); }catch(e){}
+}
+function getSavedDifficulty(){
+  try{
+    const d = localStorage.getItem(REFLEX_DIFF_KEY);
+    if(d && REFLEX_DIFFS[d] && (d!=='leyenda' || isLegendUnlocked())) return d;
+  }catch(e){}
+  return 'medio';
+}
+function saveDifficulty(d){
+  try{ localStorage.setItem(REFLEX_DIFF_KEY, d); }catch(e){}
+}
+function getReflexRefPoints(){
+  try{ return parseInt(localStorage.getItem(REFLEX_REF_POINTS_KEY)) || 0; }catch(e){ return 0; }
+}
+function addReflexRefPoints(n){
+  const total = getReflexRefPoints() + n;
+  try{ localStorage.setItem(REFLEX_REF_POINTS_KEY, String(total)); }catch(e){}
+  return total;
+}
+// cada REFLEX_REF_POINTS_PER_BONUS puntos acumulados = +1 en el atributo REF (como un ejercicio más)
+function getReflexRefBonus(){
+  return Math.floor(getReflexRefPoints() / REFLEX_REF_POINTS_PER_BONUS);
+}
+
+/* ---- selector de dificultad (pantalla intro) ---- */
+function renderReflexDiffRow(){
+  const row = document.getElementById('reflex-diff-row');
+  if(!row) return;
+  const legendOn = isLegendUnlocked();
+  row.innerHTML = '';
+  Object.keys(REFLEX_DIFFS).forEach(key=>{
+    const cfg = REFLEX_DIFFS[key];
+    const locked = key==='leyenda' && !legendOn;
+    const chip = document.createElement('div');
+    chip.className = 'reflex-diff-chip' + (key==='leyenda' ? ' legend' : '') + (locked ? ' locked' : '') + (reflexDifficulty===key ? ' active' : '');
+    chip.innerHTML = `<div class="ico">${locked ? '🔒' : cfg.icon}</div><div class="lbl">${cfg.label}</div>`;
+    chip.onclick = ()=>{
+      if(locked) return;
+      reflexDifficulty = key;
+      saveDifficulty(key);
+      renderReflexDiffRow();
+    };
+    row.appendChild(chip);
+  });
+  document.getElementById('reflex-unlock-hint').style.display = legendOn ? 'none' : 'block';
+}
+
+function bindReflexZoneListener(){
+  if(reflexListenerBound) return;
+  const goal = document.getElementById('reflex-goal');
+  if(!goal) return;
+  goal.addEventListener('click', (e)=>{
+    const zoneEl = e.target.closest('.reflex-zone');
+    if(!zoneEl || !reflexState) return;
+    handleReflexTap(parseInt(zoneEl.dataset.zone, 10));
+  });
+  reflexListenerBound = true;
+}
+
+function clearReflexZones(){
+  document.querySelectorAll('.reflex-zone').forEach(z=>{
+    z.className = 'reflex-zone';
+    z.innerHTML = '';
+  });
+}
+
+function updateReflexHud(){
+  document.getElementById('reflex-round').textContent = `${reflexState.round}/${REFLEX_ROUNDS}`;
+  document.getElementById('reflex-hits').textContent = reflexState.hits;
+  const avg = reflexState.times.length ? Math.round(reflexState.times.reduce((a,b)=>a+b,0)/reflexState.times.length) : null;
+  document.getElementById('reflex-avg').textContent = avg!==null ? avg : '—';
+}
+
+function openReflexGame(){
+  bindReflexZoneListener();
+  reflexGameOpen = true;
+  reflexDifficulty = getSavedDifficulty();
+  document.getElementById('reflex-intro').style.display = 'flex';
+  document.getElementById('reflex-play').style.display = 'none';
+  document.getElementById('reflex-result').style.display = 'none';
+  renderReflexDiffRow();
+  document.getElementById('reflex-bg').classList.add('open');
+}
+
+function closeReflexGame(){
+  reflexGameOpen = false;
+  if(reflexState && reflexState.timeoutHandle) clearTimeout(reflexState.timeoutHandle);
+  if(reflexState && reflexState.nextHandle) clearTimeout(reflexState.nextHandle);
+  reflexState = null;
+  document.getElementById('reflex-bg').classList.remove('open');
+  if(document.getElementById('view-entrenar').classList.contains('active')) renderEntrenar();
+}
+
+function startReflexGame(){
+  reflexState = {
+    round: 0, hits: 0, correctCount: 0, times: [],
+    activeZone: null, isFake: false, resolved: true, busy: true,
+    timeoutHandle: null, nextHandle: null, appearTime: 0,
+    diff: reflexDifficulty
+  };
+  document.getElementById('reflex-intro').style.display = 'none';
+  document.getElementById('reflex-result').style.display = 'none';
+  document.getElementById('reflex-play').style.display = 'flex';
+  clearReflexZones();
+  updateReflexHud();
+  nextReflexRound();
+}
+
+function nextReflexRound(){
+  if(!reflexGameOpen || !reflexState) return;
+  clearReflexZones();
+  if(reflexState.round >= REFLEX_ROUNDS){ finishReflexGame(); return; }
+  reflexState.round++;
+  reflexState.resolved = false;
+  reflexState.busy = true;
+  updateReflexHud();
+  document.getElementById('reflex-msg').textContent = 'Preparate...';
+  const delay = 500 + Math.random()*700;
+  reflexState.nextHandle = setTimeout(()=>{
+    if(!reflexGameOpen || !reflexState) return;
+    const cfg = REFLEX_DIFFS[reflexState.diff] || REFLEX_DIFFS.medio;
+    const zoneIdx = Math.floor(Math.random()*6);
+    const isFake = reflexState.round > cfg.fakeStartRound && Math.random() < cfg.fakeProb;
+    reflexState.activeZone = zoneIdx;
+    reflexState.isFake = isFake;
+    reflexState.resolved = false;
+    reflexState.busy = false;
+    reflexState.appearTime = performance.now();
+    const zoneEl = document.querySelector(`.reflex-zone[data-zone="${zoneIdx}"]`);
+    zoneEl.classList.add(isFake ? 'fake' : 'real');
+    zoneEl.innerHTML = isFake ? '<div class="reflex-ball fake-ball">✕</div>' : '<div class="reflex-ball"></div>';
+    document.getElementById('reflex-msg').textContent = isFake ? '🚫 ¡Amague! NO toques' : '¡Tocá la zona!';
+    const windowMs = Math.max(cfg.windowStart - reflexState.round*cfg.windowStep, cfg.windowFloor);
+    reflexState.timeoutHandle = setTimeout(()=>resolveReflexRound(null), windowMs);
+  }, delay);
+}
+
+function handleReflexTap(zoneIdx){
+  if(!reflexState || reflexState.busy || reflexState.resolved) return;
+  resolveReflexRound(zoneIdx);
+}
+
+function resolveReflexRound(tappedZone){
+  if(!reflexState || reflexState.resolved) return;
+  reflexState.resolved = true;
+  clearTimeout(reflexState.timeoutHandle);
+  const zoneEl = document.querySelector(`.reflex-zone[data-zone="${reflexState.activeZone}"]`);
+  const reactionMs = Math.round(performance.now() - reflexState.appearTime);
+  const msg = document.getElementById('reflex-msg');
+
+  if(reflexState.isFake){
+    if(tappedZone === null){
+      reflexState.correctCount++;
+      msg.textContent = '✅ Bien, no mordiste el amague';
+    }else{
+      if(zoneEl) zoneEl.classList.add('hit-fake');
+      msg.textContent = '❌ Amague, no había que tocar';
+    }
+  }else{
+    if(tappedZone === reflexState.activeZone){
+      reflexState.correctCount++;
+      reflexState.hits++;
+      reflexState.times.push(reactionMs);
+      if(zoneEl) zoneEl.classList.add('hit');
+      msg.textContent = `🧤 ¡Atajada! ${reactionMs}ms`;
+    }else{
+      if(zoneEl) zoneEl.classList.add('miss');
+      msg.textContent = tappedZone===null ? '⚽ Gol, no llegaste a tiempo' : '⚽ Gol, zona equivocada';
+    }
+  }
+  updateReflexHud();
+  reflexState.nextHandle = setTimeout(()=>nextReflexRound(), 700);
+}
+
+function finishReflexGame(){
+  const diffKey = reflexState.diff;
+  const avg = reflexState.times.length ? Math.round(reflexState.times.reduce((a,b)=>a+b,0)/reflexState.times.length) : null;
+  const accuracy = Math.round((reflexState.correctCount / REFLEX_ROUNDS) * 100);
+
+  document.getElementById('reflex-play').style.display = 'none';
+  document.getElementById('reflex-result').style.display = 'flex';
+  document.getElementById('rr-avg').textContent = avg!==null ? avg+'ms' : '—';
+  document.getElementById('rr-acc').textContent = accuracy+'%';
+  document.getElementById('rr-title').textContent = 'Resultado · ' + REFLEX_DIFFS[diffKey].label;
+  document.getElementById('rr-ico').textContent = '🏆';
+
+  let msgTxt = 'Seguí practicando para bajar tu tiempo de reacción.';
+  if(accuracy>=90) msgTxt = 'Reflejos de otro nivel. ¡Bajo palos sos una pared!';
+  else if(accuracy>=70) msgTxt = 'Buen partido bajo los tres palos.';
+  document.getElementById('rr-msg').textContent = msgTxt;
+
+  // récord personal (por dificultad)
+  const best = getReflexBestFor(diffKey);
+  const newBestEl = document.getElementById('rr-newbest');
+  newBestEl.style.display = 'none';
+  if(avg!==null && accuracy>=75){
+    if(!best || avg < best.avg){
+      saveReflexBestFor(diffKey, {avg, acc:accuracy, date:new Date().toISOString()});
+      newBestEl.style.display = 'block';
+    }
+  }
+
+  // desbloqueo de Leyenda: solo jugando en Difícil
+  const legendEl = document.getElementById('rr-legend-unlock');
+  legendEl.style.display = 'none';
+  if(diffKey==='dificil' && !isLegendUnlocked() && avg!==null && avg<=REFLEX_LEGEND_UNLOCK_MS && accuracy>=REFLEX_LEGEND_UNLOCK_ACC){
+    unlockLegend();
+    legendEl.style.display = 'block';
+    document.getElementById('rr-ico').textContent = '👑';
+  }
+
+  // aporte al atributo de Reflejos (REF) en la carta del jugador:
+  // cada dificultad pesa distinto, y hacen falta REFLEX_REF_POINTS_PER_BONUS
+  // puntos acumulados para subir 1 punto real del atributo (como un ejercicio más).
+  const bonusEl = document.getElementById('rr-ref-bonus');
+  bonusEl.style.display = 'none';
+  if(accuracy>=60){
+    const weight = REFLEX_REF_POINTS_BY_DIFF[diffKey] || 1;
+    const before = getReflexRefPoints();
+    const after = addReflexRefPoints(weight);
+    const leveledUp = Math.floor(after/REFLEX_REF_POINTS_PER_BONUS) > Math.floor(before/REFLEX_REF_POINTS_PER_BONUS);
+    const progress = after % REFLEX_REF_POINTS_PER_BONUS;
+    bonusEl.style.display = 'block';
+    bonusEl.textContent = leveledUp
+      ? '🧤 ¡Subiste tu atributo de Reflejos en la carta!'
+      : `🧤 +${weight} para tu atributo de Reflejos (${progress}/${REFLEX_REF_POINTS_PER_BONUS})`;
+  }
+
+  reflexState = null;
+}
+
+/* ============================================================
    INIT
 ============================================================ */
 (async function init(){
@@ -5374,6 +6187,7 @@ async function deleteMatch(id){
   initBienvenida();
   initReminderCheck();
   renderThemeToggleUI();
+  renderCooldownToggleUI();
 })();
 
 /* ---------- Tutorial de bienvenida ---------- */
