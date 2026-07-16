@@ -92,9 +92,43 @@
 
    v26: se saca el campo de texto libre del chequeo de molestias (el
    consejo genérico no aportaba lo suficiente). Queda solo la
-   selección por chips con las zonas ya cargadas. */
+   selección por chips con las zonas ya cargadas.
 
-const CACHE_NAME = 'arqueroplus-v26';
+   v27: en el test físico inicial se agrega una pregunta sobre
+   condiciones de salud (cardíaca u otra) a tener en cuenta; si se
+   marca, el resultado muestra un aviso recomendando consultar a un
+   médico antes de repetir pruebas de esfuerzo máximo y qué señales
+   de alarma frenar el entrenamiento. Además, el resultado ahora
+   detecta el punto más flojo del test (ej. salto) y recomienda
+   ejercicios de arquero puntuales para esa capacidad, con un botón
+   para agregarlos directo a la próxima sesión.
+
+   v28: los ejercicios con formato "X series x Y reps" ahora tienen
+   un contador de series dentro de la sesión ("Serie 1/3", "2/3"...).
+   Al terminar una serie que no es la última, se dispara un descanso
+   corto (10/15/20s) en vez del descanso grande de entre-ejercicios,
+   que sigue apareciendo recién cuando se completan todas las series.
+
+   v29: se agrega una categoría nueva a Arquero, "Preparación Física"
+   (FIS), con 6 ejercicios: sprints cortos, saltos pliométricos,
+   flexiones explosivas, plancha con rotación, dominadas/remo con
+   banda, y sentadilla búlgara. Se suma también una plantilla rápida
+   "Preparación Física". El test físico inicial ahora recomienda
+   estos ejercicios puntuales según el punto flojo detectado (antes
+   usaba ejercicios de arco como aproximación, ahora son específicos
+   de esa capacidad). La categoría nueva entra sola en el radar de
+   atributos y en el cálculo de nivel (OVR) del arquero, sin tocar
+   código aparte de sumarla a la lista de categorías.
+
+   v30: fix importante — el archivo tenía varios cierres de comentario
+   sueltos a la mitad del bloque de notas (entre v26 y v29), lo
+   que rompía la sintaxis de todo el archivo. Un service worker con
+   error de sintaxis no se instala, así que las versiones v27, v28 y
+   v29 probablemente nunca llegaron a activarse en los dispositivos
+   ya instalados por más que se subiera el HTML nuevo. Con este fix
+   el archivo vuelve a ser JavaScript válido. */
+
+const CACHE_NAME = 'arqueroplus-v30';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

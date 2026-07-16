@@ -409,6 +409,15 @@
     flex-basis:100%; margin-top:0; padding-left:36px;
   }
   .active-session .drill-check.open .drill-desc{display:block;}
+  .set-tracker{
+    flex-basis:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:8px 0 0 36px; margin-top:2px; border-top:1px dashed var(--line); padding-top:8px;
+  }
+  .set-tracker-label{font-size:12px; color:var(--chalk-dim); font-weight:600;}
+  .set-tracker-btn{
+    background:var(--accent-dim); color:var(--accent); border:1px solid var(--accent);
+    border-radius:20px; padding:6px 12px; font-size:11.5px; font-weight:600; cursor:pointer; flex-shrink:0;
+  }
   .check-circle{
     width:24px; height:24px; border-radius:50%; border:2px solid var(--line-strong);
     flex-shrink:0; cursor:pointer; position:relative;
@@ -1626,11 +1635,7 @@
     <h2 id="rest-timer-title">Descanso</h2>
     <div class="sub" id="rest-timer-sub">Elegí cuánto descansás y arrancamos la cuenta regresiva.</div>
     <div class="rest-timer-display" id="rest-timer-display">60</div>
-    <div class="quick-add-row" id="rest-timer-presets">
-      <div class="quick-add-chip" onclick="beginRestCountdown(30)">30s</div>
-      <div class="quick-add-chip" onclick="beginRestCountdown(60)">60s</div>
-      <div class="quick-add-chip" onclick="beginRestCountdown(90)">90s</div>
-    </div>
+    <div class="quick-add-row" id="rest-timer-presets"></div>
     <button class="cta-btn ghost" id="rest-skip-btn" style="margin-top:16px;" onclick="skipRestTimer()">⏭ Saltar descanso</button>
     <button class="cta-btn ghost" style="margin-top:8px;" onclick="closeRestTimer()">Cerrar</button>
   </div>
@@ -1780,6 +1785,18 @@
     <div class="field-row"><label>🔥 Abdominales (máx. reps)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-situps" class="field-input" placeholder="Ej: 30"></div>
     <div class="field-row"><label>🧗 Dominadas (máx. reps)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-pullups" class="field-input" placeholder="Ej: 5"></div>
 
+    <div class="settings-row" style="margin-top:6px; align-items:flex-start;">
+      <div class="settings-row-body">
+        <div class="settings-row-title">⚕️ Tengo una condición de salud a tener en cuenta</div>
+        <div class="settings-row-sub">Cardíaca, respiratoria, o cualquier otra que deba tener presente antes de un esfuerzo máximo (sprint, salto).</div>
+      </div>
+      <div class="toggle-switch" id="fit-health-toggle" onclick="toggleFitHealthFlag()"></div>
+    </div>
+    <div class="field-row" id="fit-health-note-row" style="display:none;">
+      <label>Contame un poco más (opcional)</label>
+      <input type="text" id="fit-health-note" class="field-input" placeholder="Ej: arritmia, asma, presión alta...">
+    </div>
+
     <div style="display:flex; gap:10px; margin-top:16px;">
       <button class="cta-btn ghost" style="margin-top:0;" onclick="closeFitTestModal()">Cancelar</button>
       <button class="cta-btn" style="margin-top:0;" onclick="saveFitTest()">Ver mi nivel</button>
@@ -1899,6 +1916,7 @@ const ICON_PATHS = {
   zigzag:  'M3 17l5-5-3-3 8-6 3 4-5 3 4 4-3 3 5 4',
   backturn:'M12 4a8 8 0 1 0 6 13M12 4v5h5',
   arrows:  'M4 12h16M4 12l4-4M4 12l4 4M20 12l-4-4M20 12l-4 4',
+  strength:'M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10',
 };
 function iconSvg(name, size, color){
   const p = ICON_PATHS[name] || ICON_PATHS.target;
@@ -1913,6 +1931,7 @@ const CATEGORY_ICON = {
   MAR:'duel', AER:'header', SAL:'pass', LEC:'eye',
   CTP:'boot', VIS:'pass', REC:'magnet', LLE:'arrows',
   FIN:'target', MSB:'run', ESP:'backturn', REG:'zigzag',
+  FIS:'strength',
 };
 
 /* ============================================================
@@ -2173,6 +2192,7 @@ const CATEGORIES = {
     {id:'PIE', name:'Juego de Pies'},
     {id:'SAQ', name:'Saques y Distribución'},
     {id:'1v1', name:'Uno contra Uno'},
+    {id:'FIS', name:'Preparación Física'},
   ],
   DEF: [
     {id:'MAR', name:'Marcación y Duelos'},
@@ -2230,6 +2250,12 @@ const DRILLS = {
     {id:'arq_1v1a', cat:'1v1', mode:'pareja', name:'Duelo mano a mano frontal', dose:'8 duelos', desc:'Enfrentamiento directo con un atacante desde el borde del área. Trabajar el momento exacto de la salida y mantenerse "grande" en la línea de tiro.'},
     {id:'arq_1v1b', cat:'1v1', mode:'pareja', name:'Achique en profundidad', dose:'6 repeticiones', desc:'Ante un pase filtrado en profundidad, salir a cortar el balón antes que el atacante, decidiendo rápido entre despejar o atrapar.'},
     {id:'arq_1v1c', cat:'1v1', mode:'pareja', name:'Cierre de ángulo en carrera', dose:'6 repeticiones', desc:'El atacante arranca desde una banda hacia el área; cerrar el ángulo de tiro con carrera diagonal controlada, sin llegar apurado.'},
+    {id:'arq_fis1', cat:'FIS', mode:'solo', name:'Sprints cortos repetidos', dose:'6 series x 15m', desc:'Sprints explosivos de arranque, simulando la salida del arco a cortar un centro o un pase filtrado. Recuperación casi completa entre series — la calidad de cada sprint importa más que el cansancio acumulado.'},
+    {id:'arq_fis2', cat:'FIS', mode:'solo', name:'Saltos pliométricos', dose:'4 series x 6 reps', desc:'Saltos verticales explosivos (al cajón, a una grada, o en el lugar) con aterrizaje suave y controlado. Es la base física de las palomas y los desvíos por encima del travesaño.'},
+    {id:'arq_fis3', cat:'FIS', mode:'solo', name:'Flexiones explosivas', dose:'4 series x 10 reps', desc:'Flexiones de brazos con impulso (despegando las manos del piso si el nivel lo permite, o simplemente rápidas si no). Trabajan la potencia de brazos para rechazar remates fuertes.'},
+    {id:'arq_fis4', cat:'FIS', mode:'solo', name:'Plancha con rotación', dose:'3 series x 30s por lado', desc:'Plancha lateral con rotación de tronco hacia el techo y de vuelta. Estabilidad de core, clave para sostener el cuerpo en el aire durante la estirada.'},
+    {id:'arq_fis5', cat:'FIS', mode:'ambos', name:'Dominadas o remo con banda', dose:'4 series x 6-8 reps', desc:'Dominadas en barra si tenés dónde colgarte, o remo con banda elástica si no. Fuerza de tracción para sostenerte al ir a buscar un centro por arriba de todos.'},
+    {id:'arq_fis6', cat:'FIS', mode:'solo', name:'Sentadilla búlgara', dose:'3 series x 8 reps por lado', desc:'Sentadilla a una pierna con el pie de atrás apoyado en una silla o banco. Fuerza unilateral de piernas, la base de cualquier salto o arrancada explosiva.'},
   ],
   DEF: [
     {id:'def_mar1', cat:'MAR', name:'Marcación al hombre en carrera', dose:'6 carreras de 15m', desc:'Trabajar la distancia óptima de marca, no dejar girar al rival y achicar en el momento justo de la recepción.'},
@@ -2279,6 +2305,15 @@ const DRILLS = {
 const DRILL_INDEX = {};
 Object.keys(DRILLS).forEach(pos=> DRILLS[pos].forEach(d=> DRILL_INDEX[d.id] = {...d, position:pos}));
 function drillById(id){ return DRILL_INDEX[id]; }
+// detecta ejercicios tipo "3 series x 10 reps" para poder trackear serie por serie con descanso corto entremedio
+function seriesCountForDrill(id){
+  const d = drillById(id);
+  if(!d || !d.dose) return null;
+  const m = d.dose.match(/(\d+)\s*series?/i);
+  if(!m) return null;
+  const n = parseInt(m[1], 10);
+  return (n>=2) ? n : null;
+}
 
 /* ============================================================
    TEMPLATES (per position)
@@ -2289,6 +2324,7 @@ const TEMPLATES = {
     {name:'Completa', dur:'45 min', drills:['arq_ref1','arq_blq3','arq_ach1','arq_pie1','arq_saq2','arq_1v1a']},
     {name:'Pies y Salidas', dur:'25 min', drills:['arq_pie1','arq_pie2','arq_pie3','arq_ach2']},
     {name:'Bajo los tres palos', dur:'20 min', drills:['arq_blq1','arq_blq2','arq_blq4']},
+    {name:'Preparación Física', dur:'30 min', drills:['arq_fis1','arq_fis2','arq_fis3','arq_fis4','arq_fis6']},
   ],
   DEF: [
     {name:'Marca sólida', dur:'20 min', drills:['def_mar1','def_mar2','def_lec1']},
@@ -2804,6 +2840,7 @@ let draft = {ARQ:[],DEF:[],MED:[],DEL:[]};
 let activePosition = 'ARQ';
 let activeSession = null;
 let activeChecked = {};
+let activeSetProgress = {}; // {drillId: series ya completadas}
 let warmupActive = false;
 let warmupChecked = {};
 let cooldownActive = false;
@@ -4711,12 +4748,19 @@ function renderEntrenar(){
     activeSession.drillIds.forEach(id=>{
       const d = drillById(id);
       const done = !!activeChecked[id];
+      const seriesTotal = seriesCountForDrill(id);
+      const seriesDone = activeSetProgress[id] || 0;
+      const showSetTracker = seriesTotal && !done;
       html += `<div class="drill-check ${done?'done':''}" data-id="${id}">
         <div class="check-circle"></div>
         <div class="drill-check-body"><div class="name">${d.name}</div><div class="drill-dose">${d.dose}</div></div>
         <button class="info-btn" data-info-for="${id}" title="Ver de qué se trata">i</button>
         <button class="rest-timer-btn" data-timer-for="${id}" title="Temporizador de descanso">⏱</button>
         <div class="drill-desc">${d.desc}</div>
+        ${showSetTracker ? `<div class="set-tracker">
+          <div class="set-tracker-label">Serie ${Math.min(seriesDone+1, seriesTotal)}/${seriesTotal}</div>
+          <button class="set-tracker-btn" data-set-id="${id}">✓ Terminé esta serie</button>
+        </div>` : ''}
       </div>`;
     });
     html += '</div>';
@@ -4726,6 +4770,7 @@ function renderEntrenar(){
         const id = el.dataset.id;
         const wasDone = !!activeChecked[id];
         activeChecked[id] = !wasDone;
+        activeSetProgress[id] = wasDone ? 0 : (seriesCountForDrill(id) || 0);
         const justFinished = !wasDone;
         const quedanPendientes = activeSession.drillIds.some(dId => !activeChecked[dId]);
         renderEntrenar();
@@ -4744,6 +4789,12 @@ function renderEntrenar(){
     });
     content.querySelectorAll('.rest-timer-btn').forEach(btn=>{
       btn.addEventListener('click', (e)=>{ e.stopPropagation(); openRestTimer(); });
+    });
+    content.querySelectorAll('.set-tracker-btn').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        markSeriesDone(btn.dataset.setId);
+      });
     });
     const finishBtn = document.createElement('button');
     finishBtn.className = 'cta-btn';
@@ -4907,6 +4958,7 @@ function startSession(){
     startedAt: Date.now(),
   };
   activeChecked = {};
+  activeSetProgress = {};
   renderEntrenar();
 }
 
@@ -4989,15 +5041,41 @@ function ensureRestAudioCtx(){
     if(restAudioCtx.state === 'suspended') restAudioCtx.resume();
   }catch(e){ /* audio no disponible */ }
 }
-function openRestTimer(auto){
+function markSeriesDone(id){
+  const total = seriesCountForDrill(id);
+  if(!total) return;
+  const next = (activeSetProgress[id] || 0) + 1;
+  activeSetProgress[id] = next;
+  if(next >= total){
+    // completó todas las series → el ejercicio entero queda marcado, y entra el descanso "grande" antes del próximo
+    activeChecked[id] = true;
+    const quedanPendientes = activeSession.drillIds.some(dId => !activeChecked[dId]);
+    renderEntrenar();
+    if(quedanPendientes) openRestTimer(true);
+  } else {
+    // todavía quedan series de este mismo ejercicio → descanso corto entre series
+    renderEntrenar();
+    openRestTimer(false, [10,15,20], `Serie ${next}/${total} lista. Descansá y arrancamos la próxima.`);
+  }
+}
+
+function openRestTimer(auto, presets, customSub){
   clearInterval(restTimerInterval);
-  restTimerRemaining = 60;
+  const list = (presets && presets.length) ? presets : [30,60,90];
+  restTimerRemaining = list[Math.floor(list.length/2)];
   const disp = document.getElementById('rest-timer-display');
   disp.classList.remove('done');
-  disp.textContent = '60';
-  document.getElementById('rest-timer-sub').textContent = auto
+  disp.textContent = String(restTimerRemaining);
+  document.getElementById('rest-timer-sub').textContent = customSub || (auto
     ? '¡Ejercicio completado! Elegí cuánto descansás antes del próximo.'
-    : 'Elegí cuánto descansás y arrancamos la cuenta regresiva.';
+    : 'Elegí cuánto descansás y arrancamos la cuenta regresiva.');
+  const presetsRow = document.getElementById('rest-timer-presets');
+  presetsRow.innerHTML = list.map(s=>`<div class="quick-add-chip" data-secs="${s}">${s}s</div>`).join('');
+  presetsRow.querySelectorAll('.quick-add-chip').forEach(chip=>{
+    chip.addEventListener('click', ()=> beginRestCountdown(parseInt(chip.dataset.secs, 10)));
+  });
+  const skipBtn = document.getElementById('rest-skip-btn');
+  if(skipBtn) skipBtn.style.display = '';
   document.getElementById('rest-timer-modal').classList.add('open');
 }
 function beginRestCountdown(seconds){
@@ -5091,6 +5169,7 @@ async function pushSession(){
   const finishedPos = finishedSession.position;
   activeSession = null;
   activeChecked = {};
+  activeSetProgress = {};
   draft[finishedPos] = [];
   await saveDraft();
   goTo('inicio');
@@ -5553,6 +5632,22 @@ function computeFitnessResult(results){
   return {breakdown, avg, level};
 }
 
+// qué ejercicios de arquero le sirven a cada capacidad física del test
+const TEST_TO_ARQ_DRILLS = {
+  sprint:   ['arq_fis1', 'arq_ach1', 'arq_ach3'],
+  jump:     ['arq_fis2', 'arq_fis6', 'arq_blq4'],
+  pushups:  ['arq_fis3', 'arq_blq1'],
+  situps:   ['arq_fis4', 'arq_blq3'],
+  pullups:  ['arq_fis5', 'arq_blq4'],
+};
+function getWeakestFitAreas(breakdown){
+  const scored = breakdown.filter(b=>b.score!==null);
+  if(scored.length<2) return []; // con un solo dato no hay "punto flojo" relativo
+  const min = Math.min(...scored.map(b=>b.score));
+  if(min>=4) return []; // ya está todo bien, no hace falta remarcar nada
+  return scored.filter(b=>b.score===min);
+}
+
 function openFitTestModal(){
   const t = physicalTest || {};
   document.getElementById('fit-sprint').value = t.sprint ?? '';
@@ -5560,9 +5655,24 @@ function openFitTestModal(){
   document.getElementById('fit-pushups').value = t.pushups ?? '';
   document.getElementById('fit-situps').value = t.situps ?? '';
   document.getElementById('fit-pullups').value = t.pullups ?? '';
+  fitHealthFlagDraft = !!t.healthFlag;
+  document.getElementById('fit-health-note').value = t.healthNote || '';
+  renderFitHealthToggleUI();
   document.getElementById('fit-test-modal').classList.add('open');
 }
 function closeFitTestModal(){ document.getElementById('fit-test-modal').classList.remove('open'); }
+
+let fitHealthFlagDraft = false;
+function toggleFitHealthFlag(){
+  fitHealthFlagDraft = !fitHealthFlagDraft;
+  renderFitHealthToggleUI();
+}
+function renderFitHealthToggleUI(){
+  const el = document.getElementById('fit-health-toggle');
+  if(el) el.classList.toggle('on', fitHealthFlagDraft);
+  const row = document.getElementById('fit-health-note-row');
+  if(row) row.style.display = fitHealthFlagDraft ? 'block' : 'none';
+}
 
 async function saveFitTest(){
   const results = {
@@ -5571,8 +5681,10 @@ async function saveFitTest(){
     pushups: document.getElementById('fit-pushups').value,
     situps: document.getElementById('fit-situps').value,
     pullups: document.getElementById('fit-pullups').value,
+    healthFlag: fitHealthFlagDraft,
+    healthNote: (document.getElementById('fit-health-note').value || '').trim(),
   };
-  const anyFilled = Object.values(results).some(v=>v!=='' && v!==null && v!==undefined);
+  const anyFilled = FITNESS_TESTS.some(def=>{ const v=results[def.id]; return v!=='' && v!==null && v!==undefined; });
   if(!anyFilled){ alert('Cargá al menos un resultado para calcular tu nivel.'); return; }
 
   const { level } = computeFitnessResult(results);
@@ -5593,14 +5705,46 @@ function showFitResult(){
   const { breakdown, level } = computeFitnessResult(physicalTest);
   document.getElementById('fit-result-icon').textContent = level.icon;
   document.getElementById('fit-result-title').textContent = level.name;
-  let html = `<p style="font-size:13px; color:var(--chalk-dim); line-height:1.5; margin-bottom:14px;">${level.desc}</p>`;
+  let html = '';
+  if(physicalTest.healthFlag){
+    html += `<div class="coach-card" style="margin-bottom:14px; border-color:var(--danger, #FF6B6B);">
+      <div class="coach-eyebrow">⚕️ TENÉS ALGO A TENER EN CUENTA</div>
+      <div class="coach-text">Marcaste una condición de salud${physicalTest.healthNote ? ' ('+escapeHtml(physicalTest.healthNote)+')' : ''}. Antes de repetir pruebas de esfuerzo máximo (sprint, salto) o de subir mucho la intensidad, consultá con un médico que conozca tu caso. Si durante el entrenamiento sentís dolor en el pecho, mareos, falta de aire fuera de lo normal o palpitaciones raras, parás en el momento.</div>
+    </div>`;
+  }
+  html += `<p style="font-size:13px; color:var(--chalk-dim); line-height:1.5; margin-bottom:14px;">${level.desc}</p>`;
   breakdown.forEach(b=>{
     const dots = [1,2,3,4,5].map(n=>`<div class="fit-dot ${b.score && n<=b.score ? 'on':''}" style="--fit-color:${level.color}"></div>`).join('');
     const valTxt = (b.value!==null && b.value!==undefined && b.value!=='') ? `${b.value} ${b.def.unit}` : '—';
     html += `<div class="fit-row"><span>${b.def.icon}</span><span class="fr-label">${b.def.label}</span><span class="fr-val mono">${valTxt}</span><div class="fit-dots">${dots}</div></div>`;
   });
+
+  const weakAreas = getWeakestFitAreas(breakdown);
+  const recDrillIds = [...new Set(weakAreas.flatMap(w=>TEST_TO_ARQ_DRILLS[w.def.id]||[]))].filter(id=>drillById(id));
+  if(weakAreas.length && recDrillIds.length){
+    const labels = weakAreas.map(w=>w.def.label).join(' y ');
+    html += `<div class="coach-card" style="margin-top:14px;">
+      <div class="coach-eyebrow">🎯 TU PUNTO A MEJORAR: ${escapeHtml(labels.toUpperCase())}</div>
+      <div class="coach-text">Sumá estos ejercicios a tus próximas sesiones de arquero — trabajan justo esa capacidad en situación de juego, no solo en el gimnasio.</div>
+      <ul style="margin:8px 0 4px; padding-left:18px; font-size:12.5px; color:var(--chalk-dim); line-height:1.6;">
+        ${recDrillIds.map(id=>`<li>${escapeHtml(drillById(id).name)}</li>`).join('')}
+      </ul>
+      <button id="fit-result-add-btn" class="cta-btn" style="margin-top:10px;" data-ids='${JSON.stringify(recDrillIds)}'>+ Agregar a mi próxima sesión</button>
+    </div>`;
+  }
+
   document.getElementById('fit-result-breakdown').innerHTML = html;
+  const addBtn = document.getElementById('fit-result-add-btn');
+  if(addBtn) addBtn.addEventListener('click', ()=> addFitRecommendedDrills(JSON.parse(addBtn.dataset.ids)));
   document.getElementById('fit-result-bg').classList.add('open');
+}
+function addFitRecommendedDrills(ids){
+  activePosition = 'ARQ';
+  ids.forEach(id=>{ if(!draft.ARQ.includes(id)) draft.ARQ.push(id); });
+  saveDraft();
+  closeFitResult();
+  renderPositionBar();
+  goTo('entrenar');
 }
 function closeFitResult(){ document.getElementById('fit-result-bg').classList.remove('open'); }
 
