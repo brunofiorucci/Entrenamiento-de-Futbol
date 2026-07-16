@@ -419,6 +419,11 @@
     color:#0E2A1C; font-size:13px; font-weight:700;
   }
   .drill-check.done .name{color:var(--chalk-faint); text-decoration:line-through;}
+  .drill-check.priority{border-color:var(--accent); background:var(--accent-dim);}
+  .drill-check.priority .drill-check-body .name::after{
+    content:"⚠ prioridad"; margin-left:8px; font-family:'IBM Plex Mono',monospace; font-size:9.5px;
+    letter-spacing:0.04em; text-transform:uppercase; color:var(--accent); font-weight:600;
+  }
 
   /* ---------- Arquetipos ---------- */
   .archetype-row{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; scrollbar-width:none;}
@@ -1500,6 +1505,13 @@
       <div class="danger-zone-label" style="color:var(--chalk-dim); border:none; margin-bottom:0;">Entrenamiento</div>
       <div class="settings-row">
         <div class="settings-row-body">
+          <div class="settings-row-title">🤕 Chequeo de molestias antes de entrenar</div>
+          <div class="settings-row-sub">Antes de arrancar (arquero), pregunta si te duele algo y te da un consejo por zona. Siempre podés saltarlo desde ahí.</div>
+        </div>
+        <div class="toggle-switch" id="precheck-toggle" onclick="togglePrecheck()"></div>
+      </div>
+      <div class="settings-row" style="margin-top:10px;">
+        <div class="settings-row-body">
           <div class="settings-row-title">🔥 Calentamiento antes de entrenar</div>
           <div class="settings-row-sub">Ofrece una rutina corta de activación (arquero) antes de empezar cada sesión. Siempre podés saltarla desde ahí.</div>
         </div>
@@ -1949,6 +1961,80 @@ const COOLDOWN_DRILLS = [
 ];
 function totalCooldownSeconds(){ return COOLDOWN_DRILLS.reduce((a,w)=>a+w.dur,0); }
 
+/* ---------- Molestias del diario → elongación priorizada ----------
+   El diario post-sesión pide "¿alguna molestia física?" en texto libre.
+   Acá lo cruzamos con las últimas entradas: si una misma zona aparece
+   repetida hace poco, se lo marcamos al usuario y priorizamos/resaltamos
+   el estiramiento correspondiente en la elongación (final de sesión y
+   la sección aparte), además de avisarlo el entrenador IA antes de arrancar. */
+const DISCOMFORT_ZONES = [
+  {key:'tobillo',   label:'el tobillo',              keywords:['tobillo'],                                   cooldownIds:['cd_1'],
+    tip:'Si es una molestia leve, vendalo o usá tobillera antes de entrenar para darle sostén. En el calentamiento, sumale más tiempo a la movilidad de tobillo y evitá apoyos bruscos o cambios de dirección forzados hoy.'},
+  {key:'gemelo',    label:'el gemelo/pantorrilla',    keywords:['gemelo','pantorrilla'],                      cooldownIds:['cd_1'],
+    tip:'Elongá bien la pantorrilla antes de arrancar y bajá la intensidad en saltos o skipping. Si sentís un pinchazo agudo (no solo cargado), mejor cortá el ejercicio ahí.'},
+  {key:'isquio',    label:'los isquiotibiales',       keywords:['isquio','isquiotibial','atras del muslo'],   cooldownIds:['cd_2'],
+    tip:'Evitá arrancadas explosivas o elongación forzada en frío. Calentá progresivo, sin tirones bruscos, y si aparece un tirón agudo parás enseguida.'},
+  {key:'rodilla',   label:'la rodilla',               keywords:['rodilla'],                                   cooldownIds:['cd_3','cd_2'],
+    tip:'Si tenés hinchazón o inestabilidad, una rodillera o vendaje te puede dar sostén extra. En caídas y blocajes, priorizá la técnica por sobre la velocidad hoy, y si el dolor no es solo muscular, mejor consultá a un profesional antes de forzar.'},
+  {key:'cuadriceps',label:'el cuádriceps',            keywords:['cuadricep','muslo delantero'],               cooldownIds:['cd_3'],
+    tip:'Calentá bien antes de cualquier sentadilla o salto, y evitá cargar de más ese lado. Si notás que tira al estirar la pierna, bajá la intensidad.'},
+  {key:'aductor',   label:'el aductor/ingle',         keywords:['aductor','ingle'],                           cooldownIds:['cd_4'],
+    tip:'Los aductores no perdonan si los fuerzas en frío: dedicale más tiempo a la movilidad de cadera antes de arrancar y evitá aperturas o cambios de dirección bruscos hoy.'},
+  {key:'cadera',    label:'la cadera',                keywords:['cadera'],                                    cooldownIds:['cd_4','cd_5'],
+    tip:'Sumá rotaciones suaves de cadera al calentamiento antes de cualquier caída o salida. Si el dolor es agudo (no solo rigidez), mejor no fuerces y consultá a un profesional.'},
+  {key:'espalda',   label:'la espalda baja',          keywords:['espalda','lumbar'],                          cooldownIds:['cd_5'],
+    tip:'Evitá cargar peso o forzar la zona lumbar hoy. Priorizá técnica de caída controlada por sobre el impacto, y si el dolor baja por la pierna o es intenso, no entrenes: consultá a un profesional.'},
+  {key:'hombro',    label:'el hombro',                keywords:['hombro'],                                    cooldownIds:[],
+    tip:'Movilizá el hombro suave antes de cualquier despeje o achique con los brazos arriba. Si algo se traba o duele al levantar el brazo, evitá forzar esa posición hoy.'},
+  {key:'muneca',    label:'la muñeca',                keywords:['muñeca','muneca'],                           cooldownIds:['cd_1'],
+    tip:'Una muñequera o vendaje te puede dar sostén extra para las atajadas. Evitá caídas apoyando todo el peso en esa mano y priorizá el blocaje con antebrazos hoy si podés.'},
+  {key:'dedo',      label:'el dedo (mano)',           keywords:['dedo','dedos'],                              cooldownIds:[],
+    tip:'Si podés, vendalo junto al dedo de al lado (buddy tape) para darle sostén. Evitá atajar de puntas de dedos hoy y priorizá el blocaje con palmas/antebrazos. Si está muy hinchado o no podés doblarlo, mejor consultá a un profesional antes de seguir.'},
+  {key:'pie',       label:'el pie / planta',          keywords:['pie','planta del pie','empeine'],            cooldownIds:['cd_1'],
+    tip:'Fijate que el botín no te apriete esa zona y sumá algo de movilidad de tobillo/pie al calentamiento. Evitá saltos repetidos o apoyos bruscos hoy si te molesta al pisar.'},
+  {key:'cabeza',    label:'la cabeza',                keywords:['cabeza','jaqueca'],                          cooldownIds:[],
+    tip:'Si el dolor viene de un golpe reciente (por ejemplo un cabezazo fuerte o una caída), no entrenes hoy y consultá a un profesional — puede ser una conmoción, y no vale la pena arriesgarse. Si es más bien cansancio o tensión, hidratate bien, bajá la intensidad y evitá cabecear hoy si podés.'},
+  {key:'cuello',    label:'el cuello',                keywords:['cuello','cervical'],                         cooldownIds:[],
+    tip:'Movilizá el cuello con círculos suaves antes de arrancar, sin forzar. Evitá cabeceos o movimientos bruscos de cabeza hoy hasta que afloje.'},
+  {key:'costillas', label:'las costillas/torso',      keywords:['costilla','costillas','torso','pecho'],      cooldownIds:[],
+    tip:'Evitá caídas o estiradas de ese lado hoy si podés, y priorizá achiques con el cuerpo de frente en vez de tirarte. Si te cuesta respirar hondo o el dolor es fuerte, mejor consultá a un profesional antes de entrenar.'},
+  {key:'codo',      label:'el codo',                  keywords:['codo'],                                      cooldownIds:[],
+    tip:'Evitá apoyar todo el peso sobre ese brazo al caer y, si tenés, usá una codera. Priorizá blocajes con el otro lado cuando puedas hoy.'},
+];
+function normalizeForMatch(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+// Mira las últimas entradas del diario que tengan molestia cargada (hasta 8,
+// dentro de los últimos 30 días) y detecta si alguna zona se repite (2+ veces).
+// Devuelve la zona más reciente/repetida, o null si no hay nada para avisar.
+function detectRecurringDiscomfort(){
+  if(!journal || journal.length===0) return null;
+  const cutoff = Date.now() - 30*86400000;
+  const recent = [...journal]
+    .filter(j=>j.discomfort && j.discomfort.trim() && new Date(j.date).getTime()>=cutoff)
+    .sort((a,b)=> new Date(b.date)-new Date(a.date))
+    .slice(0,8);
+  if(recent.length===0) return null;
+
+  const counts = {};
+  const lastMention = {};
+  recent.forEach(j=>{
+    const text = normalizeForMatch(j.discomfort);
+    DISCOMFORT_ZONES.forEach(z=>{
+      if(z.keywords.some(k=> text.includes(normalizeForMatch(k)))){
+        counts[z.key] = (counts[z.key]||0)+1;
+        if(!lastMention[z.key]) lastMention[z.key] = j.date;
+      }
+    });
+  });
+
+  const flagged = Object.keys(counts).filter(k=>counts[k]>=2);
+  if(flagged.length===0) return null;
+  flagged.sort((a,b)=> counts[b]-counts[a] || new Date(lastMention[b])-new Date(lastMention[a]));
+  const zone = DISCOMFORT_ZONES.find(z=>z.key===flagged[0]);
+  return {zone, count:counts[flagged[0]]};
+}
+
 const COOLDOWN_KEY = 'arqueroplus_cooldown_enabled';
 function isCooldownEnabled(){
   try{ const v = localStorage.getItem(COOLDOWN_KEY); return v===null ? true : v==='1'; }catch(e){ return true; }
@@ -1963,13 +2049,62 @@ function renderCooldownToggleUI(){
   if(el) el.classList.toggle('on', isCooldownEnabled());
 }
 
+/* ---------- Chequeo rápido de molestias antes de entrenar ----------
+   Paso opcional (activado por defecto) justo antes del calentamiento:
+   preguntamos con chips qué te duele hoy y mostramos un consejo
+   práctico por zona (vendaje, bajar intensidad, etc). Lo elegido acá
+   también prioriza la elongación al final de esa misma sesión. */
+const PRECHECK_KEY = 'arqueroplus_precheck_enabled';
+function isPrecheckEnabled(){
+  try{ const v = localStorage.getItem(PRECHECK_KEY); return v===null ? true : v==='1'; }catch(e){ return true; }
+}
+function togglePrecheck(){
+  const turningOn = !isPrecheckEnabled();
+  try{ localStorage.setItem(PRECHECK_KEY, turningOn ? '1' : '0'); }catch(e){}
+  renderPrecheckToggleUI();
+}
+function renderPrecheckToggleUI(){
+  const el = document.getElementById('precheck-toggle');
+  if(el) el.classList.toggle('on', isPrecheckEnabled());
+}
+let precheckActive = false;
+let precheckSelected = {};
+let sessionDiscomfortZones = []; // molestias marcadas en el chequeo de ESTA sesión, para priorizar la elongación al terminar
+function togglePrecheckZone(key){
+  precheckSelected[key] = !precheckSelected[key];
+  renderEntrenar();
+}
+function maybeStartPrecheck(){
+  if(activePosition==='ARQ' && isPrecheckEnabled()){
+    precheckSelected = {};
+    precheckActive = true;
+    renderEntrenar();
+  } else {
+    sessionDiscomfortZones = [];
+    maybeStartWarmup();
+  }
+}
+function finishPrecheck(){
+  precheckActive = false;
+  sessionDiscomfortZones = DISCOMFORT_ZONES.filter(z=>precheckSelected[z.key]);
+  maybeStartWarmup();
+}
+
 /* ---------- Modal standalone: se puede abrir en cualquier momento,
    sin depender de estar en medio de una sesión ---------- */
-function renderStretchList(container, checked, onToggle){
-  let html = '<div class="active-session">';
-  COOLDOWN_DRILLS.forEach(w=>{
+function renderStretchList(container, checked, onToggle, priorityIds, noteHtml){
+  priorityIds = priorityIds || [];
+  noteHtml = noteHtml || '';
+  const ordered = [...COOLDOWN_DRILLS].sort((a,b)=>{
+    const pa = priorityIds.includes(a.id) ? 0 : 1;
+    const pb = priorityIds.includes(b.id) ? 0 : 1;
+    return pa-pb;
+  });
+  let html = noteHtml + '<div class="active-session">';
+  ordered.forEach(w=>{
     const done = !!checked[w.id];
-    html += `<div class="drill-check ${done?'done':''}" data-id="${w.id}">
+    const isPriority = priorityIds.includes(w.id);
+    html += `<div class="drill-check ${done?'done':''} ${isPriority?'priority':''}" data-id="${w.id}">
       <div class="check-circle"></div>
       <div class="drill-check-body"><div class="name">${w.name}</div><div class="drill-dose">${w.dur}s</div></div>
       <button class="info-btn" title="Ver de qué se trata">i</button>
@@ -1990,14 +2125,23 @@ function renderStretchList(container, checked, onToggle){
     });
   });
 }
+function discomfortNoteHtml(discomfort){
+  if(!discomfort) return '';
+  return `<div class="coach-card" style="margin-bottom:14px;">
+    <div class="coach-eyebrow">🧑‍🏫 ENTRENADOR IA</div>
+    <div class="coach-text">Notamos ${discomfort.zone.label} en tu diario ${discomfort.count} veces últimamente. Priorizamos ese estiramiento hoy — si la molestia sigue o empeora, mejor consultá a un profesional.</div>
+  </div>`;
+}
 
 let stretchModalChecked = {};
 function drawStretchModalList(){
   const list = document.getElementById('stretch-modal-list');
+  const discomfort = detectRecurringDiscomfort();
+  const priorityIds = discomfort ? discomfort.zone.cooldownIds : [];
   renderStretchList(list, stretchModalChecked, (id)=>{
     stretchModalChecked[id] = !stretchModalChecked[id];
     drawStretchModalList();
-  });
+  }, priorityIds, discomfortNoteHtml(discomfort));
 }
 function openStretchModal(){
   stretchModalChecked = {};
@@ -2007,6 +2151,7 @@ function openStretchModal(){
 function closeStretchModal(){
   document.getElementById('stretch-modal').classList.remove('open');
 }
+
 
 
 const POSITIONS = [
@@ -2440,6 +2585,7 @@ function openBackupMenu(){
   renderReminderToggleUI();
   renderWarmupToggleUI();
   renderCooldownToggleUI();
+  renderPrecheckToggleUI();
   document.getElementById('backup-menu-bg').classList.add('open');
 }
 function closeBackupMenu(){ document.getElementById('backup-menu-bg').classList.remove('open'); }
@@ -3826,6 +3972,8 @@ function generateCoachPreMessage(posId){
   const load = computeTrainingLoad();
   if(load.id==='riesgo') text += ` ⚠️ Ojo: tu carga de la semana está alta respecto a tus últimas semanas — hoy priorizá una sesión suave o técnica antes que volumen.`;
   else if(load.id==='atencion') text += ` Tu carga viene en aumento esta semana, así que prestá atención a cómo te sentís y no te fuerces si notás cansancio.`;
+  const discomfort = detectRecurringDiscomfort();
+  if(discomfort) text += ` 🔁 Notamos ${discomfort.zone.label} en tu diario últimamente — vamos a priorizar ese estiramiento en la elongación de hoy.`;
   return text;
 }
 function renderCoachCard(containerId, posId){
@@ -4431,6 +4579,44 @@ function renderEntrenar(){
   const title = document.getElementById('entrenar-title');
   const pos = posById(activePosition);
 
+  if(precheckActive){
+    title.textContent = '¿Te duele algo hoy? · ' + pos.name;
+    let html = `<div class="coach-card" style="margin-bottom:14px;">
+      <div class="coach-eyebrow">📋 CHEQUEO RÁPIDO</div>
+      <div class="coach-text">Marcá si tenés alguna molestia hoy. No hace falta que sea grave: con eso ajustamos el calentamiento y te dejamos un consejo antes de arrancar.</div>
+    </div>`;
+    html += '<div class="reflex-diff-row" id="precheck-row" style="justify-content:flex-start;">';
+    DISCOMFORT_ZONES.forEach(z=>{
+      const sel = !!precheckSelected[z.key];
+      html += `<div class="reflex-diff-chip ${sel?'active':''}" data-zone-key="${z.key}">
+        <div class="lbl">${z.label.replace(/^(el|la|los) /,'')}</div>
+      </div>`;
+    });
+    html += '</div>';
+
+    const selectedZones = DISCOMFORT_ZONES.filter(z=>precheckSelected[z.key]);
+    if(selectedZones.length>0){
+      selectedZones.forEach(z=>{
+        html += `<div class="coach-card" style="margin-bottom:10px; border-color:var(--miss);">
+          <div class="coach-eyebrow" style="color:var(--miss);">⚠ ${z.label.toUpperCase()}</div>
+          <div class="coach-text">${z.tip}</div>
+        </div>`;
+      });
+    }
+
+    content.innerHTML = html;
+    content.querySelectorAll('[data-zone-key]').forEach(chip=>{
+      chip.addEventListener('click', ()=> togglePrecheckZone(chip.dataset.zoneKey));
+    });
+
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'cta-btn';
+    continueBtn.textContent = selectedZones.length>0 ? 'Entendido, continuar' : 'No me duele nada, continuar';
+    continueBtn.onclick = finishPrecheck;
+    content.appendChild(continueBtn);
+    return;
+  }
+
   if(warmupActive){
     title.textContent = 'Calentamiento · ' + pos.name;
     const items = WARMUP_DRILLS[activePosition] || [];
@@ -4476,32 +4662,28 @@ function renderEntrenar(){
 
   if(cooldownActive){
     title.textContent = 'Elongación · ' + pos.name;
-    let html = `<div class="coach-card" style="margin-bottom:14px;">
+    const discomfort = detectRecurringDiscomfort();
+    const priorityIds = [...new Set([
+      ...(discomfort ? discomfort.zone.cooldownIds : []),
+      ...sessionDiscomfortZones.flatMap(z=>z.cooldownIds)
+    ])];
+    let intro = `<div class="coach-card" style="margin-bottom:14px;">
       <div class="coach-eyebrow">🧘 ELONGACIÓN FINAL</div>
       <div class="coach-text">Terminaste la parte fuerte. Unos minutos de estiramiento ayudan a la recuperación y bajan el riesgo de lesión. Marcá cada uno a medida que lo hacés.</div>
-    </div><div class="active-session">`;
-    COOLDOWN_DRILLS.forEach(w=>{
-      const done = !!cooldownChecked[w.id];
-      html += `<div class="drill-check ${done?'done':''}" data-id="${w.id}">
-        <div class="check-circle"></div>
-        <div class="drill-check-body"><div class="name">${w.name}</div><div class="drill-dose">${w.dur}s</div></div>
-        <button class="info-btn" title="Ver de qué se trata">i</button>
-        <div class="drill-desc">${w.desc}</div>
+    </div>`;
+    intro += discomfortNoteHtml(discomfort);
+    if(sessionDiscomfortZones.length>0){
+      intro += `<div class="coach-card" style="margin-bottom:14px;">
+        <div class="coach-eyebrow">🎯 MOLESTIAS DE HOY</div>
+        <div class="coach-text">Marcaste ${sessionDiscomfortZones.map(z=>z.label).join(', ')} antes de entrenar. Priorizamos esos estiramientos abajo.</div>
       </div>`;
-    });
-    html += '</div>';
-    content.innerHTML = html;
-    content.querySelectorAll('.drill-check').forEach(el=>{
-      el.addEventListener('click', ()=>{ cooldownChecked[el.dataset.id] = !cooldownChecked[el.dataset.id]; renderEntrenar(); });
-    });
-    content.querySelectorAll('.info-btn').forEach(btn=>{
-      btn.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        const card = btn.closest('.drill-check');
-        card.classList.toggle('open');
-        btn.classList.toggle('open');
-      });
-    });
+    }
+    content.innerHTML = intro + '<div id="cooldown-list-wrap"></div>';
+    const listWrap = document.getElementById('cooldown-list-wrap');
+    renderStretchList(listWrap, cooldownChecked, (id)=>{
+      cooldownChecked[id] = !cooldownChecked[id];
+      renderEntrenar();
+    }, priorityIds, '');
     const doneCount = COOLDOWN_DRILLS.filter(w=>cooldownChecked[w.id]).length;
     const continueBtn = document.createElement('button');
     continueBtn.className = 'cta-btn';
@@ -4665,7 +4847,7 @@ function renderEntrenar(){
     const startBtn = document.createElement('button');
     startBtn.className = 'cta-btn';
     startBtn.textContent = 'Iniciar sesión (' + currentDraft.length + ' ejercicios)';
-    startBtn.onclick = maybeStartWarmup;
+    startBtn.onclick = maybeStartPrecheck;
     content.appendChild(startBtn);
     const clearBtn = document.createElement('button');
     clearBtn.className = 'cta-btn ghost';
@@ -6188,6 +6370,7 @@ function finishReflexGame(){
   initReminderCheck();
   renderThemeToggleUI();
   renderCooldownToggleUI();
+  renderPrecheckToggleUI();
 })();
 
 /* ---------- Tutorial de bienvenida ---------- */

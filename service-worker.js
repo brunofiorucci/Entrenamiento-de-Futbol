@@ -61,9 +61,40 @@
    movimientos cortos, ~4-5 min) que aparece antes de cada sesión,
    con checklist e info de cada movimiento. Se puede saltar en el
    momento o desactivar del todo desde Ajustes → Entrenamiento. Va
-   activado por defecto. */
+   activado por defecto.
 
-const CACHE_NAME = 'arqueroplus-v20';
+   v21: se agrega un chequeo rápido de molestias antes de entrenar
+   (arquero): antes del calentamiento, se puede marcar con chips qué
+   zona duele hoy (tobillo, rodilla, muñeca, etc.) y la app muestra un
+   consejo práctico por zona (vendaje/muñequera, bajar intensidad,
+   cuándo consultar a un profesional). Lo marcado ahí también prioriza
+   la elongación al final de esa misma sesión. Se puede desactivar
+   desde Ajustes → Entrenamiento; va activado por defecto.
+
+   v22: se agregan más zonas al chequeo de molestias (dedo, pie/planta,
+   cuello, costillas/torso, codo) y un campo de texto libre para lo que
+   no esté en la lista — intenta matchear con una zona conocida y si no,
+   da un consejo general (bajar intensidad, hielo, cuándo consultar a
+   un profesional). Se pueden agregar varias y quitarlas con la ×.
+
+   v23: ajuste visual — se saca el emoji de curita 🩹 repetido en cada
+   chip del chequeo de molestias (quedaba recargado) y se varían los
+   íconos de esa sección para que no se repitan tanto.
+
+   v24: se agrega "cabeza" como zona propia en el chequeo de molestias
+   (antes caía en el consejo genérico) con aviso sobre golpes/posible
+   conmoción. Además se reescribe el consejo genérico del texto libre:
+   antes arrancaba diciendo "no tenemos consejo específico" y sonaba
+   inútil; ahora va directo al consejo práctico.
+
+   v25: se saca el ícono (○/✓) de los chips del chequeo de molestias,
+   queda solo el nombre de la parte del cuerpo.
+
+   v26: se saca el campo de texto libre del chequeo de molestias (el
+   consejo genérico no aportaba lo suficiente). Queda solo la
+   selección por chips con las zonas ya cargadas. */
+
+const CACHE_NAME = 'arqueroplus-v26';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
