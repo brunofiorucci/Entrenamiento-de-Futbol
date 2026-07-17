@@ -126,9 +126,42 @@
    error de sintaxis no se instala, así que las versiones v27, v28 y
    v29 probablemente nunca llegaron a activarse en los dispositivos
    ya instalados por más que se subiera el HTML nuevo. Con este fix
-   el archivo vuelve a ser JavaScript válido. */
+   el archivo vuelve a ser JavaScript válido.
 
-const CACHE_NAME = 'arqueroplus-v30';
+   v31: se agregan 4 estiramientos más a la Elongación (hombro, pecho
+   en marco de puerta, cuello, antebrazo/muñeca), que además cubren
+   zonas de molestia que antes no tenían ningún estiramiento asociado
+   (hombro, dedo, cuello, costillas, codo). Se agrega un módulo nuevo,
+   separado de la elongación: "Movilidad" (circuito de movilidad
+   articular — hombros, cadera, tobillos, columna, muñecas), con su
+   propia tarjeta al lado de Elongación en Entrenar, su propio modal,
+   y su propio acceso rápido desde Ajustes. Es standalone: no depende
+   de terminar una sesión ni del chequeo de molestias.
+
+   v32: el test físico ahora guarda un historial completo en vez de
+   pisar el resultado anterior cada vez que lo repetís. Nuevo modal
+   "Evolución" con gráfico de barras del nivel promedio a lo largo
+   del tiempo y una lista de cada test con fecha, nivel, y flechas
+   de tendencia (▲/▼) por cada capacidad comparado con el test
+   anterior. Accesible desde el widget de test físico y desde el
+   resultado del test. Si ya tenías un test cargado de antes, se
+   migra automáticamente como primer punto del historial.
+
+   v33: Elongación y Movilidad ahora muestran repeticiones/respiraciones
+   en vez de segundos (ej. "8 respiraciones por lado" en vez de "30s").
+   Se agregan 5 ejercicios nuevos a Movilidad (círculos de cadera de
+   pie, ankle rocks, rotación de cuello, gato-vaca, apertura de pecho
+   con rotación), quedando 11 en total. Calentamiento no se tocó,
+   sigue en segundos.
+
+   v34: Elongación y Movilidad llegan a 15 ejercicios cada una.
+   Elongación suma glúteo (figura 4), flexores de cadera, espalda
+   alta (postura del niño), tríceps y torsión espinal — los nuevos
+   de cadera/hombro/codo también se sumaron al mapeo de zonas de
+   molestia. Movilidad suma cadera 90/90, balanceo de pierna frontal
+   y lateral, y movilidad de dedos/agarre. */
+
+const CACHE_NAME = 'arqueroplus-v34';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

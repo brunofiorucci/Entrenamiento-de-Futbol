@@ -872,6 +872,18 @@
   .ovr-hist-row{display:flex; align-items:flex-end; gap:4px; height:70px; margin-bottom:8px;}
   .ovr-hist-bar{flex:1; background:var(--accent); border-radius:3px 3px 0 0; min-height:3px; position:relative;}
   .ovr-hist-empty{color:var(--chalk-faint); font-size:12px;}
+  .fit-hist-row{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:10px 12px; margin-bottom:8px;
+  }
+  .fit-hist-row-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .fit-hist-date{font-size:12px; color:var(--chalk-dim);}
+  .fit-hist-level{font-size:12.5px; font-weight:600;}
+  .fit-hist-metrics{display:flex; flex-wrap:wrap; gap:8px;}
+  .fit-hist-metric{font-size:11.5px; color:var(--chalk-dim); background:var(--bg); border-radius:8px; padding:3px 8px;}
+  .trend-up{color:var(--save, #4CD97B); font-weight:700;}
+  .trend-down{color:var(--danger, #FF6B6B); font-weight:700;}
+  .trend-same{color:var(--chalk-faint);}
 
   /* ---------- Clima ---------- */
   .weather-card{
@@ -1534,6 +1546,7 @@
         <div class="toggle-switch" id="cooldown-toggle" onclick="toggleCooldown()"></div>
       </div>
       <button class="cta-btn ghost" style="margin-top:10px;" onclick="closeBackupMenu(); openStretchModal();">🧘 Ver rutina de elongación ahora</button>
+      <button class="cta-btn ghost" style="margin-top:8px;" onclick="closeBackupMenu(); openMobilityModal();">🔄 Ver rutina de movilidad ahora</button>
     </div>
 
     <button class="cta-btn ghost" style="margin-top:6px;" onclick="closeBackupMenu()">Cerrar</button>
@@ -1648,6 +1661,15 @@
     <div class="sub">Usala cuando quieras: después de entrenar, antes o después de picaditos, remates sueltos o cualquier práctica extra.</div>
     <div id="stretch-modal-list"></div>
     <button class="cta-btn ghost" style="margin-top:14px;" onclick="closeStretchModal()">Cerrar</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="mobility-modal" onclick="if(event.target===this) closeMobilityModal()">
+  <div class="modal">
+    <h2>🔄 Movilidad</h2>
+    <div class="sub">Circuito corto de movilidad articular (hombros, cadera, tobillos, columna). Bien para antes de entrenar, en un día de descanso, o cuando quieras.</div>
+    <div id="mobility-modal-list"></div>
+    <button class="cta-btn ghost" style="margin-top:14px;" onclick="closeMobilityModal()">Cerrar</button>
   </div>
 </div>
 
@@ -1812,6 +1834,17 @@
     <div class="levelup-title" id="fit-result-title">Intermedio</div>
     <div class="fit-breakdown" id="fit-result-breakdown" style="text-align:left; margin-bottom:18px;"></div>
     <button class="cta-btn" style="margin-top:0;" onclick="closeFitResult()">Empezar a entrenar</button>
+    <button class="cta-btn ghost" style="margin-top:10px;" onclick="closeFitResult(); openFitHistoryModal();">📈 Ver evolución</button>
+  </div>
+</div>
+
+<div class="modal-bg" id="fit-history-modal" onclick="if(event.target===this) closeFitHistoryModal()">
+  <div class="modal">
+    <h2>📈 Evolución del test físico</h2>
+    <div class="sub">Cada vez que repetís el test, queda guardado acá para que veas cómo cambiás con el tiempo.</div>
+    <div id="fit-history-bars" style="margin:14px 0;"></div>
+    <div id="fit-history-list"></div>
+    <button class="cta-btn ghost" style="margin-top:14px;" onclick="closeFitHistoryModal()">Cerrar</button>
   </div>
 </div>
 
@@ -1971,14 +2004,61 @@ function renderWarmupToggleUI(){
    (por ej. después de tirar unos remates sueltos con alguien).
 ============================================================ */
 const COOLDOWN_DRILLS = [
-  {id:'cd_1', name:'Elongación de gemelos', dur:30, desc:'Apoyate contra una pared, una pierna atrás con el talón en el piso, y llevá el peso hacia adelante. Cambiá de lado.'},
-  {id:'cd_2', name:'Elongación de isquiotibiales', dur:30, desc:'Sentado o de pie, pierna estirada y tronco hacia adelante sin rebotar, buscando la parte de atrás del muslo.'},
-  {id:'cd_3', name:'Elongación de cuádriceps', dur:30, desc:'De pie, llevá el talón hacia el glúteo sosteniendo el pie con la mano, rodillas juntas. Cambiá de lado.'},
-  {id:'cd_4', name:'Elongación de aductores', dur:30, desc:'Piernas bien abiertas, llevá el peso hacia un costado flexionando esa rodilla, la otra pierna estirada.'},
-  {id:'cd_5', name:'Elongación de espalda baja y cadera', dur:30, desc:'Acostado boca arriba, llevá una rodilla hacia el pecho y después cruzada hacia el lado contrario.'},
-  {id:'cd_6', name:'Respiración y relajación', dur:40, desc:'Sentado o parado, respiración profunda y pausada para bajar pulsaciones antes de terminar.'},
+  {id:'cd_1', name:'Elongación de gemelos', reps:'8 respiraciones por lado', desc:'Apoyate contra una pared, una pierna atrás con el talón en el piso, y llevá el peso hacia adelante. Cambiá de lado.'},
+  {id:'cd_2', name:'Elongación de isquiotibiales', reps:'8 respiraciones por lado', desc:'Sentado o de pie, pierna estirada y tronco hacia adelante sin rebotar, buscando la parte de atrás del muslo.'},
+  {id:'cd_3', name:'Elongación de cuádriceps', reps:'8 respiraciones por lado', desc:'De pie, llevá el talón hacia el glúteo sosteniendo el pie con la mano, rodillas juntas. Cambiá de lado.'},
+  {id:'cd_4', name:'Elongación de aductores', reps:'8 respiraciones por lado', desc:'Piernas bien abiertas, llevá el peso hacia un costado flexionando esa rodilla, la otra pierna estirada.'},
+  {id:'cd_5', name:'Elongación de espalda baja y cadera', reps:'8 respiraciones por lado', desc:'Acostado boca arriba, llevá una rodilla hacia el pecho y después cruzada hacia el lado contrario.'},
+  {id:'cd_6', name:'Respiración y relajación', reps:'10 respiraciones profundas', desc:'Sentado o parado, respiración profunda y pausada para bajar pulsaciones antes de terminar.'},
+  {id:'cd_7', name:'Elongación de hombro', reps:'8 respiraciones por lado', desc:'Llevá un brazo estirado cruzado al pecho, sosteniéndolo con el otro brazo por arriba o abajo del codo. Cambiá de lado.'},
+  {id:'cd_8', name:'Elongación de pecho en marco de puerta', reps:'8 respiraciones por lado', desc:'Apoyá el antebrazo en un marco o pared, codo a la altura del hombro, y girá el cuerpo hacia el lado contrario hasta sentir el estiramiento en el pecho. Cambiá de lado.'},
+  {id:'cd_9', name:'Elongación de cuello', reps:'5 respiraciones por lado', desc:'Sentado o de pie, inclinar la cabeza suavemente hacia un hombro (sin forzar con la mano) y sostener. Después girar despacio hacia cada lado. Nunca en círculo completo ni con rebotes.'},
+  {id:'cd_10', name:'Elongación de antebrazo y muñeca', reps:'8 repeticiones por lado', desc:'Brazo estirado al frente, palma hacia arriba, y con la otra mano tirá suave los dedos hacia abajo. Repetí con la palma hacia abajo. Cambiá de lado.'},
+  {id:'cd_11', name:'Elongación de glúteo (figura 4)', reps:'8 respiraciones por lado', desc:'Acostado boca arriba, cruzá un tobillo sobre la rodilla contraria y llevá esa pierna hacia el pecho sosteniendo detrás del muslo. Cambiá de lado.'},
+  {id:'cd_12', name:'Elongación de flexores de cadera', reps:'8 respiraciones por lado', desc:'En zancada, rodilla de atrás apoyada en el piso, llevá la cadera hacia adelante manteniendo el torso derecho hasta sentir el estiramiento adelante de esa cadera. Cambiá de lado.'},
+  {id:'cd_13', name:'Elongación de espalda alta (postura del niño)', reps:'8 respiraciones', desc:'De rodillas, sentate hacia atrás sobre los talones con los brazos estirados al frente apoyados en el piso, dejando caer el pecho.'},
+  {id:'cd_14', name:'Elongación de tríceps', reps:'8 respiraciones por lado', desc:'Llevá un brazo doblado detrás de la cabeza y empujá suave el codo hacia abajo con la otra mano. Cambiá de lado.'},
+  {id:'cd_15', name:'Torsión espinal acostado', reps:'6 respiraciones por lado', desc:'Acostado boca arriba, llevá ambas rodillas juntas hacia un lado manteniendo los hombros apoyados en el piso, brazos en cruz. Cambiá de lado.'},
 ];
-function totalCooldownSeconds(){ return COOLDOWN_DRILLS.reduce((a,w)=>a+w.dur,0); }
+
+/* ---------- Movilidad articular — standalone, al lado de la elongación ----------
+   Circuito corto de movilidad (tipo CARs: control articular en rango completo),
+   pensado para hombros, cadera, tobillos y columna. Es independiente de la
+   elongación: no depende de terminar una sesión ni del chequeo de molestias. */
+const MOBILITY_DRILLS = [
+  {id:'mb_1', name:'Círculos de hombro', reps:'10 círculos por lado, cada sentido', desc:'Brazo estirado al costado, dibujá círculos grandes y controlados con el hombro buscando el rango completo. Cambiá de sentido y de lado.'},
+  {id:'mb_2', name:'Movilidad de cadera en cuadrupedia', reps:'8 círculos por lado', desc:'Apoyado en manos y rodillas, dibujá círculos amplios con una rodilla como si fuera un compás, sin mover el resto del cuerpo. Cambiá de lado.'},
+  {id:'mb_3', name:'Movilidad de tobillo con apoyo', reps:'10 reps por lado', desc:'Un pie apoyado contra una pared, empujá la rodilla hacia adelante por encima de los dedos sin despegar el talón del piso. Repetí de forma controlada.'},
+  {id:'mb_4', name:'Rotación de columna sentado', reps:'8 reps por lado', desc:'Sentado (piso o silla), girá el torso hacia un lado y después hacia el otro, sin forzar el cuello.'},
+  {id:'mb_5', name:'Movilidad de muñeca y dedos', reps:'10 círculos + 10 aperturas de mano', desc:'Círculos de muñeca en ambos sentidos, y después abrí y cerrá bien los dedos varias veces, como activando el agarre antes de atajar.'},
+  {id:'mb_6', name:'Sentadilla profunda sostenida', reps:'5 reps', desc:'Bajá a una sentadilla profunda, talones en el piso si podés, y quedate ahí un par de segundos moviendo el peso suave de un lado a otro antes de subir. Moviliza cadera y tobillo a la vez.'},
+  {id:'mb_7', name:'Círculos de cadera de pie', reps:'8 círculos por lado, cada sentido', desc:'De pie, manos en la cintura, dibujá círculos amplios con la cadera como si fuera una soga. Buscá el rango completo sin mover demasiado el torso.'},
+  {id:'mb_8', name:'Ankle rocks (tobillo en cuclillas)', reps:'10 reps por lado', desc:'En cuclillas o con un pie adelantado, llevá la rodilla hacia adelante y atrás repetidamente sin despegar el talón, sintiendo el trabajo en el tobillo.'},
+  {id:'mb_9', name:'Rotación controlada de cuello', reps:'5 reps por lado', desc:'De pie o sentado, girá la cabeza despacio de un lado al otro mirando por arriba del hombro, sin forzar ni hacer círculos completos.'},
+  {id:'mb_10', name:'Gato-vaca (movilidad de columna)', reps:'10 reps', desc:'En cuatro apoyos, alterná entre arquear la espalda hacia arriba (gato) y hundirla llevando el pecho adelante (vaca), moviendo toda la columna con la respiración.'},
+  {id:'mb_11', name:'Apertura de pecho con rotación', reps:'8 reps por lado', desc:'Acostado de costado con las rodillas flexionadas, brazos estirados al frente uno sobre otro; abrí el brazo de arriba hacia el otro lado girando el pecho, siguiéndolo con la mirada, y volvé.'},
+  {id:'mb_12', name:'Cadera 90/90', reps:'6 cambios de lado', desc:'Sentado con ambas piernas dobladas en ángulo de 90°, rotá de un lado al otro pasando por el centro sin ayudarte con las manos.'},
+  {id:'mb_13', name:'Balanceo de pierna frontal', reps:'10 reps por lado', desc:'Sostenido de una pared o el arco, balanceo controlado de una pierna hacia adelante y atrás, sin perder el equilibrio ni forzar el rango.'},
+  {id:'mb_14', name:'Balanceo de pierna lateral', reps:'10 reps por lado', desc:'Sostenido de una pared o el arco, balanceo controlado de una pierna hacia el costado (cruzando adelante del cuerpo y abriendo hacia afuera).'},
+  {id:'mb_15', name:'Movilidad de dedos y agarre', reps:'10 aperturas + 10 puños', desc:'Abrí bien los dedos estirándolos al máximo, y después cerrá la mano en puño fuerte. Activa el agarre antes de las atajadas.'},
+];
+
+let mobilityModalChecked = {};
+function drawMobilityModalList(){
+  const list = document.getElementById('mobility-modal-list');
+  renderStretchList(MOBILITY_DRILLS, list, mobilityModalChecked, (id)=>{
+    mobilityModalChecked[id] = !mobilityModalChecked[id];
+    drawMobilityModalList();
+  }, [], '');
+}
+function openMobilityModal(){
+  mobilityModalChecked = {};
+  drawMobilityModalList();
+  document.getElementById('mobility-modal').classList.add('open');
+}
+function closeMobilityModal(){
+  document.getElementById('mobility-modal').classList.remove('open');
+}
 
 /* ---------- Molestias del diario → elongación priorizada ----------
    El diario post-sesión pide "¿alguna molestia física?" en texto libre.
@@ -1999,25 +2079,25 @@ const DISCOMFORT_ZONES = [
     tip:'Calentá bien antes de cualquier sentadilla o salto, y evitá cargar de más ese lado. Si notás que tira al estirar la pierna, bajá la intensidad.'},
   {key:'aductor',   label:'el aductor/ingle',         keywords:['aductor','ingle'],                           cooldownIds:['cd_4'],
     tip:'Los aductores no perdonan si los fuerzas en frío: dedicale más tiempo a la movilidad de cadera antes de arrancar y evitá aperturas o cambios de dirección bruscos hoy.'},
-  {key:'cadera',    label:'la cadera',                keywords:['cadera'],                                    cooldownIds:['cd_4','cd_5'],
+  {key:'cadera',    label:'la cadera',                keywords:['cadera'],                                    cooldownIds:['cd_4','cd_5','cd_11','cd_12'],
     tip:'Sumá rotaciones suaves de cadera al calentamiento antes de cualquier caída o salida. Si el dolor es agudo (no solo rigidez), mejor no fuerces y consultá a un profesional.'},
   {key:'espalda',   label:'la espalda baja',          keywords:['espalda','lumbar'],                          cooldownIds:['cd_5'],
     tip:'Evitá cargar peso o forzar la zona lumbar hoy. Priorizá técnica de caída controlada por sobre el impacto, y si el dolor baja por la pierna o es intenso, no entrenes: consultá a un profesional.'},
-  {key:'hombro',    label:'el hombro',                keywords:['hombro'],                                    cooldownIds:[],
+  {key:'hombro',    label:'el hombro',                keywords:['hombro'],                                    cooldownIds:['cd_7','cd_8','cd_14'],
     tip:'Movilizá el hombro suave antes de cualquier despeje o achique con los brazos arriba. Si algo se traba o duele al levantar el brazo, evitá forzar esa posición hoy.'},
-  {key:'muneca',    label:'la muñeca',                keywords:['muñeca','muneca'],                           cooldownIds:['cd_1'],
+  {key:'muneca',    label:'la muñeca',                keywords:['muñeca','muneca'],                           cooldownIds:['cd_1','cd_10'],
     tip:'Una muñequera o vendaje te puede dar sostén extra para las atajadas. Evitá caídas apoyando todo el peso en esa mano y priorizá el blocaje con antebrazos hoy si podés.'},
-  {key:'dedo',      label:'el dedo (mano)',           keywords:['dedo','dedos'],                              cooldownIds:[],
+  {key:'dedo',      label:'el dedo (mano)',           keywords:['dedo','dedos'],                              cooldownIds:['cd_10'],
     tip:'Si podés, vendalo junto al dedo de al lado (buddy tape) para darle sostén. Evitá atajar de puntas de dedos hoy y priorizá el blocaje con palmas/antebrazos. Si está muy hinchado o no podés doblarlo, mejor consultá a un profesional antes de seguir.'},
   {key:'pie',       label:'el pie / planta',          keywords:['pie','planta del pie','empeine'],            cooldownIds:['cd_1'],
     tip:'Fijate que el botín no te apriete esa zona y sumá algo de movilidad de tobillo/pie al calentamiento. Evitá saltos repetidos o apoyos bruscos hoy si te molesta al pisar.'},
   {key:'cabeza',    label:'la cabeza',                keywords:['cabeza','jaqueca'],                          cooldownIds:[],
     tip:'Si el dolor viene de un golpe reciente (por ejemplo un cabezazo fuerte o una caída), no entrenes hoy y consultá a un profesional — puede ser una conmoción, y no vale la pena arriesgarse. Si es más bien cansancio o tensión, hidratate bien, bajá la intensidad y evitá cabecear hoy si podés.'},
-  {key:'cuello',    label:'el cuello',                keywords:['cuello','cervical'],                         cooldownIds:[],
+  {key:'cuello',    label:'el cuello',                keywords:['cuello','cervical'],                         cooldownIds:['cd_9'],
     tip:'Movilizá el cuello con círculos suaves antes de arrancar, sin forzar. Evitá cabeceos o movimientos bruscos de cabeza hoy hasta que afloje.'},
-  {key:'costillas', label:'las costillas/torso',      keywords:['costilla','costillas','torso','pecho'],      cooldownIds:[],
+  {key:'costillas', label:'las costillas/torso',      keywords:['costilla','costillas','torso','pecho'],      cooldownIds:['cd_8'],
     tip:'Evitá caídas o estiradas de ese lado hoy si podés, y priorizá achiques con el cuerpo de frente en vez de tirarte. Si te cuesta respirar hondo o el dolor es fuerte, mejor consultá a un profesional antes de entrenar.'},
-  {key:'codo',      label:'el codo',                  keywords:['codo'],                                      cooldownIds:[],
+  {key:'codo',      label:'el codo',                  keywords:['codo'],                                      cooldownIds:['cd_10','cd_14'],
     tip:'Evitá apoyar todo el peso sobre ese brazo al caer y, si tenés, usá una codera. Priorizá blocajes con el otro lado cuando puedas hoy.'},
 ];
 function normalizeForMatch(s){
@@ -2111,10 +2191,10 @@ function finishPrecheck(){
 
 /* ---------- Modal standalone: se puede abrir en cualquier momento,
    sin depender de estar en medio de una sesión ---------- */
-function renderStretchList(container, checked, onToggle, priorityIds, noteHtml){
+function renderStretchList(drillsArr, container, checked, onToggle, priorityIds, noteHtml){
   priorityIds = priorityIds || [];
   noteHtml = noteHtml || '';
-  const ordered = [...COOLDOWN_DRILLS].sort((a,b)=>{
+  const ordered = [...drillsArr].sort((a,b)=>{
     const pa = priorityIds.includes(a.id) ? 0 : 1;
     const pb = priorityIds.includes(b.id) ? 0 : 1;
     return pa-pb;
@@ -2125,7 +2205,7 @@ function renderStretchList(container, checked, onToggle, priorityIds, noteHtml){
     const isPriority = priorityIds.includes(w.id);
     html += `<div class="drill-check ${done?'done':''} ${isPriority?'priority':''}" data-id="${w.id}">
       <div class="check-circle"></div>
-      <div class="drill-check-body"><div class="name">${w.name}</div><div class="drill-dose">${w.dur}s</div></div>
+      <div class="drill-check-body"><div class="name">${w.name}</div><div class="drill-dose">${w.reps}</div></div>
       <button class="info-btn" title="Ver de qué se trata">i</button>
       <div class="drill-desc">${w.desc}</div>
     </div>`;
@@ -2157,7 +2237,7 @@ function drawStretchModalList(){
   const list = document.getElementById('stretch-modal-list');
   const discomfort = detectRecurringDiscomfort();
   const priorityIds = discomfort ? discomfort.zone.cooldownIds : [];
-  renderStretchList(list, stretchModalChecked, (id)=>{
+  renderStretchList(COOLDOWN_DRILLS, list, stretchModalChecked, (id)=>{
     stretchModalChecked[id] = !stretchModalChecked[id];
     drawStretchModalList();
   }, priorityIds, discomfortNoteHtml(discomfort));
@@ -2861,7 +2941,8 @@ let communityPosts = [];         // caché en memoria del feed (no se persiste l
 // ---- IA Coach / memoria / diario / récords / objetivo / OVR histórico ----
 let journal = [];                 // {id, sessionId, date, position, mood, best, hardest, discomfort, comment}
 let manualRecords = {};           // {dominadas:{value,date}, sprint:{value,date}, distancia:{value,date}}
-let physicalTest = null;          // {sprint,jump,pushups,situps,pullups,date,levelId,score} — test físico inicial
+let physicalTest = null;          // {sprint,jump,pushups,situps,pullups,date,levelId,score} — test físico más reciente
+let fitnessTestHistory = [];      // [{...mismos campos que physicalTest, id}] — todos los tests hechos, para ver evolución
 let seasonGoal = null;            // id de SEASON_GOALS, o null
 let ovrHistory = [];              // {date, position, ovr, attrs?}
 let weeklyChallenges = [];        // {id, week, position, type, catId?, target, text, reward}
@@ -2878,7 +2959,7 @@ function contextById(id){ return MATCH_CONTEXTS.find(c=>c.id===id) || MATCH_CONT
 
 function currentStateObject(){
   return {sessions, matches, draft, activePosition, selectedArchetype, spacePref, weekProgress,
-    journal, manualRecords, seasonGoal, ovrHistory, weeklyChallenges, physicalTest, weeklyLogs};
+    journal, manualRecords, seasonGoal, ovrHistory, weeklyChallenges, physicalTest, weeklyLogs, fitnessTestHistory};
 }
 
 async function loadState(){
@@ -2912,6 +2993,11 @@ async function loadState(){
   ovrHistory = (data && data.ovrHistory) || [];
   weeklyChallenges = (data && data.weeklyChallenges) || [];
   physicalTest = (data && data.physicalTest) || null;
+  fitnessTestHistory = (data && data.fitnessTestHistory) || [];
+  // migración: si ya tenía un test guardado de antes de que existiera el historial, lo sumamos ahí para no perderlo
+  if(physicalTest && fitnessTestHistory.length===0){
+    fitnessTestHistory = [{ ...physicalTest, id: 'fit_'+Date.now() }];
+  }
   weeklyLogs = (data && data.weeklyLogs) || {};
   POSITIONS.forEach(p=>{ if(!draft[p.id]) draft[p.id]=[]; if(selectedArchetype[p.id]===undefined) selectedArchetype[p.id]=null; });
 }
@@ -4717,7 +4803,7 @@ function renderEntrenar(){
     }
     content.innerHTML = intro + '<div id="cooldown-list-wrap"></div>';
     const listWrap = document.getElementById('cooldown-list-wrap');
-    renderStretchList(listWrap, cooldownChecked, (id)=>{
+    renderStretchList(COOLDOWN_DRILLS, listWrap, cooldownChecked, (id)=>{
       cooldownChecked[id] = !cooldownChecked[id];
       renderEntrenar();
     }, priorityIds, '');
@@ -4820,6 +4906,15 @@ function renderEntrenar(){
     <div class="reflex-card-body">
       <div class="reflex-card-title">Elongación</div>
       <div class="reflex-card-sub">Rutina de estiramiento · usala cuando quieras, no hace falta terminar una sesión acá</div>
+    </div>
+  </div>`;
+
+  // ---- Movilidad, al lado de la elongación, también disponible siempre ----
+  html += `<div class="reflex-card" onclick="openMobilityModal()">
+    <div class="reflex-card-ico">🔄</div>
+    <div class="reflex-card-body">
+      <div class="reflex-card-title">Movilidad</div>
+      <div class="reflex-card-sub">Circuito de movilidad articular · hombros, cadera, tobillos y columna</div>
     </div>
   </div>`;
 
@@ -5482,6 +5577,7 @@ async function resetAllProgress(){
   seasonGoal = null;
   ovrHistory = [];
   physicalTest = null;
+  fitnessTestHistory = [];
   weeklyChallenges = [];
   weeklyLogs = {};
   await persistState();
@@ -5693,6 +5789,7 @@ async function saveFitTest(){
     date: new Date().toISOString(),
     levelId: level.id,
   };
+  fitnessTestHistory.push({ ...physicalTest, id: 'fit_'+Date.now() });
   await persistState();
   closeFitTestModal();
   renderFitTestWidget('fit-test-wrap');
@@ -5748,6 +5845,68 @@ function addFitRecommendedDrills(ids){
 }
 function closeFitResult(){ document.getElementById('fit-result-bg').classList.remove('open'); }
 
+/* ============================================================
+   ⭐ HISTORIAL DEL TEST FÍSICO
+============================================================ */
+function openFitHistoryModal(){
+  renderFitHistoryModal();
+  document.getElementById('fit-history-modal').classList.add('open');
+}
+function closeFitHistoryModal(){ document.getElementById('fit-history-modal').classList.remove('open'); }
+
+function renderFitHistoryModal(){
+  const chrono = [...fitnessTestHistory].sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const barsWrap = document.getElementById('fit-history-bars');
+  const listWrap = document.getElementById('fit-history-list');
+  if(chrono.length===0){
+    barsWrap.innerHTML = '';
+    listWrap.innerHTML = '<div class="ovr-hist-empty">Todavía no hay tests guardados. Cada vez que hagas el test físico, queda uno nuevo acá para ver tu evolución.</div>';
+    return;
+  }
+  const withResult = chrono.map(t=>({t, ...computeFitnessResult(t)}));
+  const recent = withResult.slice(-14);
+  const max = 5; // el promedio siempre va de 1 a 5
+  let bars = '<div class="ovr-hist-row">';
+  recent.forEach(r=>{
+    const pct = Math.max(6, Math.round((r.avg/max)*100));
+    bars += `<div class="ovr-hist-bar" style="height:${pct}%; background:${r.level.color};" title="${fmtDate(new Date(r.t.date))} · ${r.level.name} (${r.avg.toFixed(1)}/5)"></div>`;
+  });
+  bars += '</div>';
+  const currentAvg = recent[recent.length-1].avg;
+  const firstAvg = recent[0].avg;
+  const diff = Math.round((currentAvg-firstAvg)*10)/10;
+  bars += `<div style="font-size:11.5px; color:var(--chalk-dim);">Nivel actual: <b style="color:var(--chalk)">${recent[recent.length-1].level.name}</b>${diff!==0 && recent.length>1 ? ` (${diff>0?'+':''}${diff} en este historial)` : ''}</div>`;
+  barsWrap.innerHTML = bars;
+
+  // lista del más reciente al más viejo, con flecha de tendencia por métrica vs el test anterior
+  const newestFirst = [...withResult].reverse();
+  let html = '';
+  newestFirst.forEach((r, i)=>{
+    const prev = newestFirst[i+1];
+    const metricsHtml = FITNESS_TESTS.map(def=>{
+      const b = r.breakdown.find(x=>x.def.id===def.id);
+      if(!b || b.value==='' || b.value===null || b.value===undefined) return '';
+      let arrow = '<span class="trend-same">·</span>';
+      if(prev){
+        const pb = prev.breakdown.find(x=>x.def.id===def.id);
+        if(pb && pb.score!==null && b.score!==null){
+          if(b.score>pb.score) arrow = '<span class="trend-up">▲</span>';
+          else if(b.score<pb.score) arrow = '<span class="trend-down">▼</span>';
+        }
+      }
+      return `<span class="fit-hist-metric">${def.icon} ${b.value}${def.unit} ${arrow}</span>`;
+    }).join('');
+    html += `<div class="fit-hist-row">
+      <div class="fit-hist-row-top">
+        <span class="fit-hist-date">${fmtDate(new Date(r.t.date))}</span>
+        <span class="fit-hist-level" style="color:${r.level.color}">${r.level.icon} ${r.level.name}</span>
+      </div>
+      <div class="fit-hist-metrics">${metricsHtml}</div>
+    </div>`;
+  });
+  listWrap.innerHTML = html;
+}
+
 function renderFitTestWidget(elId){
   const el = document.getElementById(elId);
   if(!el) return;
@@ -5777,6 +5936,7 @@ function renderFitTestWidget(elId){
         </div>
       </div>
       <button class="fit-retake-btn" onclick="event.stopPropagation(); openFitTestModal();">Repetir test</button>
+      ${fitnessTestHistory.length>=2 ? `<button class="fit-retake-btn" style="margin-top:6px;" onclick="event.stopPropagation(); openFitHistoryModal();">📈 Ver evolución</button>` : ''}
     </div>`;
 }
 
