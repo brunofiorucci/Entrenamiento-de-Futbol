@@ -358,6 +358,11 @@
   .drill-dose{font-size:11.5px; color:var(--chalk-dim); font-family:'IBM Plex Mono',monospace;}
   .drill-desc{font-size:13px; color:var(--chalk-dim); line-height:1.5; margin-top:10px; display:none;}
   .drill.open .drill-desc{display:block;}
+  .yt-link{
+    display:none; font-size:12.5px; color:var(--accent); font-weight:600;
+    text-decoration:none; margin-top:8px;
+  }
+  .drill.open .yt-link{display:inline-block;}
   .add-btn{
     width:30px; height:30px; border-radius:8px;
     border:1.5px solid var(--line-strong); background:transparent; color:var(--chalk);
@@ -409,6 +414,10 @@
     flex-basis:100%; margin-top:0; padding-left:36px;
   }
   .active-session .drill-check.open .drill-desc{display:block;}
+  .active-session .drill-check .yt-link{
+    flex-basis:100%; padding-left:36px; margin-top:0;
+  }
+  .active-session .drill-check.open .yt-link{display:inline-block;}
   .set-tracker{
     flex-basis:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:8px 0 0 36px; margin-top:2px; border-top:1px dashed var(--line); padding-top:8px;
@@ -1343,6 +1352,7 @@
       </div>
 
       <button class="cta-btn" onclick="goTo('entrenar')">Empezar entrenamiento</button>
+      <button class="cta-btn ghost" style="margin-top:10px;" onclick="openFreeSessionModal()">📝 Registrar entrenamiento libre</button>
 
       <div class="section-label" id="pos-widget-label">Mapa de atajadas</div>
       <div id="pos-widget"></div>
@@ -1826,6 +1836,34 @@
   </div>
 </div>
 
+<!-- Modal: registrar entrenamiento libre (sesiones hechas fuera de la app, sin marcar ejercicios) -->
+<div class="modal-bg" id="free-session-modal">
+  <div class="modal">
+    <h2>Registrar entrenamiento libre</h2>
+    <div class="sub">Para esas sesiones que hiciste sin marcar ejercicios acá — con un familiar, un entrenador, o por tu cuenta. Igual suma a tu historial, racha y nivel.</div>
+
+    <div class="section-label" style="margin-top:0;">¿Con quién entrenaste?</div>
+    <div class="filter-row" id="free-session-companion-row"></div>
+
+    <div class="field-row"><label>Fecha</label><input type="date" id="free-session-date" class="field-input"></div>
+    <div class="field-row"><label>⏱ Duración (min)</label><input type="number" min="1" step="1" inputmode="numeric" id="free-session-duration" class="field-input" placeholder="Ej: 40"></div>
+    <div class="field-row" style="align-items:flex-start; flex-direction:column; gap:6px;">
+      <label>¿Qué entrenaste?</label>
+      <textarea id="free-session-note" class="field-input" placeholder="Ej: hoy mi papá me hizo tiros desde afuera del área y trabajamos salidas."></textarea>
+    </div>
+
+    <div id="free-session-shots-wrap">
+      <div class="section-label" style="margin-top:6px;">Remates (opcional)</div>
+      <div id="free-session-goal-grid"></div>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-top:16px;">
+      <button class="cta-btn ghost" style="margin-top:0;" onclick="closeFreeSessionModal()">Cancelar</button>
+      <button class="cta-btn" style="margin-top:0;" onclick="saveFreeSession()">Guardar sesión</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: resultado del test físico -->
 <div class="levelup-bg" id="fit-result-bg" onclick="if(event.target===this) closeFitResult()">
   <div class="levelup-card">
@@ -2263,6 +2301,15 @@ const POSITIONS = [
 ];
 function posById(id){ return POSITIONS.find(p=>p.id===id); }
 
+// Arma un link de búsqueda de YouTube para un ejercicio (no un video fijo,
+// porque los nombres son propios de la app y un link exacto podría no existir
+// o quedar roto/desactualizado con el tiempo).
+function youtubeSearchUrl(drill, posId){
+  const posName = (posById(posId)||{}).name || '';
+  const q = `${drill.name} ${posName} fútbol entrenamiento`;
+  return 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q);
+}
+
 /* ============================================================
    CATEGORIES (per position)
 ============================================================ */
@@ -2325,11 +2372,13 @@ const DRILLS = {
     {id:'arq_blq4', cat:'BLQ', mode:'pareja', name:'Palomas a esquina alta', dose:'3 series x 5 reps c/lado', desc:'Remates altos a las escuadras. Trabajar el salto vertical-lateral y el desvío con la punta de los dedos por encima del travesaño.'},
     {id:'arq_blq5', cat:'BLQ', mode:'solo', name:'Doble estirada de recuperación', dose:'4 series x 5 reps c/lado', desc:'Estirada hacia un lado, recuperación rápida de pie y segunda estirada inmediata hacia el mismo poste. Simula el rebote tras un primer rechazo.'},
     {id:'arq_blq6', cat:'BLQ', mode:'pareja', name:'Blocaje frontal tras salida corta', dose:'5 repeticiones', desc:'Salir dos o tres pasos al frente y bloquear un remate cercano ejecutado a media potencia, cerrando bien el ángulo antes del contacto.'},
+    {id:'arq_blq7', cat:'BLQ', mode:'pareja', name:'Despeje de puños en centro disputado', dose:'6 repeticiones', desc:'Ante un centro alto con rivales cerca que impiden un blocaje seguro, despejar con los puños (uno o los dos) buscando altura y distancia en vez de arriesgar a que se escape de las manos.'},
     {id:'arq_ach1', cat:'ACH', mode:'pareja', name:'Achique 1 vs. delantero', dose:'6 repeticiones', desc:'Un atacante encara desde media distancia. Practicar el achique progresivo, reduciendo el ángulo sin anticipar la caída.'},
     {id:'arq_ach2', cat:'ACH', mode:'pareja', name:'Salida a centros cruzados', dose:'8 centros por lado', desc:'Centros desde ambas bandas al área chica. Trabajar lectura de trayectoria, timing de salto y despeje con puños o atrape.'},
     {id:'arq_ach3', cat:'ACH', mode:'pareja', name:'Achique y recuperación de posición', dose:'5 series', desc:'Salir rápido ante un pase filtrado y, si no llega, recuperar la posición bajo los tres palos con pasos cortos hacia atrás.'},
     {id:'arq_ach4', cat:'ACH', mode:'pareja', name:'Disputa de pelota dividida', dose:'6 repeticiones', desc:'Balón que puede ser alcanzado tanto por el arquero como por un atacante que llega de frente. Decidir rápido entre salir con decisión o quedarse, sin quedar a mitad de camino.'},
     {id:'arq_ach5', cat:'ACH', mode:'pareja', name:'Achique con temporización', dose:'6 repeticiones', desc:'Ante un pase al espacio, calcular el momento exacto de arrancar para llegar antes que el delantero sin regalar el primer paso ni salir apurado.'},
+    {id:'arq_ach6', cat:'ACH', mode:'pareja', name:'Cobertura de espacios en juego reducido', dose:'10 minutos', desc:'Jugar un fútbol reducido (4v4 o 5v5 con arco chico) donde el arquero debe leer en tiempo real cuándo salir y cuándo quedarse, en vez de repetir el gesto de forma aislada. Simula mucho mejor la toma de decisiones de un partido real.'},
     {id:'arq_pie1', cat:'PIE', mode:'pareja', name:'Control orientado bajo presión', dose:'10 repeticiones', desc:'Recibir con un rival cerca aplicando presión leve, orientar el primer control hacia el espacio libre y salir jugando en dos toques.'},
     {id:'arq_pie2', cat:'PIE', mode:'ambos', name:'Pase corto y largo a dos pies', dose:'20 pases (10+10)', desc:'Circuito de pases cortos precisos y saques largos rasos, alternando pie hábil y pie menos hábil. Solo: contra una pared. Con compañero: pases cruzados.'},
     {id:'arq_pie3', cat:'PIE', mode:'pareja', name:'Salida jugada bajo presión', dose:'6 secuencias', desc:'Simular una salida con el balón desde el fondo ante presión de un rival, buscando siempre la opción más segura antes que el despeje.'},
@@ -2982,6 +3031,16 @@ const MATCH_CONTEXTS = [
   {id:'otro',   name:'Otro',   color:'#9AA5B1'}
 ];
 function contextById(id){ return MATCH_CONTEXTS.find(c=>c.id===id) || MATCH_CONTEXTS[2]; }
+
+const TRAINING_COMPANIONS = [
+  {id:'papa',       name:'Papá'},
+  {id:'mama',       name:'Mamá'},
+  {id:'amigo',      name:'Amigo'},
+  {id:'hermano',    name:'Hermano/a'},
+  {id:'entrenador', name:'Entrenador'},
+  {id:'solo',       name:'Solo'},
+];
+function companionById(id){ return TRAINING_COMPANIONS.find(c=>c.id===id); }
 
 function currentStateObject(){
   return {sessions, matches, draft, activePosition, selectedArchetype, spacePref, weekProgress,
@@ -4234,7 +4293,7 @@ function renderInicio(){
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
             <div style="font-size:15px; font-weight:600;">${fmtDate(new Date(lastOfPos.date))}</div>
-            <div class="drill-dose" style="margin-top:4px;">${lastOfPos.drillIds.length} ejercicios · ${lastOfPos.durationMin} min</div>
+            <div class="drill-dose" style="margin-top:4px;">${lastOfPos.manual ? 'Sesión libre' : lastOfPos.drillIds.length+' ejercicios'} · ${lastOfPos.durationMin} min</div>
           </div>
           <div class="history-badge">✓ Completa</div>
         </div>
@@ -4696,6 +4755,7 @@ function renderEjercicios(){
         </div>
       </div>
       <div class="drill-desc">${d.desc}</div>
+      <a class="yt-link" href="${youtubeSearchUrl(d, activePosition)}" target="_blank" rel="noopener">▶ Buscar video de referencia en YouTube</a>
     `;
     el.querySelector('.info-btn').addEventListener('click', (e)=>{
       e.stopPropagation();
@@ -4869,6 +4929,7 @@ function renderEntrenar(){
         <button class="info-btn" data-info-for="${id}" title="Ver de qué se trata">i</button>
         <button class="rest-timer-btn" data-timer-for="${id}" title="Temporizador de descanso">⏱</button>
         <div class="drill-desc">${d.desc}</div>
+        <a class="yt-link" href="${youtubeSearchUrl(d, pos.id)}" target="_blank" rel="noopener" onclick="event.stopPropagation();">▶ Buscar video de referencia en YouTube</a>
         ${showSetTracker ? `<div class="set-tracker">
           <div class="set-tracker-label">Serie ${Math.min(seriesDone+1, seriesTotal)}/${seriesTotal}</div>
           <button class="set-tracker-btn" data-set-id="${id}">✓ Terminé esta serie</button>
@@ -6235,10 +6296,14 @@ function renderProgreso(){
       const saves = s.zones ? Object.values(s.zones).reduce((a,z)=>a+z.s,0) : 0;
       const row = document.createElement('div');
       row.className = 'history-item';
+      const companionName = s.companion && companionById(s.companion) ? companionById(s.companion).name : null;
+      const subLine = s.manual
+        ? `📝 Sesión libre${companionName ? ' · '+companionName : ''} · ${s.durationMin} min${totalShots>0 ? ' · '+saves+'/'+totalShots+' atajadas':''}`
+        : `${s.drillIds.length} ejerc. · ${s.durationMin} min${totalShots>0 ? ' · '+saves+'/'+totalShots+' atajadas':''}`;
       row.innerHTML = `
         <div>
           <div class="history-date"><span class="pos-tag" style="background:${p.color}">${p.id}</span>${fmtDate(new Date(s.date))}</div>
-          <div class="history-sub">${s.drillIds.length} ejerc. · ${s.durationMin} min${totalShots>0 ? ' · '+saves+'/'+totalShots+' atajadas':''}</div>
+          <div class="history-sub">${subLine}</div>
           ${s.note ? `<div class="history-note">📝 ${escapeHtml(s.note)}</div>` : ''}
         </div>
         <div class="history-actions">
@@ -6403,6 +6468,62 @@ async function deleteMatch(id){
   matches = matches.filter(m=>m.id!==id);
   saveMatches();
   renderPartidos();
+}
+
+/* ============================================================
+   ⭐ ENTRENAMIENTO LIBRE (sesiones sin marcar ejercicios de la app,
+   por ejemplo cuando entrenás con un familiar o entrenador externo)
+============================================================ */
+let freeSessionCompanion = 'solo';
+function renderFreeSessionCompanionChips(){
+  const row = document.getElementById('free-session-companion-row');
+  row.innerHTML = '';
+  TRAINING_COMPANIONS.forEach(c=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (freeSessionCompanion===c.id ? ' active' : '');
+    chip.textContent = c.name;
+    chip.onclick = ()=>{ freeSessionCompanion=c.id; renderFreeSessionCompanionChips(); };
+    row.appendChild(chip);
+  });
+}
+function openFreeSessionModal(){
+  document.getElementById('free-session-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('free-session-duration').value = '';
+  document.getElementById('free-session-note').value = '';
+  document.getElementById('free-session-shots-wrap').style.display = activePosition==='ARQ' ? 'block' : 'none';
+  freeSessionCompanion = 'solo';
+  renderFreeSessionCompanionChips();
+  shotlogTemp = {};
+  renderGoalGrid(document.getElementById('free-session-goal-grid'), {}, true);
+  document.getElementById('free-session-modal').classList.add('open');
+}
+function closeFreeSessionModal(){ document.getElementById('free-session-modal').classList.remove('open'); }
+
+async function saveFreeSession(){
+  const dateVal = document.getElementById('free-session-date').value;
+  const duration = parseInt(document.getElementById('free-session-duration').value) || 0;
+  const note = document.getElementById('free-session-note').value.trim();
+  if(duration <= 0){ alert('Contame cuántos minutos duró el entrenamiento.'); return; }
+  const isoDate = dateVal ? new Date(dateVal+'T12:00:00').toISOString() : new Date().toISOString();
+  const hasZones = activePosition==='ARQ' && Object.keys(shotlogTemp).length>0;
+
+  const before = snapshotProgress();
+  sessions.push({
+    id: 'sess_manual_'+Date.now(),
+    date: isoDate,
+    position: activePosition,
+    drillIds: [],
+    durationMin: duration,
+    completionRatio: 1,
+    manual: true,
+    companion: freeSessionCompanion,
+    ...(note ? {note} : {}),
+    ...(hasZones ? {zones: {...shotlogTemp}} : {})
+  });
+  await saveSessions();
+  closeFreeSessionModal();
+  refreshCurrentView();
+  celebrateProgress(before);
 }
 
 /* ============================================================
