@@ -418,6 +418,14 @@
     flex-basis:100%; padding-left:36px; margin-top:0;
   }
   .active-session .drill-check.open .yt-link{display:inline-block;}
+
+  .tech-diagram{
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:10px 10px 8px; margin-top:10px; max-width:280px;
+  }
+  .tech-diagram svg{width:100%; height:auto; display:block;}
+  .tech-diagram-caption{font-size:11px; color:var(--chalk-dim); margin-top:6px; text-align:center; line-height:1.4;}
+  .active-session .drill-check .tech-diagram{flex-basis:100%; margin-left:36px; width:calc(100% - 36px);}
   .set-tracker{
     flex-basis:100%; display:flex; align-items:center; justify-content:space-between; gap:10px;
     padding:8px 0 0 36px; margin-top:2px; border-top:1px dashed var(--line); padding-top:8px;
@@ -2008,6 +2016,159 @@ const CATEGORY_ICON = {
 };
 
 /* ============================================================
+   DIAGRAMAS TÉCNICOS ILUSTRADOS (solo Arquero)
+   ------------------------------------------------------------
+   No usamos fotos reales (derechos de autor / no hay forma de
+   generarlas acá): son diagramas propios, en SVG, con una silueta
+   simple del arquero y flechas mostrando la dirección del
+   movimiento — uno por categoría, no por ejercicio individual.
+============================================================ */
+const CATEGORY_DIAGRAMS = {
+  REF: {
+    svg: `<svg viewBox="0 0 220 150">
+      <circle cx="110" cy="60" r="8" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="110" y1="68" x2="110" y2="90" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="110" y1="90" x2="98" y2="112" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="110" y1="90" x2="122" y2="112" stroke="var(--chalk)" stroke-width="2.5"/>
+      <polyline points="110,75 92,80 82,74" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <polyline points="110,75 128,80 138,74" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="78" y1="74" x2="50" y2="74" stroke="var(--accent)" stroke-width="2.5"/>
+      <polygon points="50,74 58,69 58,79" fill="var(--accent)"/>
+      <line x1="142" y1="74" x2="170" y2="74" stroke="var(--accent)" stroke-width="2.5"/>
+      <polygon points="170,74 162,69 162,79" fill="var(--accent)"/>
+      <circle cx="42" cy="74" r="5" fill="var(--miss)"/>
+      <circle cx="178" cy="74" r="5" fill="var(--miss)"/>
+    </svg>`,
+    caption: 'Pies firmes, manos activas a la altura del pecho: reaccioná hacia el lado del estímulo sin adelantarte.'
+  },
+  BLQ: {
+    svg: `<svg viewBox="0 0 220 150">
+      <line x1="40" y1="25" x2="40" y2="105" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="180" y1="25" x2="180" y2="105" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="40" y1="25" x2="180" y2="25" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="20" y1="105" x2="200" y2="105" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <circle cx="110" cy="72" r="7" fill="none" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <line x1="110" y1="79" x2="110" y2="95" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <path d="M30,45 Q60,55 55,90" fill="none" stroke="var(--miss)" stroke-width="2" stroke-dasharray="4 3"/>
+      <polygon points="55,90 48,84 60,82" fill="var(--miss)"/>
+      <path d="M110,90 Q80,88 58,94" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="5 3"/>
+      <polygon points="58,94 66,90 66,99" fill="var(--accent)"/>
+      <ellipse cx="55" cy="96" rx="20" ry="6" fill="none" stroke="var(--chalk)" stroke-width="2.5" transform="rotate(-10 55 96)"/>
+      <line x1="38" y1="94" x2="30" y2="88" stroke="var(--chalk)" stroke-width="2.5"/>
+    </svg>`,
+    caption: 'Primer paso de carga hacia el costado y estirada completa, buscando la pelota con el brazo de abajo primero.'
+  },
+  ACH: {
+    svg: `<svg viewBox="0 0 220 150">
+      <line x1="40" y1="25" x2="40" y2="105" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="180" y1="25" x2="180" y2="105" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="40" y1="25" x2="180" y2="25" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="20" y1="105" x2="200" y2="105" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <line x1="110" y1="65" x2="40" y2="25" stroke="var(--chalk)" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="110" y1="65" x2="180" y2="25" stroke="var(--chalk)" stroke-width="1.5" stroke-dasharray="3 3"/>
+      <line x1="110" y1="98" x2="40" y2="25" stroke="var(--chalk-faint)" stroke-width="1" stroke-dasharray="2 4"/>
+      <line x1="110" y1="98" x2="180" y2="25" stroke="var(--chalk-faint)" stroke-width="1" stroke-dasharray="2 4"/>
+      <circle cx="110" cy="98" r="6" fill="none" stroke="var(--chalk-faint)" stroke-width="2" stroke-dasharray="3 2"/>
+      <circle cx="110" cy="58" r="7" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="110" y1="65" x2="110" y2="72" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="110" y1="90" x2="102" y2="98" stroke="var(--chalk)" stroke-width="0"/>
+      <line x1="110" y1="88" x2="110" y2="72" stroke="var(--accent)" stroke-width="3"/>
+      <polygon points="110,88 105,78 115,78" fill="var(--accent)"/>
+      <polygon points="110,18 104,10 116,10" fill="var(--miss)"/>
+      <circle cx="110" cy="12" r="5" fill="var(--miss)"/>
+    </svg>`,
+    caption: 'Salir a tiempo achica el ángulo de tiro (líneas llenas) frente a quedarte en la línea (líneas punteadas).'
+  },
+  PIE: {
+    svg: `<svg viewBox="0 0 220 150">
+      <line x1="20" y1="112" x2="200" y2="112" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <circle cx="55" cy="65" r="7" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="55" y1="72" x2="55" y2="94" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="55" y1="94" x2="46" y2="112" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="55" y1="94" x2="64" y2="110" stroke="var(--chalk)" stroke-width="2.5"/>
+      <circle cx="66" cy="112" r="5" fill="var(--chalk)"/>
+      <path d="M70,108 Q120,120 165,70" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="5 3"/>
+      <polygon points="165,70 155,72 159,80" fill="var(--accent)"/>
+      <circle cx="172" cy="62" r="7" fill="none" stroke="var(--chalk-faint)" stroke-width="2"/>
+    </svg>`,
+    caption: 'Control orientado hacia el lado libre y pase preciso al compañero, sin exponerte a la presión rival.'
+  },
+  SAQ: {
+    svg: `<svg viewBox="0 0 220 150">
+      <line x1="20" y1="112" x2="200" y2="112" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <circle cx="45" cy="65" r="7" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="45" y1="72" x2="45" y2="94" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="45" y1="94" x2="37" y2="112" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="45" y1="94" x2="53" y2="112" stroke="var(--chalk)" stroke-width="2.5"/>
+      <polyline points="45,78 60,68 70,72" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <path d="M68,72 Q130,20 185,75" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="5 3"/>
+      <polygon points="185,75 174,70 176,80" fill="var(--accent)"/>
+      <circle cx="190" cy="82" r="7" fill="none" stroke="var(--chalk-faint)" stroke-width="2"/>
+    </svg>`,
+    caption: 'Elegí la distribución según la presión rival: mano corta y rápida, o saque bombeado si aprietan arriba.'
+  },
+  '1v1': {
+    svg: `<svg viewBox="0 0 220 150">
+      <line x1="40" y1="25" x2="40" y2="105" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="180" y1="25" x2="180" y2="105" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="40" y1="25" x2="180" y2="25" stroke="var(--line-strong)" stroke-width="3"/>
+      <line x1="20" y1="105" x2="200" y2="105" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <line x1="150" y1="18" x2="40" y2="105" stroke="var(--chalk-faint)" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="150" y1="18" x2="180" y2="105" stroke="var(--chalk-faint)" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="128" y1="68" x2="40" y2="105" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="128" y1="68" x2="180" y2="105" stroke="var(--accent)" stroke-width="2"/>
+      <line x1="150" y1="18" x2="128" y2="68" stroke="var(--miss)" stroke-width="2" stroke-dasharray="4 3"/>
+      <polygon points="128,68 134,58 122,58" fill="var(--miss)"/>
+      <polygon points="150,22 144,14 156,14" fill="var(--miss)"/>
+      <circle cx="150" cy="14" r="5" fill="var(--miss)"/>
+      <circle cx="128" cy="60" r="7" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="128" y1="67" x2="128" y2="90" stroke="var(--chalk)" stroke-width="2.5"/>
+    </svg>`,
+    caption: 'Parate sobre la línea imaginaria entre la pelota y el centro del arco, adelantado lo justo para achicar el ángulo.'
+  },
+  FIS: {
+    svg: `<svg viewBox="0 0 220 150">
+      <line x1="20" y1="120" x2="200" y2="120" stroke="var(--line-strong)" stroke-width="1.5"/>
+      <circle cx="45" cy="95" r="7" fill="none" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <line x1="45" y1="102" x2="45" y2="112" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <line x1="45" y1="112" x2="36" y2="120" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <line x1="45" y1="112" x2="54" y2="120" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <line x1="45" y1="60" x2="45" y2="90" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="4 3"/>
+      <polygon points="45,60 39,70 51,70" fill="var(--accent)"/>
+      <circle cx="110" cy="40" r="7" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="110" y1="47" x2="110" y2="65" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="110" y1="65" x2="100" y2="80" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="110" y1="65" x2="120" y2="80" stroke="var(--chalk)" stroke-width="2.5"/>
+      <polyline points="110,52 98,58 92,52" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <polyline points="110,52 122,58 128,52" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <circle cx="175" cy="95" r="7" fill="none" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <line x1="175" y1="102" x2="175" y2="112" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <line x1="175" y1="108" x2="166" y2="120" stroke="var(--chalk-faint)" stroke-width="2"/>
+      <line x1="175" y1="108" x2="184" y2="120" stroke="var(--chalk-faint)" stroke-width="2"/>
+    </svg>`,
+    caption: 'Cargá flexionando rodillas y cadera, y extendé explosivo hacia arriba: la potencia sale de las piernas.'
+  },
+  MAN: {
+    svg: `<svg viewBox="0 0 220 150">
+      <circle cx="110" cy="45" r="14" fill="none" stroke="var(--miss)" stroke-width="2.5"/>
+      <path d="M60,95 Q78,60 95,88 Q110,65 125,88 Q142,60 160,95" fill="none" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="60" y1="95" x2="60" y2="115" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="160" y1="95" x2="160" y2="115" stroke="var(--chalk)" stroke-width="2.5"/>
+      <line x1="48" y1="90" x2="30" y2="82" stroke="var(--accent)" stroke-width="2"/>
+      <polygon points="30,82 40,80 37,90" fill="var(--accent)"/>
+      <line x1="172" y1="90" x2="190" y2="82" stroke="var(--accent)" stroke-width="2"/>
+      <polygon points="190,82 180,80 183,90" fill="var(--accent)"/>
+    </svg>`,
+    caption: 'Pulgares e índices casi juntos formando una "W" detrás de la pelota, con los dedos bien abiertos y firmes.'
+  },
+};
+function techDiagramHtml(catId){
+  const d = CATEGORY_DIAGRAMS[catId];
+  if(!d) return '';
+  return `<div class="tech-diagram">${d.svg}<div class="tech-diagram-caption">${d.caption}</div></div>`;
+}
+
+/* ============================================================
    CALENTAMIENTO PREVIO (por ahora, específico de Arquero)
 ============================================================ */
 const WARMUP_DRILLS = {
@@ -2366,6 +2527,8 @@ const DRILLS = {
     {id:'arq_ref3', cat:'REF', mode:'solo', name:'Cambios de dirección explosivos', dose:'5 series x 20s', desc:'Desplazamientos laterales cortos y explosivos entre conos, terminando cada repetición con una estirada simulada.'},
     {id:'arq_ref4', cat:'REF', mode:'pareja', name:'Reacción a estímulo de color', dose:'4 series x 8 reps', desc:'Un compañero levanta o nombra un cono de color entre varios ubicados a los costados; el arquero debe tocar el correcto lo más rápido posible. Trabaja el tiempo de decisión, no solo la velocidad de brazos.'},
     {id:'arq_ref5', cat:'REF', mode:'solo', name:'Reflejos a ras del piso', dose:'4 series x 8 reps', desc:'De rodillas o en posición baja, un balón se lanza con rebotes irregulares cerca del cuerpo. Foco en manos blandas y reacción sin levantarse de más.'},
+    {id:'arq_ref6', cat:'REF', mode:'pareja', name:'Pelotitas de tenis por color', dose:'4 series x 8 reps', desc:'Un compañero sostiene dos pelotas de tenis (o de goma) de distinto color, una en cada mano, y las suelta o tira a corta distancia. Antes de soltarlas dice un color en voz alta: hay que atrapar solo esa, dejando caer o ignorando la otra. Al ser pelotas chicas y rápidas, exige manos mucho más finas que con el balón grande, y sumar el color obliga a decidir en fracciones de segundo, no solo a reaccionar.'},
+    {id:'arq_ref7', cat:'REF', mode:'solo', name:'Rebote irregular en red de reacción', dose:'4 series x 10 reps', desc:'Con una red o panel de rebote irregular (con nudos, bultos o protuberancias que hacen que la pelota salga para cualquier lado, tipo "reaction net"), parate cerca y lanzá el balón contra ella. El rebote sale impredecible en dirección y altura, así que no se puede anticipar: hay que leer el bote recién cuando sale y reaccionar. Si no tenés una red así, se puede improvisar atando bolsas o pelotas chicas a una red o alambrado para deformar el rebote.'},
     {id:'arq_blq1', cat:'BLQ', mode:'solo', name:'Caída lateral controlada', dose:'4 series x 6 reps', desc:'Desde posición básica, caída lateral técnica sobre colchoneta o césped, apoyando cadera-costado y protegiendo el balón con ambas manos.'},
     {id:'arq_blq2', cat:'BLQ', mode:'pareja', name:'Blocaje bajo de rodillas', dose:'3 series x 8 reps', desc:'Remates rasos dirigidos al cuerpo. Trabajar la técnica de "cesta" con manos y antebrazos, rodillas juntas, sin dejar rebote.'},
     {id:'arq_blq3', cat:'BLQ', mode:'pareja', name:'Estirada a media altura', dose:'4 series x 6 reps c/lado', desc:'Remates a media altura fuera del alcance directo. Foco en el paso de carga previo y extensión completa del cuerpo.'},
@@ -2406,11 +2569,18 @@ const DRILLS = {
     {id:'arq_fis10', cat:'FIS', mode:'solo', name:'Peso muerto a una pierna', dose:'3 series x 8 reps por lado', desc:'Con o sin peso (una botella o mochila alcanza), bisagra de cadera sobre una pierna manteniendo el equilibrio. Fuerza de cadena posterior y estabilidad de tobillo para las salidas y los saltos.'},
     {id:'arq_fis11', cat:'FIS', mode:'solo', name:'Circuito de resistencia específica', dose:'5 series x 30s', desc:'Encadenar sin pausa: 5 flexiones, 5 sentadillas con salto y una estirada simulada a cada lado. Simula la exigencia de sostener el nivel de explosividad durante todo el partido.'},
     {id:'arq_fis12', cat:'FIS', mode:'ambos', name:'Estabilidad en un pie con perturbación', dose:'3 series x 30s por lado', desc:'Pararse en un pie sobre superficie inestable (o firme si no hay otra opción). Con compañero: recibe pequeños empujones para desestabilizarse. Solo: rebotar un balón contra una pared mientras se sostiene el equilibrio. Control postural para no perder equilibrio tras una caída o un salto.'},
+    {id:'arq_fis13', cat:'FIS', mode:'solo', name:'Salto al cajón', dose:'4 series x 6 reps', desc:'Salto vertical explosivo a un cajón, banco o escalón firme, aterrizando arriba con las dos piernas y controlando la caída. Es el ejercicio más directo para ganar altura de salto, la base de cualquier paloma.'},
+    {id:'arq_fis14', cat:'FIS', mode:'solo', name:'Saltos laterales sobre vallas bajas', dose:'4 series x 8 reps', desc:'Saltar de lado a lado por encima de una valla baja, cono acostado o línea marcada, sin pausa entre saltos. Trabaja la potencia de salto en el plano lateral, que es el que más se usa en una estirada real.'},
+    {id:'arq_fis15', cat:'FIS', mode:'solo', name:'Saltos a una pierna (unipodal)', dose:'3 series x 6 reps por lado', desc:'Saltos hacia adelante o hacia el lado despegando y aterrizando con la misma pierna. La mayoría de las estiradas salen de un solo pie de apoyo, así que la fuerza de salto unilateral es más específica que la de las dos piernas juntas.'},
+    {id:'arq_fis16', cat:'FIS', mode:'pareja', name:'Salto reactivo a objetivo alto', dose:'4 series x 6 reps', desc:'Un compañero sostiene el balón (o la mano) en alto y lo mueve un poco a upa cada vez; el arquero debe saltar y tocarlo apenas se levanta, sin poder anticipar la altura exacta. Combina el salto explosivo con la lectura del momento justo para despegar.'},
     {id:'arq_man1', cat:'MAN', mode:'solo', name:'Apriete de pelota antiestrés', dose:'4 series x 15 reps por mano', desc:'Apretar con fuerza una pelota antiestrés o de tenis, sostener 2 segundos y soltar. Fuerza de agarre pura, la base para sostener cualquier atajada sin que se escape el balón.'},
     {id:'arq_man2', cat:'MAN', mode:'solo', name:'Flexo-extensión de muñeca con peso liviano', dose:'3 series x 12 reps', desc:'Con una botella de agua o mancuerna liviana, apoyar el antebrazo en una mesa o la pierna y mover solo la muñeca hacia arriba y abajo. Fortalece los músculos que estabilizan la mano al recibir un impacto fuerte.'},
     {id:'arq_man3', cat:'MAN', mode:'pareja', name:'Recepción de balón medicinal liviano', dose:'4 series x 8 reps', desc:'Un compañero tira un balón medicinal liviano (o una pelota de básquet) a corta distancia; recibir y absorber el impacto flexionando ligeramente los brazos, sin que rebote hacia afuera.'},
     {id:'arq_man4', cat:'MAN', mode:'solo', name:'Acarreo de carga (farmer carry)', dose:'4 series x 20m', desc:'Caminar sosteniendo un peso en cada mano (mancuernas, bolsones o baldes con agua), con los hombros atrás y el agarre firme todo el recorrido. Resistencia de agarre para sostener la tensión durante todo el partido.'},
     {id:'arq_man5', cat:'MAN', mode:'solo', name:'Movilidad de dedos y muñeca', dose:'2 series x 10 reps', desc:'Rotaciones de muñeca hacia ambos lados, apertura y cierre completo de los dedos, y estiramiento suave llevando los dedos hacia atrás con la otra mano. Ideal como cierre o como parte del calentamiento antes de un entrenamiento exigente para las manos.'},
+    {id:'arq_man6', cat:'MAN', mode:'solo', name:'Flexiones sobre los nudillos', dose:'3 series x 8 reps', desc:'Flexiones de brazos apoyando los puños cerrados (nudillos) en vez de las palmas, sobre una superficie blanda al principio (colchoneta o toalla doblada). Fortalece la muñeca en la posición cerrada y la prepara para absorber golpes fuertes sin doblarse.'},
+    {id:'arq_man7', cat:'MAN', mode:'solo', name:'Extensión de muñeca con banda elástica', dose:'3 series x 15 reps', desc:'Con una banda elástica pisada en el piso y sostenida con la mano, llevar la muñeca hacia arriba contra la resistencia, con el antebrazo quieto. Fortalece los extensores de la muñeca, que son los que más sufren al recibir un remate fuerte en mala posición.'},
+    {id:'arq_man8', cat:'MAN', mode:'solo', name:'Rebote de pared a una mano', dose:'4 series x 10 reps por mano', desc:'Parado cerca de una pared, tirar y recibir un balón chico o una pelota de tenis con una sola mano, en apoyo firme sobre los dedos. Trabaja la fuerza de muñeca y dedos en la misma posición que un desvío de una mano.'},
   ],
   DEF: [
     {id:'def_mar1', cat:'MAR', name:'Marcación al hombre en carrera', dose:'6 carreras de 15m', desc:'Trabajar la distancia óptima de marca, no dejar girar al rival y achicar en el momento justo de la recepción.'},
@@ -4755,6 +4925,7 @@ function renderEjercicios(){
         </div>
       </div>
       <div class="drill-desc">${d.desc}</div>
+      ${activePosition==='ARQ' ? techDiagramHtml(d.cat) : ''}
       <a class="yt-link" href="${youtubeSearchUrl(d, activePosition)}" target="_blank" rel="noopener">▶ Buscar video de referencia en YouTube</a>
     `;
     el.querySelector('.info-btn').addEventListener('click', (e)=>{
@@ -4929,6 +5100,7 @@ function renderEntrenar(){
         <button class="info-btn" data-info-for="${id}" title="Ver de qué se trata">i</button>
         <button class="rest-timer-btn" data-timer-for="${id}" title="Temporizador de descanso">⏱</button>
         <div class="drill-desc">${d.desc}</div>
+        ${pos.id==='ARQ' ? techDiagramHtml(d.cat) : ''}
         <a class="yt-link" href="${youtubeSearchUrl(d, pos.id)}" target="_blank" rel="noopener" onclick="event.stopPropagation();">▶ Buscar video de referencia en YouTube</a>
         ${showSetTracker ? `<div class="set-tracker">
           <div class="set-tracker-label">Serie ${Math.min(seriesDone+1, seriesTotal)}/${seriesTotal}</div>
