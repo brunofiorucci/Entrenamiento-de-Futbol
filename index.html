@@ -1839,7 +1839,7 @@
 <!-- Modal: registrar entrenamiento libre (sesiones hechas fuera de la app, sin marcar ejercicios) -->
 <div class="modal-bg" id="free-session-modal">
   <div class="modal">
-    <h2>Registrar entrenamiento libre</h2>
+    <h2 id="free-session-modal-title">Registrar entrenamiento libre</h2>
     <div class="sub">Para esas sesiones que hiciste sin marcar ejercicios acá — con un familiar, un entrenador, o por tu cuenta. Igual suma a tu historial, racha y nivel.</div>
 
     <div class="section-label" style="margin-top:0;">¿Con quién entrenaste?</div>
@@ -6315,7 +6315,7 @@ function renderProgreso(){
           ${s.note ? `<div class="history-note">📝 ${escapeHtml(s.note)}</div>` : ''}
         </div>
         <div class="history-actions">
-          <button class="hist-icon-btn" title="Editar nota" onclick="editSessionNote('${s.id}')">✎</button>
+          <button class="hist-icon-btn" title="Editar" onclick="${s.manual ? `editFreeSession('${s.id}')` : `editSessionNote('${s.id}')`}">✎</button>
           <button class="hist-icon-btn danger" title="Eliminar sesión" onclick="deleteSession('${s.id}')">🗑</button>
         </div>`;
       hist.appendChild(row);
@@ -6483,6 +6483,8 @@ async function deleteMatch(id){
    por ejemplo cuando entrenás con un familiar o entrenador externo)
 ============================================================ */
 let freeSessionCompanion = 'solo';
+let editingFreeSessionId = null;
+let freeSessionPosition = 'ARQ';
 function renderFreeSessionCompanionChips(){
   const row = document.getElementById('free-session-companion-row');
   row.innerHTML = '';
@@ -6495,14 +6497,33 @@ function renderFreeSessionCompanionChips(){
   });
 }
 function openFreeSessionModal(){
+  editingFreeSessionId = null;
+  freeSessionPosition = activePosition;
+  document.getElementById('free-session-modal-title').textContent = 'Registrar entrenamiento libre';
   document.getElementById('free-session-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('free-session-duration').value = '';
   document.getElementById('free-session-note').value = '';
-  document.getElementById('free-session-shots-wrap').style.display = activePosition==='ARQ' ? 'block' : 'none';
+  document.getElementById('free-session-shots-wrap').style.display = freeSessionPosition==='ARQ' ? 'block' : 'none';
   freeSessionCompanion = 'solo';
   renderFreeSessionCompanionChips();
   shotlogTemp = {};
   renderGoalGrid(document.getElementById('free-session-goal-grid'), {}, true);
+  document.getElementById('free-session-modal').classList.add('open');
+}
+function editFreeSession(id){
+  const s = sessions.find(x=>x.id===id);
+  if(!s) return;
+  editingFreeSessionId = id;
+  freeSessionPosition = s.position;
+  document.getElementById('free-session-modal-title').textContent = 'Editar entrenamiento libre';
+  document.getElementById('free-session-date').value = new Date(s.date).toISOString().slice(0,10);
+  document.getElementById('free-session-duration').value = s.durationMin || '';
+  document.getElementById('free-session-note').value = s.note || '';
+  document.getElementById('free-session-shots-wrap').style.display = freeSessionPosition==='ARQ' ? 'block' : 'none';
+  freeSessionCompanion = s.companion || 'solo';
+  renderFreeSessionCompanionChips();
+  shotlogTemp = s.zones ? {...s.zones} : {};
+  renderGoalGrid(document.getElementById('free-session-goal-grid'), shotlogTemp, true);
   document.getElementById('free-session-modal').classList.add('open');
 }
 function closeFreeSessionModal(){ document.getElementById('free-session-modal').classList.remove('open'); }
@@ -6513,21 +6534,32 @@ async function saveFreeSession(){
   const note = document.getElementById('free-session-note').value.trim();
   if(duration <= 0){ alert('Contame cuántos minutos duró el entrenamiento.'); return; }
   const isoDate = dateVal ? new Date(dateVal+'T12:00:00').toISOString() : new Date().toISOString();
-  const hasZones = activePosition==='ARQ' && Object.keys(shotlogTemp).length>0;
+  const hasZones = freeSessionPosition==='ARQ' && Object.keys(shotlogTemp).length>0;
 
   const before = snapshotProgress();
-  sessions.push({
-    id: 'sess_manual_'+Date.now(),
-    date: isoDate,
-    position: activePosition,
-    drillIds: [],
-    durationMin: duration,
-    completionRatio: 1,
-    manual: true,
-    companion: freeSessionCompanion,
-    ...(note ? {note} : {}),
-    ...(hasZones ? {zones: {...shotlogTemp}} : {})
-  });
+  if(editingFreeSessionId){
+    const s = sessions.find(x=>x.id===editingFreeSessionId);
+    if(s){
+      s.date = isoDate;
+      s.durationMin = duration;
+      s.companion = freeSessionCompanion;
+      if(note) s.note = note; else delete s.note;
+      if(hasZones) s.zones = {...shotlogTemp}; else delete s.zones;
+    }
+  }else{
+    sessions.push({
+      id: 'sess_manual_'+Date.now(),
+      date: isoDate,
+      position: freeSessionPosition,
+      drillIds: [],
+      durationMin: duration,
+      completionRatio: 1,
+      manual: true,
+      companion: freeSessionCompanion,
+      ...(note ? {note} : {}),
+      ...(hasZones ? {zones: {...shotlogTemp}} : {})
+    });
+  }
   await saveSessions();
   closeFreeSessionModal();
   refreshCurrentView();
