@@ -599,6 +599,10 @@
     width:calc(100% - 56px); max-width:340px; background:var(--surface-2);
     border:1px solid var(--line-strong); border-radius:20px; padding:32px 24px 26px;
     text-align:center; animation:levelPop .35s cubic-bezier(.2,1.4,.4,1);
+    max-height:80vh; overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
   }
   @keyframes levelPop{from{opacity:0; transform:scale(0.75);} to{opacity:1; transform:scale(1);}}
   .levelup-eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.16em; color:var(--chalk-dim); text-transform:uppercase;}
@@ -659,6 +663,9 @@
   .pos-fit-ico{font-size:15px;}
   .pos-fit-title{font-size:12.5px; font-weight:700; letter-spacing:0.02em; color:var(--chalk); text-transform:uppercase;}
   .pos-fit-blurb{font-size:12px; color:var(--chalk-dim); line-height:1.5;}
+  .fit-age-note{font-size:11px; color:var(--chalk-faint); margin:-4px 0 8px; font-family:'IBM Plex Mono',monospace;}
+  .fit-age-note.up{color:var(--save);}
+  .fit-age-note.down{color:var(--miss);}
   .pos-fit-height-row{margin-top:10px; padding-top:10px; border-top:1px solid rgba(243,241,231,0.10);}
   .pos-fit-tag{margin-left:5px; font-size:10px; cursor:help;}
   .pos-fit-warning{
@@ -728,6 +735,7 @@
   .modal-bg{
     position:fixed; inset:0; background:rgba(6,16,10,0.72); backdrop-filter:blur(2px);
     display:none; align-items:flex-end; justify-content:center; z-index:50;
+    overflow:hidden;
   }
   .modal-bg.open{display:flex;}
   .modal{
@@ -735,6 +743,9 @@
     border-radius:20px 20px 0 0; padding:22px 20px calc(24px + env(safe-area-inset-bottom));
     border-top:1px solid var(--line-strong);
     max-height:80vh; overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
   }
   .modal h2{font-size:19px; margin-bottom:4px;}
   .modal .sub{color:var(--chalk-dim); font-size:13px; margin-bottom:18px;}
@@ -1163,12 +1174,16 @@
   .welcome-modal-bg{
     position:fixed; inset:0; background:rgba(6,16,10,0.78); backdrop-filter:blur(2px);
     display:none; align-items:flex-end; justify-content:center; z-index:80;
+    overflow:hidden;
   }
   .welcome-modal-bg.open{display:flex;}
   .welcome-modal{
     width:100%; max-width:480px; background:var(--surface-2);
     border-radius:20px 20px 0 0; padding:0; border-top:1px solid var(--line-strong);
     max-height:86vh; overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
   }
   .welcome-head{
     padding:24px 22px 16px; text-align:center; border-bottom:1px solid var(--line);
@@ -5894,6 +5909,20 @@ function scoreHeightForPosition(posId, height){
   const t = POSITION_HEIGHT_THRESHOLDS[posId] || POSITION_HEIGHT_THRESHOLDS.ARQ;
   if(v>=t[0]) return 5; if(v>=t[1]) return 4; if(v>=t[2]) return 3; if(v>=t[3]) return 2; return 1;
 }
+// Búsqueda genérica de un valor de referencia por edad en una tabla {edad: valor}.
+// Si la edad exacta no está, usa el límite más cercano (misma lógica que ya usaba la altura).
+function lookupByAge(table, age){
+  const a = Math.round(parseFloat(age));
+  const keys = Object.keys(table).map(Number).sort((x,y)=>x-y);
+  if(table[a]!==undefined) return table[a];
+  if(a<keys[0]) return table[keys[0]];
+  if(a>keys[keys.length-1]) return table[keys[keys.length-1]];
+  // edad intermedia sin dato exacto: toma la clave más cercana
+  let closest = keys[0];
+  for(const k of keys){ if(Math.abs(k-a) < Math.abs(closest-a)) closest = k; }
+  return table[closest];
+}
+
 // Altura promedio de referencia por edad (cm) — valores generales de tablas de crecimiento (CDC/OMS, percentil 50).
 // Es una referencia general, no diagnóstica: el ritmo de crecimiento varía mucho de persona a persona.
 const AVG_HEIGHT_BY_AGE = {
@@ -5901,12 +5930,23 @@ const AVG_HEIGHT_BY_AGE = {
   12:149, 13:156, 14:164, 15:170, 16:173, 17:175,
 };
 function avgHeightForAge(age){
-  const a = Math.round(parseFloat(age));
-  const keys = Object.keys(AVG_HEIGHT_BY_AGE).map(Number).sort((x,y)=>x-y);
-  if(AVG_HEIGHT_BY_AGE[a]!==undefined) return AVG_HEIGHT_BY_AGE[a];
-  if(a<keys[0]) return AVG_HEIGHT_BY_AGE[keys[0]];
-  if(a>keys[keys.length-1]) return AVG_HEIGHT_BY_AGE[keys[keys.length-1]];
-  return AVG_HEIGHT_BY_AGE[keys[0]];
+  return lookupByAge(AVG_HEIGHT_BY_AGE, age);
+}
+
+// Referencias generales por edad para las pruebas físicas (valores promedio orientativos,
+// inspirados en baterías juveniles públicas tipo FitnessGram/President's Council).
+// Es una referencia general, no diagnóstica ni de rendimiento de élite juvenil.
+const AGE_NORMS = {
+  sprint:   {8:4.8, 9:4.6, 10:4.4, 11:4.2, 12:4.0, 13:3.8, 14:3.7, 15:3.6, 16:3.5, 17:3.4},
+  jump:     {8:15, 9:18, 10:20, 11:23, 12:26, 13:30, 14:34, 15:38, 16:42, 17:45},
+  pushups:  {8:4, 9:5, 10:7, 11:9, 12:11, 13:14, 14:18, 15:20, 16:24, 17:27},
+  situps:   {8:10, 9:13, 10:15, 11:18, 12:20, 13:24, 14:28, 15:32, 16:36, 17:38},
+  pullups:  {8:0, 9:1, 10:1, 11:2, 12:2, 13:3, 14:4, 15:5, 16:6, 17:7},
+};
+function avgForAge(testId, age){
+  const table = AGE_NORMS[testId];
+  if(!table) return null;
+  return lookupByAge(table, age);
 }
 function scoreHeightForAge(age, height){
   const h = parseFloat(height);
@@ -6082,13 +6122,30 @@ function showFitResult(){
     ${heightBlock}
   </div>`;
 
+  const isMinorTest = physicalTest.age && physicalTest.age<18;
   breakdown.forEach(b=>{
     const dots = [1,2,3,4,5].map(n=>`<div class="fit-dot ${b.score && n<=b.score ? 'on':''}" style="--fit-color:${level.color}"></div>`).join('');
     const valTxt = (b.value!==null && b.value!==undefined && b.value!=='') ? `${b.value} ${b.def.unit}` : '—';
     const prio = priority[b.def.id] || 0;
     const keyTag = prio>=4 ? `<span class="pos-fit-tag" title="Capacidad clave para ${posObj.name.toLowerCase()}">🎯</span>` : '';
     html += `<div class="fit-row"><span>${b.def.icon}</span><span class="fr-label">${b.def.label}${keyTag}</span><span class="fr-val mono">${valTxt}</span><div class="fit-dots">${dots}</div></div>`;
+
+    if(isMinorTest && b.value!==null && b.value!==undefined && b.value!==''){
+      const avg = avgForAge(b.def.id, physicalTest.age);
+      if(avg!==null){
+        const v = parseFloat(b.value);
+        const better = b.def.lowerBetter ? v < avg : v > avg;
+        const equal = Math.abs(v-avg) < (b.def.lowerBetter ? 0.05 : 0.5);
+        const cls = equal ? '' : (better ? 'up' : 'down');
+        const arrow = equal ? '≈' : (better ? '↑' : '↓');
+        html += `<div class="fit-age-note ${cls}">${arrow} Promedio a los ${escapeHtml(String(physicalTest.age))} años: ${avg} ${b.def.unit}</div>`;
+      }
+    }
   });
+
+  if(isMinorTest){
+    html += `<div class="fit-age-note" style="margin:2px 0 4px;">📊 Te comparamos con el promedio de chicos de tu edad — es una referencia general, no un diagnóstico. Cada cuerpo se desarrolla a su ritmo.</div>`;
+  }
 
   const posWeak = breakdown.filter(b=> (priority[b.def.id]||0)>=4 && b.score!==null && b.score<=2);
   if(posWeak.length){
