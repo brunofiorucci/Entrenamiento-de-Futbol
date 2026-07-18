@@ -927,6 +927,13 @@
   .ovr-hist-row{display:flex; align-items:flex-end; gap:4px; height:70px; margin-bottom:8px;}
   .ovr-hist-bar{flex:1; background:var(--accent); border-radius:3px 3px 0 0; min-height:3px; position:relative;}
   .ovr-hist-empty{color:var(--chalk-faint); font-size:12px;}
+  .chart-wrap{width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;}
+  .chart-tap-info{font-size:11px; color:var(--chalk-dim); margin-top:2px; font-family:'IBM Plex Mono',monospace;}
+  .cat-error-box{background:var(--surface-2); border:1px solid var(--line-strong); border-radius:12px; padding:12px 14px; margin-bottom:14px;}
+  .cat-error-line{font-size:12.5px; color:var(--chalk-dim); line-height:1.5;}
+  .cat-error-line + .cat-error-line{margin-top:8px;}
+  .cat-error-line b{color:var(--miss); font-weight:600;}
+  .cat-error-line.fix b{color:var(--save);}
   .fit-hist-row{
     background:var(--surface); border:1px solid var(--line); border-radius:12px;
     padding:10px 12px; margin-bottom:8px;
@@ -1432,6 +1439,8 @@
       <h2 style="font-size:22px; margin-bottom:16px;" id="ejercicios-title">Biblioteca de ejercicios</h2>
       <div class="filter-row" id="filter-row"></div>
       <div class="filter-row" id="mode-filter-row" style="margin-top:-4px;"></div>
+      <input type="text" id="drill-search-input" class="field-input" placeholder="🔎 Buscar ejercicio por nombre…" style="margin-bottom:12px;" oninput="onDrillSearchInput(this.value)">
+      <div id="cat-error-tip"></div>
       <div id="drill-list"></div>
     </section>
 
@@ -1928,6 +1937,9 @@
       <div id="free-session-goal-grid"></div>
     </div>
 
+    <div class="section-label">¿Qué ejercicios hiciste? (opcional)</div>
+    <div id="free-session-drills-wrap"></div>
+
     <div style="display:flex; gap:10px; margin-top:16px;">
       <button class="cta-btn ghost" style="margin-top:0;" onclick="closeFreeSessionModal()">Cancelar</button>
       <button class="cta-btn" style="margin-top:0;" onclick="saveFreeSession()">Guardar sesión</button>
@@ -2418,6 +2430,34 @@ Object.keys(CATEGORIES).forEach(pos=>{
   CATEGORIES[pos].forEach((c,i)=>{ c.color = PALETTE[i % PALETTE.length]; });
 });
 function catById(pos, catId){ return CATEGORIES[pos].find(c=>c.id===catId); }
+
+// Error típico + cómo corregirlo, por categoría. Aparece cuando filtrás por una categoría puntual.
+const CATEGORY_COMMON_ERRORS = {
+  // Arquero
+  REF: {error:'Anticipar el remate "adivinando" el lado en vez de reaccionar a lo que realmente pasa.', fix:'Mantené los ojos en el balón hasta el último instante y reaccioná a lo que ves, no a lo que creés que va a pasar.'},
+  BLQ: {error:'Caer de espaldas o "sentarse" en la estirada en vez de caer de costado.', fix:'Buscá caer siempre de costado, con el balón adelante del cuerpo y el codo protegido — nunca de espaldas.'},
+  ACH: {error:'Salir a mitad de camino, sin terminar de decidir si vas o te quedás.', fix:'Una vez que decidís salir, salí convencido y rápido: la salida a medias es la que más goles regala.'},
+  PIE: {error:'Mirar el balón todo el tiempo al recibir, sin chequear antes por dónde viene la presión.', fix:'Mirá el campo antes de que te llegue el pase, así ya sabés hacia dónde vas a salir jugando.'},
+  SAQ: {error:'Sacar siempre al mismo lado o de la misma forma, haciéndote predecible.', fix:'Variá el saque (corto, largo, a un costado u otro) según cómo esté parada la defensa rival.'},
+  '1v1': {error:'Tirarte antes de tiempo, dejando el arco abierto para que te la toquen por arriba o al costado.', fix:'Aguantá parado el mayor tiempo posible y esperá a que el atacante defina antes de tirarte.'},
+  FIS: {error:'Hacer los ejercicios físicos exigentes sin haber entrado en calor antes.', fix:'Sumá siempre una entrada en calor de al menos 5-10 minutos antes de cualquier trabajo físico fuerte.'},
+  MAN: {error:'Atajar con las palmas cerradas o "en cuchara" hacia adentro.', fix:'Recibí siempre con los dedos abiertos y las manos formando una especie de triángulo detrás del balón.'},
+  // Defensor
+  MAR: {error:'Mirar el balón y perder de vista al rival que estás marcando.', fix:'Mantené siempre un ojo en el rival y otro en el balón, nunca los dos puestos solo en el balón.'},
+  AER: {error:'Saltar sin tomar impulso, solo desde parado.', fix:'Calculá el punto de caída del balón y tomá un pequeño impulso antes de saltar para ganar altura.'},
+  SAL: {error:'Apurar el pase largo bajo presión en vez de buscar primero una salida corta y segura.', fix:'Mirá primero las opciones cortas; el pase largo se usa cuando de verdad no hay otra salida.'},
+  LEC: {error:'Reaccionar recién cuando el rival ya tiene el balón, en vez de anticipar el movimiento.', fix:'Leé el lenguaje corporal del rival y de tu compañero antes del pase, así te adelantás a la jugada.'},
+  // Mediocampista
+  CTP: {error:'Controlar el balón pegado al cuerpo, sin orientarlo hacia adelante.', fix:'El primer toque siempre tiene que orientarte hacia donde querés ir, no solo "frenar" el balón.'},
+  VIS: {error:'Mirar el balón al momento de pasar, en vez de haber mirado el campo antes de recibirlo.', fix:'Chequeá tus opciones antes de que te llegue el balón, así ya sabés a quién le vas a pasar.'},
+  REC: {error:'Ir directo al balón sin cortar la línea de pase o carrera del rival.', fix:'Acercate en diagonal, cortando el espacio, en vez de ir de frente directo al balón.'},
+  LLE: {error:'Llegar siempre por el mismo carril o en el mismo momento que el resto del equipo.', fix:'Variá el momento y el carril de llegada al área para sorprender a la defensa rival.'},
+  // Delantero
+  FIN: {error:'Pegarle siempre fuerte buscando potencia en vez de precisión.', fix:'En la mayoría de las situaciones, un remate colocado con media potencia define mejor que uno fuerte y descontrolado.'},
+  MSB: {error:'Quedarte quieto esperando el pase en vez de generar espacio.', fix:'Movete todo el tiempo para desmarcarte, incluso cuando el balón está lejos tuyo.'},
+  ESP: {error:'Recibir de espaldas e intentar girar rápido sin proteger antes el balón.', fix:'Primero protegé el balón con el cuerpo entre vos y el defensor; después decidís si girar o descargar.'},
+  REG: {error:'Regatear siempre con el mismo pie o el mismo amague, haciéndote predecible.', fix:'Alterná el pie y el tipo de amague según cómo venga parado el defensor.'},
+};
 
 // modo del ejercicio: si se puede hacer solo, necesita un compañero, o admite ambos
 const DRILL_MODE_LABEL = {
@@ -3119,6 +3159,9 @@ let cooldownChecked = {};
 let pendingFinishFn = null;
 let filterCat = 'ALL';
 let filterMode = 'ALL';
+let drillSearchQuery = '';
+function normalizeSearch(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function onDrillSearchInput(v){ drillSearchQuery = v; renderEjercicios(); }
 let matchFilterContext = 'ALL';
 let editingMatchId = null;
 let matchModalContext = 'club';
@@ -3254,6 +3297,7 @@ async function saveArchetype(){ await persistState(); }
    HELPERS
 ============================================================ */
 function fmtDate(d){ return d.toLocaleDateString('es-ES', {weekday:'short', day:'numeric', month:'short'}); }
+function fmtDateShort(d){ return d.toLocaleDateString('es-ES', {day:'numeric', month:'short'}); }
 
 function weekKey(d){
   const date = new Date(d);
@@ -3502,7 +3546,126 @@ function renderPlayerCard(container, posId, big){
   }
 }
 
-// dibuja un radar/spider chart simple en canvas, sin dependencias externas
+// Gráfico de línea detallado y reutilizable: ejes, grilla, etiquetas de fecha/valor,
+// puntos con marca de máximo/mínimo, y tap para ver el detalle exacto de un punto.
+function drawDetailedLineChart(canvas, points, opts){
+  opts = opts || {};
+  const color = opts.color || 'var(--accent)';
+  const resolvedColor = color.startsWith('var(') ? getComputedStyle(document.documentElement).getPropertyValue(color.slice(4,-1)).trim() || '#FF6B35' : color;
+  const unit = opts.unit || '';
+  const decimals = opts.decimals !== undefined ? opts.decimals : 0;
+  const dpr = window.devicePixelRatio || 1;
+  const padL = 34, padR = 14, padT = 22, padB = 34;
+  const cssW = canvas.clientWidth || parseInt(canvas.style.width) || canvas.width;
+  const cssH = canvas.clientHeight || parseInt(canvas.style.height) || canvas.height;
+  canvas.width = cssW * dpr; canvas.height = cssH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0,0,cssW,cssH);
+
+  const values = points.map(p=>p.value);
+  let min = opts.min !== undefined ? opts.min : Math.min(...values);
+  let max = opts.max !== undefined ? opts.max : Math.max(...values);
+  if(min===max){ min -= 1; max += 1; }
+  const margin = (max-min)*0.12;
+  min -= margin; max += margin;
+
+  const plotW = cssW - padL - padR;
+  const plotH = cssH - padT - padB;
+  const n = points.length;
+  const xAt = i => padL + (n===1 ? plotW/2 : (plotW * i/(n-1)));
+  const yAt = v => padT + plotH - ((v-min)/(max-min))*plotH;
+  const axisColor = isLightTheme() ? 'rgba(19,35,22,0.55)' : 'rgba(243,241,231,0.5)';
+
+  // grilla horizontal + etiquetas del eje Y
+  const gridLines = 4;
+  ctx.font = "10px 'IBM Plex Mono', monospace";
+  ctx.textAlign = 'right';
+  ctx.fillStyle = axisColor;
+  for(let g=0; g<=gridLines; g++){
+    const v = min + (max-min)*g/gridLines;
+    const y = yAt(v);
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(cssW-padR, y);
+    ctx.strokeStyle = isLightTheme() ? 'rgba(14,42,28,0.10)' : 'rgba(255,255,255,0.10)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillText(v.toFixed(decimals), padL-6, y+3);
+  }
+
+  // etiquetas del eje X (fecha) — si hay muchos puntos, se rota y se saltea alguna para no amontonar
+  ctx.fillStyle = axisColor;
+  const skip = n>10 ? Math.ceil(n/10) : 1;
+  points.forEach((p,i)=>{
+    if(i%skip!==0 && i!==n-1) return;
+    const x = xAt(i);
+    ctx.save();
+    ctx.translate(x, cssH-padB+14);
+    ctx.rotate(n>6 ? -Math.PI/4 : 0);
+    ctx.textAlign = n>6 ? 'right' : 'center';
+    ctx.fillText(p.label, 0, 0);
+    ctx.restore();
+  });
+
+  // área rellena bajo la línea
+  ctx.beginPath();
+  ctx.moveTo(xAt(0), yAt(points[0].value));
+  points.forEach((p,i)=> ctx.lineTo(xAt(i), yAt(p.value)));
+  ctx.lineTo(xAt(n-1), padT+plotH);
+  ctx.lineTo(xAt(0), padT+plotH);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0,padT,0,padT+plotH);
+  grad.addColorStop(0, resolvedColor+'55');
+  grad.addColorStop(1, resolvedColor+'05');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // línea
+  ctx.beginPath();
+  points.forEach((p,i)=> i===0 ? ctx.moveTo(xAt(i), yAt(p.value)) : ctx.lineTo(xAt(i), yAt(p.value)));
+  ctx.strokeStyle = resolvedColor;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  // puntos + valor arriba de cada uno + marca de máximo/mínimo
+  const maxVal = Math.max(...values), minVal = Math.min(...values);
+  let maxDone = false, minDone = false;
+  points.forEach((p,i)=>{
+    const x = xAt(i), y = yAt(p.value);
+    const isMax = p.value===maxVal && !maxDone && (maxDone = true);
+    const isMin = p.value===minVal && !minDone && (minDone = true) && !isMax;
+    ctx.beginPath();
+    ctx.arc(x, y, isMax||isMin ? 4 : 3, 0, Math.PI*2);
+    ctx.fillStyle = isMax ? '#8FEA6B' : isMin ? '#E4483B' : resolvedColor;
+    ctx.fill();
+    ctx.strokeStyle = isLightTheme() ? '#F3F1E7' : '#0B2116';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    if(n<=12 || isMax || isMin || i===n-1){
+      ctx.font = "9px 'IBM Plex Mono', monospace";
+      ctx.textAlign = 'center';
+      ctx.fillStyle = isMax ? '#8FEA6B' : isMin ? '#E4483B' : axisColor;
+      ctx.fillText(p.value.toFixed(decimals)+unit, x, y-9);
+    }
+  });
+
+  // tap/click: mostrar el detalle exacto del punto más cercano
+  canvas.onclick = (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    let closest = 0, closestDist = Infinity;
+    points.forEach((p,i)=>{ const d = Math.abs(xAt(i)-clickX); if(d<closestDist){ closestDist=d; closest=i; } });
+    const infoEl = opts.infoElId ? document.getElementById(opts.infoElId) : null;
+    if(infoEl){
+      const p = points[closest];
+      infoEl.textContent = `${p.label}: ${p.value.toFixed(decimals)}${unit}${p.sub ? ' · '+p.sub : ''}`;
+    }
+  };
+}
+
+
 function drawRadarChart(canvas, labels, values, color){
   const dpr = window.devicePixelRatio || 1;
   const w = canvas.width, h = canvas.height;
@@ -3515,7 +3678,7 @@ function drawRadarChart(canvas, labels, values, color){
 
   ctx.clearRect(0,0,w,h);
 
-  // anillos de fondo
+  // anillos de fondo, con su valor numérico correspondiente (0-99)
   [0.25,0.5,0.75,1].forEach(f=>{
     ctx.beginPath();
     for(let i=0;i<=n;i++){
@@ -3527,6 +3690,10 @@ function drawRadarChart(canvas, labels, values, color){
     ctx.strokeStyle = 'rgba(255,255,255,0.14)';
     ctx.lineWidth = 1;
     ctx.stroke();
+    ctx.font = "7.5px 'IBM Plex Mono', monospace";
+    ctx.fillStyle = isLightTheme() ? 'rgba(19,35,22,0.45)' : 'rgba(243,241,231,0.4)';
+    ctx.textAlign = 'left';
+    ctx.fillText(Math.round(99*f), cx+3, cy - R*f + 8);
   });
 
   // ejes + etiquetas
@@ -3559,13 +3726,18 @@ function drawRadarChart(canvas, labels, values, color){
   ctx.fill();
   ctx.stroke();
 
-  // puntos
+  // puntos + valor numérico exacto de cada atributo
+  ctx.font = "bold 9px 'IBM Plex Mono', monospace";
   for(let i=0;i<n;i++){
     const a = angle(i);
     const r = R * (values[i]/99);
     const x = cx + r*Math.cos(a), y = cy + r*Math.sin(a);
     ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2);
     ctx.fillStyle = color; ctx.fill();
+    const lx = x + 9*Math.cos(a), ly = y + 9*Math.sin(a);
+    ctx.textAlign = Math.cos(a) > 0.15 ? 'left' : Math.cos(a) < -0.15 ? 'right' : 'center';
+    ctx.fillStyle = isLightTheme() ? '#132316' : '#F3F1E7';
+    ctx.fillText(String(values[i]), lx, ly+3);
   }
 }
 
@@ -4265,7 +4437,7 @@ function computeSmartDrills(posId){
   }
 
   const orderedCats = [...cats].sort((a,b)=> score[b.id]-score[a.id]);
-  const topCats = orderedCats.slice(0, Math.min(3, orderedCats.length)).map(c=>c.id);
+  const topCats = orderedCats.slice(0, Math.min(4, orderedCats.length)).map(c=>c.id);
 
   const lastDrillIds = mem.lastSession ? new Set(mem.lastSession.drillIds) : new Set();
   const picks = [];
@@ -4279,9 +4451,11 @@ function computeSmartDrills(posId){
       if(!picks.includes(d.id)) picks.push(d.id);
     });
   });
-  const max = (lastWeather && lastWeather.condition==='calor') ? 4 : 6;
+  // apunta a una sesión de ~30-40 min: ~5 min estimados por ejercicio (incluye descansos)
+  const max = (lastWeather && lastWeather.condition==='calor') ? 6 : 8;
   return picks.slice(0, max);
 }
+function estimateDrillMinutes(count){ return count*5; }
 function useSmartWorkout(){
   draft[activePosition] = computeSmartDrills(activePosition);
   saveDraft();
@@ -4880,11 +5054,26 @@ function renderEjercicios(){
 
   const list = document.getElementById('drill-list');
   list.innerHTML = '';
+
+  const tipWrap = document.getElementById('cat-error-tip');
+  const tip = filterCat!=='ALL' ? CATEGORY_COMMON_ERRORS[filterCat] : null;
+  tipWrap.innerHTML = tip ? `<div class="cat-error-box">
+      <div class="cat-error-line"><b>⚠️ Error común:</b> ${tip.error}</div>
+      <div class="cat-error-line fix"><b>✅ Cómo corregirlo:</b> ${tip.fix}</div>
+    </div>` : '';
+
+  const searchInput = document.getElementById('drill-search-input');
+  if(searchInput && searchInput.value !== drillSearchQuery) searchInput.value = drillSearchQuery;
+
   const items = DRILLS[activePosition].filter(d=>{
     if(filterCat!=='ALL' && d.cat!==filterCat) return false;
     if(filterMode!=='ALL' && d.mode && d.mode!=='ambos' && d.mode!==filterMode) return false;
+    if(drillSearchQuery && !normalizeSearch(d.name).includes(normalizeSearch(drillSearchQuery))) return false;
     return true;
   });
+  if(items.length===0 && drillSearchQuery){
+    list.innerHTML = `<div class="empty-state">No encontré ningún ejercicio con "${escapeHtml(drillSearchQuery)}". Probá con otra palabra.</div>`;
+  }
   items.forEach(d=>{
     const cat = catById(activePosition, d.cat);
     const inDraft = draft[activePosition].includes(d.id);
@@ -5197,8 +5386,8 @@ function renderEntrenar(){
   html += '<div class="template-row">';
   html += `<div class="tmpl-card recommended" onclick="useSmartWorkout()">
     <span class="tmpl-flag">🧠 IA</span>
-    <h4>Entrenamiento de hoy</h4>
-    <p>${computeSmartDrills(activePosition).length} ejerc. · nunca se repite igual</p>
+    <h4>Rutina del día</h4>
+    <p>${computeSmartDrills(activePosition).length} ejerc. · ~${estimateDrillMinutes(computeSmartDrills(activePosition).length)} min · combina lo que menos entrenaste</p>
   </div>`;
   if(arche){
     html += `<div class="tmpl-card recommended" onclick="useRecommended()">
@@ -6273,8 +6462,8 @@ function closeFitResult(){ document.getElementById('fit-result-bg').classList.re
    ⭐ HISTORIAL DEL TEST FÍSICO
 ============================================================ */
 function openFitHistoryModal(){
-  renderFitHistoryModal();
   document.getElementById('fit-history-modal').classList.add('open');
+  renderFitHistoryModal();
 }
 function closeFitHistoryModal(){ document.getElementById('fit-history-modal').classList.remove('open'); }
 
@@ -6288,19 +6477,17 @@ function renderFitHistoryModal(){
     return;
   }
   const withResult = chrono.map(t=>({t, ...computeFitnessResult(t)}));
-  const recent = withResult.slice(-14);
-  const max = 5; // el promedio siempre va de 1 a 5
-  let bars = '<div class="ovr-hist-row">';
-  recent.forEach(r=>{
-    const pct = Math.max(6, Math.round((r.avg/max)*100));
-    bars += `<div class="ovr-hist-bar" style="height:${pct}%; background:${r.level.color};" title="${fmtDate(new Date(r.t.date))} · ${r.level.name} (${r.avg.toFixed(1)}/5)"></div>`;
-  });
-  bars += '</div>';
+  const recent = withResult.slice(-20);
   const currentAvg = recent[recent.length-1].avg;
   const firstAvg = recent[0].avg;
   const diff = Math.round((currentAvg-firstAvg)*10)/10;
-  bars += `<div style="font-size:11.5px; color:var(--chalk-dim);">Nivel actual: <b style="color:var(--chalk)">${recent[recent.length-1].level.name}</b>${diff!==0 && recent.length>1 ? ` (${diff>0?'+':''}${diff} en este historial)` : ''}</div>`;
-  barsWrap.innerHTML = bars;
+  const points = recent.map(r=>({label: fmtDateShort(new Date(r.t.date)), value: r.avg, sub: r.level.name}));
+  barsWrap.innerHTML = `
+    <div class="chart-wrap"><canvas id="fit-chart-canvas" style="width:100%; height:170px; display:block;"></canvas></div>
+    <div id="fit-chart-info" class="chart-tap-info">Tocá un punto del gráfico para ver el detalle exacto.</div>
+    <div style="font-size:11.5px; color:var(--chalk-dim); margin-top:6px;">Nivel actual: <b style="color:var(--chalk)">${recent[recent.length-1].level.name}</b>${diff!==0 && recent.length>1 ? ` (${diff>0?'+':''}${diff} en este historial)` : ''}${withResult.length>recent.length ? ` · mostrando los últimos ${recent.length} de ${withResult.length}` : ''}</div>
+  `;
+  drawDetailedLineChart(document.getElementById('fit-chart-canvas'), points, {color:'var(--save)', decimals:1, unit:'/5', min:1, max:5, infoElId:'fit-chart-info'});
 
   // lista del más reciente al más viejo, con flecha de tendencia por métrica vs el test anterior
   const newestFirst = [...withResult].reverse();
@@ -6464,23 +6651,22 @@ async function editManualRecord(id){
 function renderOvrHistoryWidget(){
   const wrap = document.getElementById('ovr-history-wrap');
   if(!wrap) return;
-  const list = ovrHistory.filter(h=>h.position===activePosition).slice(-14);
+  const full = ovrHistory.filter(h=>h.position===activePosition);
+  const list = full.slice(-20);
   if(list.length===0){
     wrap.innerHTML = '<div class="ovr-hist-empty">Todavía no hay historial de OVR para esta posición. Completá entrenamientos para ver tu evolución.</div>';
     return;
   }
-  const max = Math.max(...list.map(h=>h.ovr), 1);
-  let bars = '<div class="ovr-hist-row">';
-  list.forEach(h=>{
-    const pct = Math.max(6, Math.round((h.ovr/max)*100));
-    bars += `<div class="ovr-hist-bar" style="height:${pct}%" title="OVR ${h.ovr}"></div>`;
-  });
-  bars += '</div>';
   const current = list[list.length-1].ovr;
   const first = list[0].ovr;
   const diff = current-first;
-  bars += `<div style="font-size:11.5px; color:var(--chalk-dim);">OVR actual: <b style="color:var(--chalk)">${current}</b>${diff!==0 ? ` (${diff>0?'+':''}${diff} en este historial)` : ''}</div>`;
-  wrap.innerHTML = bars;
+  const points = list.map(h=>({label: fmtDateShort(new Date(h.date)), value: h.ovr, sub:'OVR'}));
+  wrap.innerHTML = `
+    <div class="chart-wrap"><canvas id="ovr-chart-canvas" style="width:100%; height:170px; display:block;"></canvas></div>
+    <div id="ovr-chart-info" class="chart-tap-info">Tocá un punto del gráfico para ver el detalle exacto.</div>
+    <div style="font-size:11.5px; color:var(--chalk-dim); margin-top:6px;">OVR actual: <b style="color:var(--chalk)">${current}</b>${diff!==0 ? ` (${diff>0?'+':''}${diff} en ${list.length} registros)` : ''}${full.length>list.length ? ` · mostrando los últimos ${list.length} de ${full.length}` : ''}</div>
+  `;
+  drawDetailedLineChart(document.getElementById('ovr-chart-canvas'), points, {color:'var(--accent)', decimals:0, infoElId:'ovr-chart-info'});
 }
 
 /* ============================================================
@@ -6712,7 +6898,7 @@ function renderProgreso(){
       row.className = 'history-item';
       const companionName = s.companion && companionById(s.companion) ? companionById(s.companion).name : null;
       const subLine = s.manual
-        ? `📝 Sesión libre${companionName ? ' · '+companionName : ''} · ${s.durationMin} min${totalShots>0 ? ' · '+saves+'/'+totalShots+' atajadas':''}`
+        ? `📝 Sesión libre${companionName ? ' · '+companionName : ''} · ${s.durationMin} min${s.drillIds && s.drillIds.length>0 ? ' · '+s.drillIds.length+' ejerc.' : ''}${totalShots>0 ? ' · '+saves+'/'+totalShots+' atajadas':''}`
         : `${s.drillIds.length} ejerc. · ${s.durationMin} min${totalShots>0 ? ' · '+saves+'/'+totalShots+' atajadas':''}`;
       row.innerHTML = `
         <div>
@@ -6892,6 +7078,32 @@ async function deleteMatch(id){
 let freeSessionCompanion = 'solo';
 let editingFreeSessionId = null;
 let freeSessionPosition = 'ARQ';
+let freeSessionDrillIds = [];
+function toggleFreeSessionDrill(id){
+  const i = freeSessionDrillIds.indexOf(id);
+  if(i===-1) freeSessionDrillIds.push(id); else freeSessionDrillIds.splice(i,1);
+  renderFreeSessionDrillChips();
+}
+function renderFreeSessionDrillChips(){
+  const wrap = document.getElementById('free-session-drills-wrap');
+  if(!wrap) return;
+  const cats = CATEGORIES[freeSessionPosition] || [];
+  let html = '';
+  cats.forEach(cat=>{
+    const drills = (DRILLS[freeSessionPosition]||[]).filter(d=>d.cat===cat.id);
+    if(drills.length===0) return;
+    html += `<div style="font-size:11.5px; color:var(--chalk-dim); margin:10px 0 6px;">${cat.name}</div><div class="kit-chip-row" style="margin:0 0 4px;">`;
+    drills.forEach(d=>{
+      const active = freeSessionDrillIds.includes(d.id);
+      html += `<div class="kit-chip ${active?'active':''}" onclick="toggleFreeSessionDrill('${d.id}')">${escapeHtml(d.name)}</div>`;
+    });
+    html += `</div>`;
+  });
+  if(freeSessionDrillIds.length>0){
+    html = `<div style="font-size:11.5px; color:var(--chalk-faint); margin-bottom:2px;">${freeSessionDrillIds.length} seleccionado${freeSessionDrillIds.length===1?'':'s'}</div>` + html;
+  }
+  wrap.innerHTML = html;
+}
 function renderFreeSessionCompanionChips(){
   const row = document.getElementById('free-session-companion-row');
   row.innerHTML = '';
@@ -6915,6 +7127,8 @@ function openFreeSessionModal(){
   renderFreeSessionCompanionChips();
   shotlogTemp = {};
   renderGoalGrid(document.getElementById('free-session-goal-grid'), {}, true);
+  freeSessionDrillIds = [];
+  renderFreeSessionDrillChips();
   document.getElementById('free-session-modal').classList.add('open');
 }
 function editFreeSession(id){
@@ -6931,6 +7145,8 @@ function editFreeSession(id){
   renderFreeSessionCompanionChips();
   shotlogTemp = s.zones ? {...s.zones} : {};
   renderGoalGrid(document.getElementById('free-session-goal-grid'), shotlogTemp, true);
+  freeSessionDrillIds = s.drillIds ? [...s.drillIds] : [];
+  renderFreeSessionDrillChips();
   document.getElementById('free-session-modal').classList.add('open');
 }
 function closeFreeSessionModal(){ document.getElementById('free-session-modal').classList.remove('open'); }
@@ -6950,6 +7166,7 @@ async function saveFreeSession(){
       s.date = isoDate;
       s.durationMin = duration;
       s.companion = freeSessionCompanion;
+      s.drillIds = [...freeSessionDrillIds];
       if(note) s.note = note; else delete s.note;
       if(hasZones) s.zones = {...shotlogTemp}; else delete s.zones;
     }
@@ -6958,7 +7175,7 @@ async function saveFreeSession(){
       id: 'sess_manual_'+Date.now(),
       date: isoDate,
       position: freeSessionPosition,
-      drillIds: [],
+      drillIds: [...freeSessionDrillIds],
       durationMin: duration,
       completionRatio: 1,
       manual: true,
