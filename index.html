@@ -948,6 +948,20 @@
   .weather-temp{font-family:'IBM Plex Mono',monospace; font-size:20px; font-weight:600; color:var(--chalk);}
   .weather-desc{font-size:12px; color:var(--chalk-dim);}
   .weather-tips{font-size:12.5px; color:var(--chalk); line-height:1.5; margin-top:8px;}
+  .kit-wrap{display:flex; gap:18px; align-items:flex-start; margin-bottom:14px;}
+  .kit-svg{width:110px; flex-shrink:0;}
+  .kit-zone{cursor:pointer; fill:var(--surface-2); stroke:var(--line-strong); stroke-width:1.5; transition:fill .15s;}
+  .kit-zone.filled{fill:var(--accent); fill-opacity:0.28; stroke:var(--accent);}
+  .kit-zone:active{fill-opacity:0.5;}
+  .kit-list{flex:1; display:flex; flex-direction:column; gap:6px;}
+  .kit-row{display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:10px; background:var(--surface-2); cursor:pointer;}
+  .kit-row .kit-ico{font-size:15px;}
+  .kit-row .kit-label{flex:1; font-size:12px; color:var(--chalk-dim);}
+  .kit-row .kit-val{font-size:11.5px; color:var(--chalk); font-family:'IBM Plex Mono',monospace; text-align:right;}
+  .kit-row.set{background:var(--accent-dim);}
+  .kit-chip-row{display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 14px;}
+  .kit-chip{padding:7px 12px; border-radius:20px; border:1px solid var(--line-strong); font-size:12px; color:var(--chalk-dim); cursor:pointer; background:var(--surface-2);}
+  .kit-chip.active{background:var(--accent); border-color:var(--accent); color:#0d1410; font-weight:600;}
 
   /* ---------- Debilidades ---------- */
   .weak-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px; margin-bottom:14px;}
@@ -2424,6 +2438,11 @@ const DRILLS = {
     {id:'arq_ref5', cat:'REF', mode:'solo', name:'Reflejos a ras del piso', dose:'4 series x 8 reps', desc:'De rodillas o en posición baja, un balón se lanza con rebotes irregulares cerca del cuerpo. Foco en manos blandas y reacción sin levantarse de más.'},
     {id:'arq_ref6', cat:'REF', mode:'pareja', name:'Pelotitas de tenis por color', dose:'4 series x 8 reps', desc:'Un compañero sostiene dos pelotas de tenis (o de goma) de distinto color, una en cada mano, y las suelta o tira a corta distancia. Antes de soltarlas dice un color en voz alta: hay que atrapar solo esa, dejando caer o ignorando la otra. Al ser pelotas chicas y rápidas, exige manos mucho más finas que con el balón grande, y sumar el color obliga a decidir en fracciones de segundo, no solo a reaccionar.'},
     {id:'arq_ref7', cat:'REF', mode:'solo', name:'Rebote irregular en red de reacción', dose:'4 series x 10 reps', desc:'Con una red o panel de rebote irregular (con nudos, bultos o protuberancias que hacen que la pelota salga para cualquier lado, tipo "reaction net"), parate cerca y lanzá el balón contra ella. El rebote sale impredecible en dirección y altura, así que no se puede anticipar: hay que leer el bote recién cuando sale y reaccionar. Si no tenés una red así, se puede improvisar atando bolsas o pelotas chicas a una red o alambrado para deformar el rebote.'},
+    {id:'arq_ref8', cat:'REF', mode:'pareja', name:'Doble estímulo con dos balones', dose:'4 series x 6 reps', desc:'Un compañero lanza un balón a un lado; apenas lo atajás, tira un segundo balón hacia el otro lado sin avisar. Obliga a soltar la concentración del primer atrape y reaccionar de nuevo al instante, algo muy parecido a un rebote que vuelve a quedar picando en el área.'},
+    {id:'arq_ref9', cat:'REF', mode:'pareja', name:'Reflejos a la orden de voz', dose:'4 series x 8 reps', desc:'Parado en posición básica, un compañero grita "arriba", "abajo", "izquierda" o "derecha" al mismo tiempo que lanza el balón hacia ese lado. Con el tiempo, el compañero puede engañar diciendo un lado y tirando para el otro, para que aprendas a confiar en lo que ves y no solo en lo que escuchás.'},
+    {id:'arq_ref10', cat:'REF', mode:'pareja', name:'Reacción tras giro de 360°', dose:'4 series x 6 reps', desc:'Girá sobre tu eje una vuelta completa y, apenas quedás de frente de nuevo, un compañero ya te está lanzando el balón. Simula la desorientación de un rebote inesperado tras una caída o un choque, cuando hay que reaccionar sin estar del todo acomodado.'},
+    {id:'arq_ref11', cat:'REF', mode:'pareja', name:'Dos pelotas de goma en simultáneo', dose:'4 series x 8 reps', desc:'Un compañero sostiene una pelotita de goma o tenis en cada mano y las tira casi al mismo tiempo hacia lados distintos. El objetivo no es atajar las dos sino elegir rapidísimo cuál priorizar, entrenando la decisión bajo presión de tiempo real.'},
+    {id:'arq_ref12', cat:'REF', mode:'solo', name:'Reflejos con arranque a ciegas', dose:'4 series x 8 reps', desc:'Parate de espaldas o con los ojos cerrados; un compañero (o vos mismo tirando el balón contra una pared a tu espalda) genera el estímulo, y recién al escuchar el pique o una palmada te das vuelta para reaccionar. Entrena la velocidad de reacción pura, sin poder leer nada con anticipación visual.'},
     {id:'arq_blq1', cat:'BLQ', mode:'solo', name:'Caída lateral controlada', dose:'4 series x 6 reps', desc:'Desde posición básica, caída lateral técnica sobre colchoneta o césped, apoyando cadera-costado y protegiendo el balón con ambas manos.'},
     {id:'arq_blq2', cat:'BLQ', mode:'pareja', name:'Blocaje bajo de rodillas', dose:'3 series x 8 reps', desc:'Remates rasos dirigidos al cuerpo. Trabajar la técnica de "cesta" con manos y antebrazos, rodillas juntas, sin dejar rebote.'},
     {id:'arq_blq3', cat:'BLQ', mode:'pareja', name:'Estirada a media altura', dose:'4 series x 6 reps c/lado', desc:'Remates a media altura fuera del alcance directo. Foco en el paso de carga previo y extensión completa del cuerpo.'},
@@ -2431,27 +2450,52 @@ const DRILLS = {
     {id:'arq_blq5', cat:'BLQ', mode:'solo', name:'Doble estirada de recuperación', dose:'4 series x 5 reps c/lado', desc:'Estirada hacia un lado, recuperación rápida de pie y segunda estirada inmediata hacia el mismo poste. Simula el rebote tras un primer rechazo.'},
     {id:'arq_blq6', cat:'BLQ', mode:'pareja', name:'Blocaje frontal tras salida corta', dose:'5 repeticiones', desc:'Salir dos o tres pasos al frente y bloquear un remate cercano ejecutado a media potencia, cerrando bien el ángulo antes del contacto.'},
     {id:'arq_blq7', cat:'BLQ', mode:'pareja', name:'Despeje de puños en centro disputado', dose:'6 repeticiones', desc:'Ante un centro alto con rivales cerca que impiden un blocaje seguro, despejar con los puños (uno o los dos) buscando altura y distancia en vez de arriesgar a que se escape de las manos.'},
+    {id:'arq_blq8', cat:'BLQ', mode:'pareja', name:'Tirada directa sin carga previa', dose:'4 series x 5 reps por lado', desc:'Desde parado y sin dar ningún paso de carga, un remate cercano obliga a tirarte directo al piso hacia un lado. Es la caída "de urgencia" que sale cuando no llegaste a acomodar el cuerpo, y conviene practicarla igual de seguido que la estirada técnica con carga.'},
+    {id:'arq_blq9', cat:'BLQ', mode:'pareja', name:'Caída saltando un obstáculo', dose:'4 series x 5 reps por lado', desc:'Con un cono o una valla baja ubicado justo delante tuyo, saltalo y caé del otro lado para bloquear un remate que llega apenas aterrizás. Entrena la estirada con el cuerpo todavía en movimiento vertical, algo que pasa seguido tras esquivar a un rival en el área chica.'},
+    {id:'arq_blq10', cat:'BLQ', mode:'pareja', name:'Estirada a una pierna', dose:'4 series x 5 reps por lado', desc:'Parado en apoyo de una sola pierna (la otra levantada), sostené el equilibrio un segundo y después estirate hacia el lado contrario para bloquear el remate. Sin el apoyo de las dos piernas, el salto sale más de cadera y menos de rodilla, algo muy parecido a una estirada real cuando venís desplazándote.'},
+    {id:'arq_blq11', cat:'BLQ', mode:'pareja', name:'Doble rechazo con segundo remate', dose:'4 series x 5 reps', desc:'Tras bloquear el primer remate y que quede picando cerca, un segundo tirador (o el mismo compañero recuperando rápido) define de nuevo apenas rebota el balón. Trabaja el rechazo controlado hacia una zona segura y la reacción inmediata al segundo disparo.'},
+    {id:'arq_blq12', cat:'BLQ', mode:'pareja', name:'Blocaje tras zigzag entre conos', dose:'5 repeticiones', desc:'Desplazate en zigzag rápido entre 3 o 4 conos ubicados sobre la línea de gol y, al llegar al último, bloqueá el remate que llega en ese instante. Simula los reacomodos constantes de posición durante un córner o un rebote en el área.'},
     {id:'arq_ach1', cat:'ACH', mode:'pareja', name:'Achique 1 vs. delantero', dose:'6 repeticiones', desc:'Un atacante encara desde media distancia. Practicar el achique progresivo, reduciendo el ángulo sin anticipar la caída.'},
     {id:'arq_ach2', cat:'ACH', mode:'pareja', name:'Salida a centros cruzados', dose:'8 centros por lado', desc:'Centros desde ambas bandas al área chica. Trabajar lectura de trayectoria, timing de salto y despeje con puños o atrape.'},
     {id:'arq_ach3', cat:'ACH', mode:'pareja', name:'Achique y recuperación de posición', dose:'5 series', desc:'Salir rápido ante un pase filtrado y, si no llega, recuperar la posición bajo los tres palos con pasos cortos hacia atrás.'},
     {id:'arq_ach4', cat:'ACH', mode:'pareja', name:'Disputa de pelota dividida', dose:'6 repeticiones', desc:'Balón que puede ser alcanzado tanto por el arquero como por un atacante que llega de frente. Decidir rápido entre salir con decisión o quedarse, sin quedar a mitad de camino.'},
     {id:'arq_ach5', cat:'ACH', mode:'pareja', name:'Achique con temporización', dose:'6 repeticiones', desc:'Ante un pase al espacio, calcular el momento exacto de arrancar para llegar antes que el delantero sin regalar el primer paso ni salir apurado.'},
     {id:'arq_ach6', cat:'ACH', mode:'pareja', name:'Cobertura de espacios en juego reducido', dose:'10 minutos', desc:'Jugar un fútbol reducido (4v4 o 5v5 con arco chico) donde el arquero debe leer en tiempo real cuándo salir y cuándo quedarse, en vez de repetir el gesto de forma aislada. Simula mucho mejor la toma de decisiones de un partido real.'},
+    {id:'arq_ach7', cat:'ACH', mode:'pareja', name:'Zigzag entre conos antes del achique', dose:'6 repeticiones', desc:'Desplazate en zigzag entre 3-4 conos ubicados delante del arco y, al llegar al último, salí a achicar el ángulo de un atacante que ya está encarando. Suma el reacomodo de pies previo, que en un partido real casi nunca falta antes de una salida.'},
+    {id:'arq_ach8', cat:'ACH', mode:'pareja', name:'Achique con límite marcado por conos', dose:'6 repeticiones', desc:'Marcá con dos conos hasta dónde podés avanzar de forma segura. Salí a achicar sin pasar esa línea, entrenando el "hasta acá sí, de acá no" que evita quedar mano a mano sin cobertura si te pasan el balón.'},
+    {id:'arq_ach9', cat:'ACH', mode:'pareja', name:'Salida y tirada a los pies', dose:'6 repeticiones', desc:'Ante un pase filtrado, salí decidido y tirate a los pies del atacante para quedarte con el balón antes del contacto o del remate. Es una de las acciones más de riesgo del arquero: conviene practicar el timing exacto para no llegar ni muy pronto ni muy tarde.'},
+    {id:'arq_ach10', cat:'ACH', mode:'pareja', name:'Achique bajo fatiga', dose:'5 series', desc:'Hacé un sprint corto (10-15m) de ida y vuelta y, apenas termines sin pausa, salí a achicar un mano a mano. Entrena la calidad de decisión y ejecución cuando ya venís cansado, como suele pasar en los últimos minutos de un partido.'},
+    {id:'arq_ach11', cat:'ACH', mode:'pareja', name:'Salto a una pierna para despejar centro', dose:'6 repeticiones', desc:'Ante un centro al área, salí y despejá impulsándote con una sola pierna (la que quede más cómoda según la carrera), sin tiempo de acomodar las dos. Es lo que realmente pasa en la mayoría de los centros disputados con rivales cerca.'},
     {id:'arq_pie1', cat:'PIE', mode:'pareja', name:'Control orientado bajo presión', dose:'10 repeticiones', desc:'Recibir con un rival cerca aplicando presión leve, orientar el primer control hacia el espacio libre y salir jugando en dos toques.'},
     {id:'arq_pie2', cat:'PIE', mode:'ambos', name:'Pase corto y largo a dos pies', dose:'20 pases (10+10)', desc:'Circuito de pases cortos precisos y saques largos rasos, alternando pie hábil y pie menos hábil. Solo: contra una pared. Con compañero: pases cruzados.'},
     {id:'arq_pie3', cat:'PIE', mode:'pareja', name:'Salida jugada bajo presión', dose:'6 secuencias', desc:'Simular una salida con el balón desde el fondo ante presión de un rival, buscando siempre la opción más segura antes que el despeje.'},
     {id:'arq_pie4', cat:'PIE', mode:'pareja', name:'Recepción de espaldas y giro', dose:'8 repeticiones', desc:'Recibir un pase atrás de un defensor, controlar orientado y girar para encarar el campo, decidiendo el siguiente pase en dos toques.'},
     {id:'arq_pie5', cat:'PIE', mode:'ambos', name:'Cambio de orientación largo', dose:'8 pases', desc:'Pase diagonal largo y raso hacia la banda contraria para romper una presión alta rival. Solo: contra una pared marcando el blanco con conos. Con compañero: pases cruzados a distancia.'},
+    {id:'arq_pie6', cat:'PIE', mode:'solo', name:'Slalom con balón entre conos', dose:'5 pasadas', desc:'Conducí el balón en zigzag entre 5-6 conos ubicados en línea, con toques cortos de ambos pies. No es un ejercicio típico de arquero, pero mejora el manejo fino del balón para las salidas jugando desde el fondo.'},
+    {id:'arq_pie7', cat:'PIE', mode:'ambos', name:'Pase de precisión entre conos', dose:'10 pases', desc:'Ubicá dos conos separados por un metro simulando una "puerta" a distancia media, y pasá el balón raso entre ellos. Solo: contra una pared con los conos marcando el blanco. Con compañero: que reciba parado exactamente entre los dos conos.'},
+    {id:'arq_pie8', cat:'PIE', mode:'solo', name:'Conducción contrarreloj entre conos', dose:'4 series', desc:'Armá un circuito corto con conos y recorrelo controlando el balón lo más rápido posible sin perder el dominio. Cronometrate y tratá de mejorar tu marca en cada serie.'},
+    {id:'arq_pie9', cat:'PIE', mode:'pareja', name:'Recepción entre conos estrechos', dose:'8 repeticiones', desc:'Ubicá dos conos muy cerca uno del otro y recibí un pase quedando parado justo en el medio, con el primer toque orientado hacia el campo. Obliga a un control mucho más preciso que recibir a espacio abierto.'},
+    {id:'arq_pie10', cat:'PIE', mode:'ambos', name:'Circuito de pies con pase final', dose:'5 vueltas', desc:'Encadená: conducción en zigzag entre conos, control orientado y pase largo a un blanco. Solo: contra una pared. Con compañero: que la reciba a distancia. Junta en una sola secuencia todo lo que trabajaste en los ejercicios de pies previos.'},
     {id:'arq_saq1', cat:'SAQ', mode:'ambos', name:'Saque de mano a bandas', dose:'8 saques por lado', desc:'Precisión de saque lateral rápido apuntando a un compañero o cono en la banda para iniciar el contraataque.'},
     {id:'arq_saq2', cat:'SAQ', mode:'solo', name:'Saque de meta largo (drop kick)', dose:'10 saques', desc:'Trabajar el saque de volea larga con contacto limpio, priorizando altura y distancia consistente hacia un blanco.'},
     {id:'arq_saq3', cat:'SAQ', mode:'pareja', name:'Distribución rápida en contraataque', dose:'6 secuencias', desc:'Tras una atajada, ejecutar la distribución más rápida posible según la situación (mano corta, saque largo o pase con el pie).'},
     {id:'arq_saq4', cat:'SAQ', mode:'pareja', name:'Saque corto a primer toque', dose:'8 saques', desc:'Saque de mano corto y preciso a los pies de un defensor que recibe orientado, priorizando velocidad de ejecución sobre potencia.'},
     {id:'arq_saq5', cat:'SAQ', mode:'solo', name:'Saque bombeado a mediocampo', dose:'8 saques', desc:'Trabajar el saque con efecto y altura media para superar una presión rival, buscando que el balón llegue controlable para un compañero.'},
+    {id:'arq_saq6', cat:'SAQ', mode:'solo', name:'Saque de precisión a conos', dose:'8 saques', desc:'Distribuí varios conos a distintas distancias y ángulos, y tratá de que el saque de mano o de pie caiga lo más cerca posible de cada uno, rotando el blanco en cada intento.'},
+    {id:'arq_saq7', cat:'SAQ', mode:'pareja', name:'Saque bajo presión de tiempo', dose:'6 saques', desc:'Un compañero cuenta en voz alta desde que atajás el balón: tenés 3-4 segundos para decidir y ejecutar el saque. Entrena la distribución rápida sin perder precisión, clave para no dejar reorganizar a la defensa rival.'},
+    {id:'arq_saq8', cat:'SAQ', mode:'pareja', name:'Saque a corredor en movimiento', dose:'8 saques', desc:'Un compañero arranca a correr por un carril marcado con conos; el saque tiene que salir anticipando dónde va a estar, no dónde arrancó. Trabaja el saque al espacio para iniciar un contraataque real.'},
+    {id:'arq_saq9', cat:'SAQ', mode:'pareja', name:'Doble saque con dos balones', dose:'5 series', desc:'Con dos balones a mano, hacé un saque corto apenas recibís el primero y, sin pausa, ejecutá un segundo saque largo con el otro balón. Mejora la rapidez de ejecución cuando hay que resolver la distribución sin pensarlo de más.'},
+    {id:'arq_saq10', cat:'SAQ', mode:'solo', name:'Saque con pie no dominante', dose:'8 saques', desc:'Repetí el saque de mediocampo (drop kick) o el saque corto usando solamente el pie menos hábil, apuntando a un blanco fijo. Reduce la dependencia de un solo lado para distribuir el juego.'},
     {id:'arq_1v1a', cat:'1v1', mode:'pareja', name:'Duelo mano a mano frontal', dose:'8 duelos', desc:'Enfrentamiento directo con un atacante desde el borde del área. Trabajar el momento exacto de la salida y mantenerse "grande" en la línea de tiro.'},
     {id:'arq_1v1b', cat:'1v1', mode:'pareja', name:'Achique en profundidad', dose:'6 repeticiones', desc:'Ante un pase filtrado en profundidad, salir a cortar el balón antes que el atacante, decidiendo rápido entre despejar o atrapar.'},
     {id:'arq_1v1c', cat:'1v1', mode:'pareja', name:'Cierre de ángulo en carrera', dose:'6 repeticiones', desc:'El atacante arranca desde una banda hacia el área; cerrar el ángulo de tiro con carrera diagonal controlada, sin llegar apurado.'},
     {id:'arq_1v1d', cat:'1v1', mode:'pareja', name:'Achique en contraataque abierto', dose:'6 repeticiones', desc:'El atacante encara en velocidad con espacio abierto a los costados; salir con decisión achicando el ángulo antes de que gane más terreno.'},
     {id:'arq_1v1e', cat:'1v1', mode:'pareja', name:'Lectura de penal', dose:'10 remates', desc:'Ejercicio de definición de penales: leer la carrera y el apoyo del pateador para elegir el palo antes o justo en el momento del disparo, sin anticipar de más.'},
+    {id:'arq_1v1f', cat:'1v1', mode:'pareja', name:'Duelo con ángulo limitado por conos', dose:'6 duelos', desc:'Marcá con conos un pasillo angosto por donde tiene que venir el atacante. Practicá el achique sabiendo de antemano por dónde puede definir, para automatizar la postura correcta antes de enfrentar el ángulo abierto.'},
+    {id:'arq_1v1g', cat:'1v1', mode:'pareja', name:'Dos atacantes, una decisión', dose:'6 repeticiones', desc:'Dos atacantes encaran juntos hacia el área; tenés que decidir rápido a cuál de los dos achicarle mientras cubrís lo más posible al otro con la posición del cuerpo. Entrena la lectura en superioridad numérica rival.'},
+    {id:'arq_1v1h', cat:'1v1', mode:'pareja', name:'Duelo tras rechazo', dose:'6 repeticiones', desc:'Bloqueá un primer remate a media potencia y, apenas el balón queda picando cerca, un segundo atacante llega en carrera para definir mano a mano. Simula el rebote que no se puede controlar del todo y queda servido.'},
+    {id:'arq_1v1i', cat:'1v1', mode:'pareja', name:'Arranque a ciegas y giro', dose:'6 repeticiones', desc:'Empezá de espaldas al atacante; a la señal, girate y resolvé el mano a mano que ya está en marcha. Entrena la lectura rápida de la situación cuando no tuviste tiempo de prepararte con anticipación.'},
+    {id:'arq_1v1j', cat:'1v1', mode:'pareja', name:'Tanda de penales con fatiga previa', dose:'5 remates', desc:'Hacé una serie corta de sprints o saltos y, sin pausa para recuperar del todo, atajá una tanda de penales. Simula la definición por penales al final de un partido exigente, cuando las piernas ya no responden igual.'},
     {id:'arq_fis1', cat:'FIS', mode:'solo', name:'Sprints cortos repetidos', dose:'6 series x 15m', desc:'Sprints explosivos de arranque, simulando la salida del arco a cortar un centro o un pase filtrado. Recuperación casi completa entre series — la calidad de cada sprint importa más que el cansancio acumulado.'},
     {id:'arq_fis2', cat:'FIS', mode:'solo', name:'Saltos pliométricos', dose:'4 series x 6 reps', desc:'Saltos verticales explosivos (al cajón, a una grada, o en el lugar) con aterrizaje suave y controlado. Es la base física de las palomas y los desvíos por encima del travesaño.'},
     {id:'arq_fis3', cat:'FIS', mode:'solo', name:'Flexiones explosivas', dose:'4 series x 10 reps', desc:'Flexiones de brazos con impulso (despegando las manos del piso si el nivel lo permite, o simplemente rápidas si no). Trabajan la potencia de brazos para rechazar remates fuertes.'},
@@ -2468,6 +2512,10 @@ const DRILLS = {
     {id:'arq_fis14', cat:'FIS', mode:'solo', name:'Saltos laterales sobre vallas bajas', dose:'4 series x 8 reps', desc:'Saltar de lado a lado por encima de una valla baja, cono acostado o línea marcada, sin pausa entre saltos. Trabaja la potencia de salto en el plano lateral, que es el que más se usa en una estirada real.'},
     {id:'arq_fis15', cat:'FIS', mode:'solo', name:'Saltos a una pierna (unipodal)', dose:'3 series x 6 reps por lado', desc:'Saltos hacia adelante o hacia el lado despegando y aterrizando con la misma pierna. La mayoría de las estiradas salen de un solo pie de apoyo, así que la fuerza de salto unilateral es más específica que la de las dos piernas juntas.'},
     {id:'arq_fis16', cat:'FIS', mode:'pareja', name:'Salto reactivo a objetivo alto', dose:'4 series x 6 reps', desc:'Un compañero sostiene el balón (o la mano) en alto y lo mueve un poco a upa cada vez; el arquero debe saltar y tocarlo apenas se levanta, sin poder anticipar la altura exacta. Combina el salto explosivo con la lectura del momento justo para despegar.'},
+    {id:'arq_fis17', cat:'FIS', mode:'solo', name:'Sprint con cambio de dirección entre conos', dose:'5 series', desc:'Ubicá 4-5 conos formando un recorrido en "T" o en zigzag y recorrelo a máxima velocidad, frenando y cambiando de dirección en cada cono. Trabaja la aceleración y frenada bruscas que se repiten todo el partido en los achiques.'},
+    {id:'arq_fis18', cat:'FIS', mode:'solo', name:'Salto lateral en zigzag sobre conos', dose:'4 series x 8 reps', desc:'Colocá 4-5 conos acostados en zigzag y saltalos de lado a lado con las dos piernas juntas, sin pausa entre salto y salto. A diferencia del salto sobre vallas en línea recta, acá el cambio de dirección lateral suma coordinación al trabajo de potencia.'},
+    {id:'arq_fis19', cat:'FIS', mode:'solo', name:'Salto a una pierna con caída controlada', dose:'4 series x 5 reps por lado', desc:'Parado en una sola pierna, saltá hacia adelante o al costado y aterrizá con esa misma pierna, sosteniendo el equilibrio 2 segundos antes de repetir. Es el gesto físico más parecido al de tirarte a un remate: casi nunca saltás con las dos piernas parejas en una estirada real.'},
+    {id:'arq_fis20', cat:'FIS', mode:'solo', name:'Escalera de conos con salto final', dose:'4 series', desc:'Armá una hilera corta de conos bien juntos y pasala con pasos rápidos y cortos (como en la escalera de agilidad) y, al llegar al último cono, rematá con un salto vertical explosivo. Une la coordinación de pies con la potencia de salto en un mismo gesto.'},
     {id:'arq_man1', cat:'MAN', mode:'solo', name:'Apriete de pelota antiestrés', dose:'4 series x 15 reps por mano', desc:'Apretar con fuerza una pelota antiestrés o de tenis, sostener 2 segundos y soltar. Fuerza de agarre pura, la base para sostener cualquier atajada sin que se escape el balón.'},
     {id:'arq_man2', cat:'MAN', mode:'solo', name:'Flexo-extensión de muñeca con peso liviano', dose:'3 series x 12 reps', desc:'Con una botella de agua o mancuerna liviana, apoyar el antebrazo en una mesa o la pierna y mover solo la muñeca hacia arriba y abajo. Fortalece los músculos que estabilizan la mano al recibir un impacto fuerte.'},
     {id:'arq_man3', cat:'MAN', mode:'pareja', name:'Recepción de balón medicinal liviano', dose:'4 series x 8 reps', desc:'Un compañero tira un balón medicinal liviano (o una pelota de básquet) a corta distancia; recibir y absorber el impacto flexionando ligeramente los brazos, sin que rebote hacia afuera.'},
@@ -2476,6 +2524,9 @@ const DRILLS = {
     {id:'arq_man6', cat:'MAN', mode:'solo', name:'Flexiones sobre los nudillos', dose:'3 series x 8 reps', desc:'Flexiones de brazos apoyando los puños cerrados (nudillos) en vez de las palmas, sobre una superficie blanda al principio (colchoneta o toalla doblada). Fortalece la muñeca en la posición cerrada y la prepara para absorber golpes fuertes sin doblarse.'},
     {id:'arq_man7', cat:'MAN', mode:'solo', name:'Extensión de muñeca con banda elástica', dose:'3 series x 15 reps', desc:'Con una banda elástica pisada en el piso y sostenida con la mano, llevar la muñeca hacia arriba contra la resistencia, con el antebrazo quieto. Fortalece los extensores de la muñeca, que son los que más sufren al recibir un remate fuerte en mala posición.'},
     {id:'arq_man8', cat:'MAN', mode:'solo', name:'Rebote de pared a una mano', dose:'4 series x 10 reps por mano', desc:'Parado cerca de una pared, tirar y recibir un balón chico o una pelota de tenis con una sola mano, en apoyo firme sobre los dedos. Trabaja la fuerza de muñeca y dedos en la misma posición que un desvío de una mano.'},
+    {id:'arq_man9', cat:'MAN', mode:'solo', name:'Pinza de dedos con banda elástica', dose:'3 series x 15 reps', desc:'Con una banda elástica chica o una liga fuerte, abrí y cerrá los dedos contra la resistencia, con la mano bien extendida. Fortalece la apertura de la mano, clave para cubrir más superficie de balón al atajar.'},
+    {id:'arq_man10', cat:'MAN', mode:'solo', name:'Rebote de balón medicinal a dos manos', dose:'4 series x 8 reps', desc:'Contra una pared, tirá y recibí un balón medicinal liviano con las dos manos, absorbiendo el impacto sin que rebote hacia afuera. Es un paso más exigente que la recepción con compañero, porque el rebote sale más rápido e imprevisible.'},
+    {id:'arq_man11', cat:'MAN', mode:'solo', name:'Sostén isométrico de balón en extensión', dose:'3 series x 20s', desc:'Sostené el balón con ambas manos, brazos extendidos al frente a la altura del pecho, sin dejarlo caer ni acercarlo al cuerpo. Resistencia isométrica de brazos y muñecas para no perder firmeza en los últimos minutos de un partido exigente.'},
   ],
   DEF: [
     {id:'def_mar1', cat:'MAR', name:'Marcación al hombre en carrera', dose:'6 carreras de 15m', desc:'Trabajar la distancia óptima de marca, no dejar girar al rival y achicar en el momento justo de la recepción.'},
@@ -3088,6 +3139,8 @@ let ovrHistory = [];              // {date, position, ovr, attrs?}
 let weeklyChallenges = [];        // {id, week, position, type, catId?, target, text, reward}
 let weeklyLogs = {};              // { [weekKey]: {passes:number, distanceKm:number} } — carga manual para desafíos
 let lastWeather = null;           // {temp, code, desc, tip, fetchedAt} — no se persiste, se vuelve a pedir
+let myEquipment = {torso:null, piernas:null, manos:null, medias:null, pies:null}; // ropa/equipo actual del arquero
+let kitExpandedZone = null;       // qué zona del equipo está desplegada para elegir ropa
 let pendingSessionForJournal = null; // sesión recién terminada, mientras se completa el diario
 
 const MATCH_CONTEXTS = [
@@ -3107,9 +3160,35 @@ const TRAINING_COMPANIONS = [
 ];
 function companionById(id){ return TRAINING_COMPANIONS.find(c=>c.id===id); }
 
+/* ---------- Mi equipo (ropa) ---------- */
+const EQUIPMENT_ZONES = [
+  {id:'torso',   label:'Torso',   icon:'👕', options:['Remera','Camiseta','Camiseta manga larga','Remera térmica']},
+  {id:'piernas', label:'Piernas', icon:'🩳', options:['Calza','Pantalón corto','Pantalón largo','Calza y pantalón corto']},
+  {id:'manos',   label:'Manos',   icon:'🧤', options:['Guantes']},
+  {id:'medias',  label:'Medias',  icon:'🧦', options:['Medias cortas','Medias largas','Medias normales']},
+  {id:'pies',    label:'Pies',    icon:'👟', options:['Botines','Zapatillas']},
+];
+function equipmentZoneById(id){ return EQUIPMENT_ZONES.find(z=>z.id===id); }
+
+// Sugerencia de equipo según el clima detectado (lastWeather). No pisa nada solo: hay que aplicarla a mano.
+function suggestEquipmentForWeather(){
+  if(!lastWeather) return null;
+  const { condition } = lastWeather;
+  if(condition==='calor'){
+    return {torso:'Remera', piernas:'Pantalón corto', manos:'Guantes', medias:'Medias cortas', pies:'Botines'};
+  }
+  if(condition==='frio'){
+    return {torso:'Remera térmica', piernas:'Calza y pantalón corto', manos:'Guantes', medias:'Medias largas', pies:'Botines'};
+  }
+  if(condition==='lluvia'){
+    return {torso:'Camiseta manga larga', piernas:'Pantalón largo', manos:'Guantes', medias:'Medias largas', pies:'Botines'};
+  }
+  return {torso:'Camiseta', piernas:'Pantalón corto', manos:'Guantes', medias:'Medias normales', pies:'Botines'};
+}
+
 function currentStateObject(){
   return {sessions, matches, draft, activePosition, selectedArchetype, spacePref, weekProgress,
-    journal, manualRecords, seasonGoal, ovrHistory, weeklyChallenges, physicalTest, weeklyLogs, fitnessTestHistory};
+    journal, manualRecords, seasonGoal, ovrHistory, weeklyChallenges, physicalTest, weeklyLogs, fitnessTestHistory, myEquipment};
 }
 
 async function loadState(){
@@ -3149,6 +3228,7 @@ async function loadState(){
     fitnessTestHistory = [{ ...physicalTest, id: 'fit_'+Date.now() }];
   }
   weeklyLogs = (data && data.weeklyLogs) || {};
+  myEquipment = (data && data.myEquipment) || {torso:null, piernas:null, manos:null, medias:null, pies:null};
   POSITIONS.forEach(p=>{ if(!draft[p.id]) draft[p.id]=[]; if(selectedArchetype[p.id]===undefined) selectedArchetype[p.id]=null; });
 }
 
@@ -4524,6 +4604,10 @@ function renderCarreraExtra(content){
     <div class="section-label" style="margin-top:0;">🌤 Clima y entrenamiento</div>
     <div id="weather-wrap"></div>
 
+    <div class="section-label">🎽 Mi equipo</div>
+    <p style="font-size:11.5px; color:var(--chalk-faint); line-height:1.4; margin:-4px 0 10px;">Tocá cada parte del cuerpo o la fila para elegir qué usás. Queda guardado y se registra en cada entrenamiento.</p>
+    <div id="kit-wrap" style="margin-bottom:20px;"></div>
+
     <div class="section-label">📍 Espacio disponible</div>
     <div class="space-toggle">
       <div class="space-opt ${spacePref==='amplio'?'active':''}" onclick="setSpacePref('amplio')"><span class="ico">🏟️</span>Cancha grande</div>
@@ -4544,6 +4628,7 @@ function renderCarreraExtra(content){
     <div id="video-checklist-wrap"></div>
   `;
   renderWeatherWidget();
+  renderEquipmentWidget();
 }
 function setSpacePref(v){
   spacePref = spacePref===v ? null : v;
@@ -5377,6 +5462,8 @@ function closeRestTimer(){
 async function addOptionalNote(){
   const note = await showPromptModal('¿Alguna nota de esta sesión? (opcional — dejalo vacío para omitir)');
   if(note && note.trim()) activeSession.note = note.trim();
+  const equipUsed = Object.values(myEquipment).some(v=>v);
+  if(equipUsed) activeSession.equipment = {...myEquipment};
 }
 
 function computeCompletionRatio(){
@@ -6493,6 +6580,65 @@ async function fetchWeatherAdaptation(){
   }, {timeout:8000});
 }
 
+/* ---------- Mi equipo (ropa) — figura + selector por zona ---------- */
+function renderKitSvg(){
+  const cls = z => myEquipment[z] ? 'kit-zone filled' : 'kit-zone';
+  return `<svg class="kit-svg" viewBox="0 0 100 200" onclick="handleKitSvgClick(event)">
+    <circle cx="50" cy="16" r="13" fill="var(--surface-2)" stroke="var(--line-strong)" stroke-width="1.5"/>
+    <rect class="${cls('torso')}" data-zone="torso" x="32" y="32" width="36" height="52" rx="8"/>
+    <circle class="${cls('manos')}" data-zone="manos" cx="16" cy="55" r="9"/>
+    <circle class="${cls('manos')}" data-zone="manos" cx="84" cy="55" r="9"/>
+    <rect class="${cls('piernas')}" data-zone="piernas" x="34" y="86" width="13" height="52" rx="6"/>
+    <rect class="${cls('piernas')}" data-zone="piernas" x="53" y="86" width="13" height="52" rx="6"/>
+    <ellipse class="${cls('pies')}" data-zone="pies" cx="40" cy="150" rx="10" ry="6"/>
+    <ellipse class="${cls('pies')}" data-zone="pies" cx="60" cy="150" rx="10" ry="6"/>
+  </svg>`;
+}
+function handleKitSvgClick(e){
+  const zone = e.target.getAttribute('data-zone');
+  if(zone) toggleKitZone(zone);
+}
+function toggleKitZone(zoneId){
+  kitExpandedZone = (kitExpandedZone===zoneId) ? null : zoneId;
+  renderEquipmentWidget();
+}
+function setEquipmentZone(zoneId, value){
+  myEquipment[zoneId] = (myEquipment[zoneId]===value) ? null : value; // tocar de nuevo la misma opción la saca
+  kitExpandedZone = null;
+  persistState();
+  renderEquipmentWidget();
+}
+function applyWeatherSuggestion(){
+  const s = suggestEquipmentForWeather();
+  if(!s) return;
+  myEquipment = {...s};
+  persistState();
+  renderEquipmentWidget();
+}
+function renderEquipmentWidget(){
+  const wrap = document.getElementById('kit-wrap');
+  if(!wrap) return;
+  let html = `<div class="kit-wrap">${renderKitSvg()}<div class="kit-list">`;
+  EQUIPMENT_ZONES.forEach(z=>{
+    const val = myEquipment[z.id];
+    html += `<div class="kit-row ${val?'set':''}" onclick="toggleKitZone('${z.id}')">
+      <span class="kit-ico">${z.icon}</span><span class="kit-label">${z.label}</span>
+      <span class="kit-val">${val ? escapeHtml(val) : 'Elegir'}</span>
+    </div>`;
+    if(kitExpandedZone===z.id){
+      html += `<div class="kit-chip-row">${z.options.map(o=>`<div class="kit-chip ${val===o?'active':''}" onclick="event.stopPropagation(); setEquipmentZone('${z.id}', '${o}')">${escapeHtml(o)}</div>`).join('')}</div>`;
+    }
+  });
+  html += `</div></div>`;
+  const suggestion = suggestEquipmentForWeather();
+  if(suggestion){
+    html += `<button class="cta-btn ghost" style="margin-top:0;" onclick="applyWeatherSuggestion()">🌤 Aplicar sugerencia según el clima de hoy</button>`;
+  } else {
+    html += `<p style="font-size:11.5px; color:var(--chalk-faint); margin-top:0;">Detectá el clima arriba y te sugiero qué ponerte.</p>`;
+  }
+  wrap.innerHTML = html;
+}
+
 /* ============================================================
    RENDER: PROGRESO
 ============================================================ */
@@ -6573,6 +6719,7 @@ function renderProgreso(){
           <div class="history-date"><span class="pos-tag" style="background:${p.color}">${p.id}</span>${fmtDate(new Date(s.date))}</div>
           <div class="history-sub">${subLine}</div>
           ${s.note ? `<div class="history-note">📝 ${escapeHtml(s.note)}</div>` : ''}
+          ${s.equipment ? `<div class="history-note" style="opacity:0.75;">🎽 ${Object.values(s.equipment).filter(Boolean).map(escapeHtml).join(' · ')}</div>` : ''}
         </div>
         <div class="history-actions">
           <button class="hist-icon-btn" title="Editar" onclick="${s.manual ? `editFreeSession('${s.id}')` : `editSessionNote('${s.id}')`}">✎</button>

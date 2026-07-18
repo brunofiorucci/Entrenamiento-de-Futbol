@@ -161,7 +161,7 @@
    molestia. Movilidad suma cadera 90/90, balanceo de pierna frontal
    y lateral, y movilidad de dedos/agarre. */
 
-const CACHE_NAME = 'arqueroplus-v37';
+const CACHE_NAME = 'arqueroplus-v39';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
