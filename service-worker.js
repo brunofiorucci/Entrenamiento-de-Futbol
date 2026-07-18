@@ -133,35 +133,26 @@
    zonas de molestia que antes no tenían ningún estiramiento asociado
    (hombro, dedo, cuello, costillas, codo). Se agrega un módulo nuevo,
    separado de la elongación: "Movilidad" (circuito de movilidad
-   articular — hombros, cadera, tobillos, columna, muñecas), con su
-   propia tarjeta al lado de Elongación en Entrenar, su propio modal,
-   y su propio acceso rápido desde Ajustes. Es standalone: no depende
-   de terminar una sesión ni del chequeo de molestias.
+   v35: rediseño visual premium (glassmorphism, paleta neón, Inter) +
+   grid de biblioteca con thumbnail/dificultad/duración por ejercicio +
+   fix de superposición de la nav inferior. Bump obligatorio: si no se
+   sube este número, los dispositivos que ya tenían la app instalada
+   siguen viendo la versión vieja del HTML aunque el archivo cambie
+   (la estrategia de caché sirve primero lo guardado y recién actualiza
+   en segundo plano para la próxima carga).
 
-   v32: el test físico ahora guarda un historial completo en vez de
-   pisar el resultado anterior cada vez que lo repetís. Nuevo modal
-   "Evolución" con gráfico de barras del nivel promedio a lo largo
-   del tiempo y una lista de cada test con fecha, nivel, y flechas
-   de tendencia (▲/▼) por cada capacidad comparado con el test
-   anterior. Accesible desde el widget de test físico y desde el
-   resultado del test. Si ya tenías un test cargado de antes, se
-   migra automáticamente como primer punto del historial.
+   v46: fix de bug — había dos funciones llamadas igual
+   (estimateDrillMinutes), una que calculaba los minutos de un
+   ejercicio a partir de su texto de dosis y otra que multiplicaba
+   una cantidad de ejercicios x5. Al tener el mismo nombre, la
+   segunda pisaba a la primera y todas las tarjetas de la biblioteca
+   de ejercicios (y el cálculo de dificultad) terminaban mostrando
+   "NaN min" en vez del tiempo estimado real. Se renombró la función
+   de conteo a estimateWorkoutMinutesByCount para que no choquen.
+   Bump obligatorio para que los dispositivos ya instalados bajen el
+   HTML corregido. */
 
-   v33: Elongación y Movilidad ahora muestran repeticiones/respiraciones
-   en vez de segundos (ej. "8 respiraciones por lado" en vez de "30s").
-   Se agregan 5 ejercicios nuevos a Movilidad (círculos de cadera de
-   pie, ankle rocks, rotación de cuello, gato-vaca, apertura de pecho
-   con rotación), quedando 11 en total. Calentamiento no se tocó,
-   sigue en segundos.
-
-   v34: Elongación y Movilidad llegan a 15 ejercicios cada una.
-   Elongación suma glúteo (figura 4), flexores de cadera, espalda
-   alta (postura del niño), tríceps y torsión espinal — los nuevos
-   de cadera/hombro/codo también se sumaron al mapeo de zonas de
-   molestia. Movilidad suma cadera 90/90, balanceo de pierna frontal
-   y lateral, y movilidad de dedos/agarre. */
-
-const CACHE_NAME = 'arqueroplus-v43';
+const CACHE_NAME = 'arqueroplus-v46';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
