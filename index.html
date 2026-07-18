@@ -630,6 +630,41 @@
   .fit-dots{display:flex; gap:3px; flex-shrink:0;}
   .fit-dot{width:8px; height:8px; border-radius:50%; background:rgba(243,241,231,0.14);}
   .fit-dot.on{background:var(--fit-color, var(--accent));}
+  .imc-chart{margin:2px 0 16px;}
+  .imc-chart-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px;}
+  .imc-chart-num{font-family:'Oswald',sans-serif; font-size:26px; font-weight:700; color:var(--chalk);}
+  .imc-chart-cat{font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700; letter-spacing:0.04em; padding:3px 9px; border-radius:20px;}
+  .imc-scale{position:relative; height:10px; border-radius:6px; overflow:visible;
+    background:linear-gradient(90deg, #5BC8FF 0 17.5%, #4ED17F 17.5% 50%, #FFD35B 50% 75%, #FF6B35 75% 100%);}
+  .imc-scale-marker{position:absolute; top:-5px; width:2px; height:20px; background:var(--chalk); border-radius:2px;
+    box-shadow:0 0 0 2px var(--surface); transform:translateX(-50%);}
+  .imc-scale-labels{display:flex; justify-content:space-between; margin-top:6px; font-size:9.5px; color:var(--chalk-faint); font-family:'IBM Plex Mono',monospace;}
+  .imc-chart-note{font-size:11px; color:var(--chalk-faint); line-height:1.4; margin-top:8px; font-style:italic;}
+  .water-card{
+    display:flex; flex-direction:column; gap:6px; background:rgba(91,200,255,0.08);
+    border:1px solid rgba(91,200,255,0.25); border-radius:12px; padding:12px 14px; margin-bottom:14px;
+  }
+  .water-card-top{display:flex; align-items:center; gap:12px;}
+  .water-ico{font-size:24px; flex-shrink:0;}
+  .water-title{font-size:11.5px; color:var(--chalk-dim); text-transform:uppercase; letter-spacing:0.04em; font-weight:600;}
+  .water-range{font-family:'Oswald',sans-serif; font-size:20px; font-weight:700; color:#5BC8FF; margin-top:2px;}
+  .water-note{font-size:11px; color:var(--chalk-faint); line-height:1.4;}
+  .water-card-main{cursor:pointer; margin-bottom:16px; border-color:rgba(91,200,255,0.4);}
+  .water-card-main .water-ico{font-size:28px;}
+  .water-card-main .water-range{font-size:24px;}
+  .pos-fit-card{
+    border-radius:12px; padding:12px 14px; margin:2px 0 14px;
+  }
+  .pos-fit-head{display:flex; align-items:center; gap:8px; margin-bottom:5px;}
+  .pos-fit-ico{font-size:15px;}
+  .pos-fit-title{font-size:12.5px; font-weight:700; letter-spacing:0.02em; color:var(--chalk); text-transform:uppercase;}
+  .pos-fit-blurb{font-size:12px; color:var(--chalk-dim); line-height:1.5;}
+  .pos-fit-height-row{margin-top:10px; padding-top:10px; border-top:1px solid rgba(243,241,231,0.10);}
+  .pos-fit-tag{margin-left:5px; font-size:10px; cursor:help;}
+  .pos-fit-warning{
+    font-size:12px; line-height:1.5; color:var(--chalk-dim);
+    border-radius:10px; padding:9px 12px; margin-top:12px;
+  }
   .fit-retake-btn{
     margin-top:14px; width:100%; background:none; border:1px solid var(--line-strong); color:var(--chalk-dim);
     padding:10px; border-radius:10px; font-size:12.5px; cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
@@ -1334,6 +1369,8 @@
 
       <div id="fit-test-wrap"></div>
 
+      <div id="water-wrap"></div>
+
       <div id="coach-wrap"></div>
       <div id="goal-widget-wrap"></div>
       <div id="weekly-challenge-wrap"></div>
@@ -1809,8 +1846,13 @@
 <div class="modal-bg" id="fit-test-modal">
   <div class="modal">
     <h2>Test físico inicial</h2>
-    <div class="sub">Hacé estas 5 pruebas y cargá tus resultados. Con eso te recomendamos un nivel de entrenamiento.</div>
+    <div class="sub">Cargá tu peso y altura, hacé estas 5 pruebas y anotá tus resultados. Con eso te recomendamos un nivel de entrenamiento.</div>
 
+    <div style="display:flex; gap:10px;">
+      <div class="field-row" style="flex:1;"><label>⚖️ Peso (kg)</label><input type="number" min="0" step="0.1" inputmode="decimal" id="fit-weight" class="field-input" placeholder="Ej: 68"></div>
+      <div class="field-row" style="flex:1;"><label>📏 Altura (cm)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-height" class="field-input" placeholder="Ej: 175"></div>
+      <div class="field-row" style="flex:0.7;"><label>🎂 Edad</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-age" class="field-input" placeholder="Ej: 16"></div>
+    </div>
     <div class="field-row"><label>🏃 Sprint 20 m (segundos)</label><input type="number" min="0" step="0.1" inputmode="decimal" id="fit-sprint" class="field-input" placeholder="Ej: 3.4"></div>
     <div class="field-row"><label>🦵 Salto vertical (cm)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-jump" class="field-input" placeholder="Ej: 38"></div>
     <div class="field-row"><label>💪 Flexiones (máx. reps)</label><input type="number" min="0" step="1" inputmode="numeric" id="fit-pushups" class="field-input" placeholder="Ej: 22"></div>
@@ -4262,6 +4304,7 @@ function renderInicio(){
   document.getElementById('streak-num').textContent = computeConsecutiveDayStreak();
   renderLevelWidget('level-widget');
   renderFitTestWidget('fit-test-wrap');
+  renderWaterWidget();
   renderLoadBanner();
   renderReminderBanner();
 
@@ -5815,6 +5858,84 @@ function scoreForTest(def, value){
 function fitnessLevelForScore(avg){
   return FITNESS_LEVELS.find(l=> avg>=l.min && avg<=l.max) || FITNESS_LEVELS[0];
 }
+
+// Qué tan importante es cada capacidad física para cada puesto (1=poco, 5=clave)
+const POSITION_FIT_PRIORITY = {
+  ARQ: {sprint:3, jump:5, pushups:4, situps:3, pullups:4},
+  DEF: {sprint:4, jump:5, pushups:3, situps:3, pullups:2},
+  MED: {sprint:3, jump:2, pushups:2, situps:5, pullups:2},
+  DEL: {sprint:5, jump:4, pushups:2, situps:3, pullups:1},
+};
+const POSITION_FIT_BLURB = {
+  ARQ: 'Un arquero necesita explosividad de salto para llegar a las palomas, y fuerza de brazos y espalda para sostenerse y rechazar remates.',
+  DEF: 'Un defensor gana o pierde partidos en los duelos aéreos y en la recuperación de posición — salto y velocidad son lo que más pesa.',
+  MED: 'Un mediocampista corre todo el partido y sostiene el core en cada giro y disputa — la resistencia abdominal es la base física clave.',
+  DEL: 'Un delantero define en la explosividad del primer paso y en los duelos aéreos con centrales — sprint y salto son lo más determinante.',
+};
+function getPositionFitPriority(posId){
+  return POSITION_FIT_PRIORITY[posId] || POSITION_FIT_PRIORITY.ARQ;
+}
+const POSITION_HEIGHT_NOTE = {
+  ARQ: 'La altura suma para tapar más arco, pero no define a un arquero: la colocación, la lectura del juego y el timing del salto pesan mucho más que los centímetros. Hay grandes arqueros de estatura baja con carreras enormes gracias a eso.',
+  DEF: 'Ayuda en los duelos aéreos, pero el timing de salto y la lectura del centro importan más que la altura en sí misma.',
+  MED: 'Para mediocampista la altura casi no pesa — ahí el margen físico más importante es la resistencia.',
+  DEL: 'Suma en los cabezazos frente al arco, pero la explosividad y el timing del desmarque son mucho más decisivos que los centímetros.',
+};
+// Umbrales de altura (cm) por posición — más exigente en ARQ/DEF, donde el alcance pesa más
+const POSITION_HEIGHT_THRESHOLDS = {
+  ARQ: [190, 182, 174, 166],
+  DEF: [188, 180, 172, 164],
+  MED: [182, 174, 166, 158],
+  DEL: [185, 177, 169, 161],
+};
+function scoreHeightForPosition(posId, height){
+  const v = parseFloat(height);
+  if(!v) return null;
+  const t = POSITION_HEIGHT_THRESHOLDS[posId] || POSITION_HEIGHT_THRESHOLDS.ARQ;
+  if(v>=t[0]) return 5; if(v>=t[1]) return 4; if(v>=t[2]) return 3; if(v>=t[3]) return 2; return 1;
+}
+// Altura promedio de referencia por edad (cm) — valores generales de tablas de crecimiento (CDC/OMS, percentil 50).
+// Es una referencia general, no diagnóstica: el ritmo de crecimiento varía mucho de persona a persona.
+const AVG_HEIGHT_BY_AGE = {
+  4:103, 5:109, 6:116, 7:122, 8:128, 9:133, 10:138, 11:143,
+  12:149, 13:156, 14:164, 15:170, 16:173, 17:175,
+};
+function avgHeightForAge(age){
+  const a = Math.round(parseFloat(age));
+  const keys = Object.keys(AVG_HEIGHT_BY_AGE).map(Number).sort((x,y)=>x-y);
+  if(AVG_HEIGHT_BY_AGE[a]!==undefined) return AVG_HEIGHT_BY_AGE[a];
+  if(a<keys[0]) return AVG_HEIGHT_BY_AGE[keys[0]];
+  if(a>keys[keys.length-1]) return AVG_HEIGHT_BY_AGE[keys[keys.length-1]];
+  return AVG_HEIGHT_BY_AGE[keys[0]];
+}
+function scoreHeightForAge(age, height){
+  const h = parseFloat(height);
+  if(!h) return null;
+  const diff = h - avgHeightForAge(age);
+  if(diff>=12) return 5; if(diff>=5) return 4; if(diff>=-5) return 3; if(diff>=-12) return 2; return 1;
+}
+function computeIMC(weight, height){
+  const w = parseFloat(weight), h = parseFloat(height);
+  if(!w || !h) return null;
+  const hM = h/100;
+  const imc = w/(hM*hM);
+  return (isFinite(imc) && imc>0) ? imc : null;
+}
+const IMC_CATEGORIES = [
+  {max:18.5, label:'BAJO PESO', color:'#5BC8FF'},
+  {max:25,   label:'NORMAL',    color:'#4ED17F'},
+  {max:30,   label:'SOBREPESO', color:'#FFD35B'},
+  {max:Infinity, label:'ALTO',  color:'#FF6B35'},
+];
+function imcCategory(imc){
+  return IMC_CATEGORIES.find(c=> imc<c.max) || IMC_CATEGORIES[IMC_CATEGORIES.length-1];
+}
+function computeWaterIntake(weight){
+  const w = parseFloat(weight);
+  if(!w || w<=0) return null;
+  // 30-35 ml por kg de peso corporal por día (guía general de hidratación)
+  return { min: (w*30/1000), max: (w*35/1000) };
+}
 function computeFitnessResult(results){
   const breakdown = FITNESS_TESTS.map(def=>({def, value:results[def.id], score:scoreForTest(def, results[def.id])}));
   const scored = breakdown.filter(b=>b.score!==null);
@@ -5841,6 +5962,9 @@ function getWeakestFitAreas(breakdown){
 
 function openFitTestModal(){
   const t = physicalTest || {};
+  document.getElementById('fit-weight').value = t.weight ?? '';
+  document.getElementById('fit-height').value = t.height ?? '';
+  document.getElementById('fit-age').value = t.age ?? '';
   document.getElementById('fit-sprint').value = t.sprint ?? '';
   document.getElementById('fit-jump').value = t.jump ?? '';
   document.getElementById('fit-pushups').value = t.pushups ?? '';
@@ -5867,6 +5991,9 @@ function renderFitHealthToggleUI(){
 
 async function saveFitTest(){
   const results = {
+    weight: document.getElementById('fit-weight').value,
+    height: document.getElementById('fit-height').value,
+    age: document.getElementById('fit-age').value,
     sprint: document.getElementById('fit-sprint').value,
     jump: document.getElementById('fit-jump').value,
     pushups: document.getElementById('fit-pushups').value,
@@ -5889,6 +6016,7 @@ async function saveFitTest(){
   closeFitTestModal();
   renderFitTestWidget('fit-test-wrap');
   renderFitTestWidget('fit-test-wrap-progreso');
+  renderWaterWidget();
   showFitResult();
 }
 
@@ -5905,11 +6033,68 @@ function showFitResult(){
     </div>`;
   }
   html += `<p style="font-size:13px; color:var(--chalk-dim); line-height:1.5; margin-bottom:14px;">${level.desc}</p>`;
+  if(physicalTest.age){
+    html += `<div class="fit-row" style="margin-bottom:2px;"><span>🎂</span><span class="fr-label">Edad</span><span class="fr-val mono">${escapeHtml(String(physicalTest.age))} años</span></div>`;
+  }
+  if(physicalTest.weight && physicalTest.height){
+    const imc = computeIMC(physicalTest.weight, physicalTest.height);
+    if(imc){
+      const cat = imcCategory(imc);
+      const pos = Math.min(100, Math.max(0, (imc-15)/20*100));
+      html += `<div class="imc-chart">
+        <div class="imc-chart-head">
+          <div><div class="imc-chart-num">${imc.toFixed(1)}</div><div style="font-size:11px; color:var(--chalk-faint);">IMC · ${physicalTest.weight} kg · ${physicalTest.height} cm</div></div>
+          <div class="imc-chart-cat" style="background:${cat.color}22; color:${cat.color};">${cat.label}</div>
+        </div>
+        <div class="imc-scale"><div class="imc-scale-marker" style="left:${pos}%;"></div></div>
+        <div class="imc-scale-labels"><span>Bajo</span><span>Normal</span><span>Sobrepeso</span><span>Alto</span></div>
+        <div class="imc-chart-note">${physicalTest.age && physicalTest.age<18 ? 'Sos menor de 18 — estos rangos son orientativos, un pediatra da el dato más preciso para tu edad.' : 'Referencia general de IMC en adultos. No reemplaza una evaluación médica.'}</div>
+      </div>`;
+    }
+  } else if(physicalTest.weight || physicalTest.height){
+    const wTxt = physicalTest.weight ? `${physicalTest.weight} kg` : '—';
+    const hTxt = physicalTest.height ? `${physicalTest.height} cm` : '—';
+    html += `<div class="fit-row"><span>⚖️</span><span class="fr-label">Peso / Altura</span><span class="fr-val mono">${wTxt} · ${hTxt}</span></div>`;
+  }
+
+  const posId = activePosition;
+  const posObj = posById(posId);
+  const priority = getPositionFitPriority(posId);
+  let heightBlock = '';
+  if(physicalTest.height){
+    const isMinor = physicalTest.age && physicalTest.age<18;
+    let note = POSITION_HEIGHT_NOTE[posId] || '';
+    let hScore;
+    if(isMinor){
+      hScore = scoreHeightForAge(physicalTest.age, physicalTest.height);
+      const avg = avgHeightForAge(physicalTest.age);
+      note += ` El promedio a los ${escapeHtml(String(physicalTest.age))} años ronda los ${avg} cm — te comparo con chicos de tu edad, no con arqueros adultos. Es una referencia general, no un diagnóstico: cada cuerpo crece a su ritmo.`;
+    } else {
+      hScore = scoreHeightForPosition(posId, physicalTest.height);
+    }
+    const dotsHtml = `<div class="fit-dots">${[1,2,3,4,5].map(n=>`<div class="fit-dot ${hScore && n<=hScore ? 'on':''}" style="--fit-color:${posObj.color}"></div>`).join('')}</div>`;
+    heightBlock = `<div class="fit-row pos-fit-height-row"><span>📏</span><span class="fr-label">Altura</span><span class="fr-val mono">${physicalTest.height} cm</span>${dotsHtml}</div>
+      <div class="pos-fit-blurb">${note}</div>`;
+  }
+  html += `<div class="pos-fit-card" style="background:${posObj.color}14; border:1px solid ${posObj.color}55;">
+    <div class="pos-fit-head"><span class="pos-fit-ico">🎯</span><div class="pos-fit-title">Para tu puesto: ${posObj.name}</div></div>
+    <div class="pos-fit-blurb">${POSITION_FIT_BLURB[posId] || ''}</div>
+    ${heightBlock}
+  </div>`;
+
   breakdown.forEach(b=>{
     const dots = [1,2,3,4,5].map(n=>`<div class="fit-dot ${b.score && n<=b.score ? 'on':''}" style="--fit-color:${level.color}"></div>`).join('');
     const valTxt = (b.value!==null && b.value!==undefined && b.value!=='') ? `${b.value} ${b.def.unit}` : '—';
-    html += `<div class="fit-row"><span>${b.def.icon}</span><span class="fr-label">${b.def.label}</span><span class="fr-val mono">${valTxt}</span><div class="fit-dots">${dots}</div></div>`;
+    const prio = priority[b.def.id] || 0;
+    const keyTag = prio>=4 ? `<span class="pos-fit-tag" title="Capacidad clave para ${posObj.name.toLowerCase()}">🎯</span>` : '';
+    html += `<div class="fit-row"><span>${b.def.icon}</span><span class="fr-label">${b.def.label}${keyTag}</span><span class="fr-val mono">${valTxt}</span><div class="fit-dots">${dots}</div></div>`;
   });
+
+  const posWeak = breakdown.filter(b=> (priority[b.def.id]||0)>=4 && b.score!==null && b.score<=2);
+  if(posWeak.length){
+    const labels = posWeak.map(w=>w.def.label).join(' y ');
+    html += `<div class="pos-fit-warning" style="background:${posObj.color}12; border:1px solid ${posObj.color}45;">⚠️ ${escapeHtml(labels)} ${posWeak.length>1?'son':'es'} clave para ${posObj.name.toLowerCase()} y ${posWeak.length>1?'están':'está'} bajo — priorizalo${posWeak.length>1?'s':''} en tus próximas sesiones.</div>`;
+  }
 
   const weakAreas = getWeakestFitAreas(breakdown);
   const recDrillIds = [...new Set(weakAreas.flatMap(w=>TEST_TO_ARQ_DRILLS[w.def.id]||[]))].filter(id=>drillById(id));
@@ -6013,7 +6198,7 @@ function renderFitTestWidget(elId){
           <div class="fit-info">
             <div class="fit-eyebrow">Paso 1</div>
             <div class="fit-title">Hacé tu test físico</div>
-            <div class="fit-sub">Sprint 20m · salto · flexiones · abdominales · dominadas — tocá para cargar tus resultados.</div>
+            <div class="fit-sub">Peso · altura · sprint 20m · salto · flexiones · abdominales · dominadas — tocá para cargar tus resultados.</div>
           </div>
         </div>
       </div>`;
@@ -6032,6 +6217,24 @@ function renderFitTestWidget(elId){
       </div>
       <button class="fit-retake-btn" onclick="event.stopPropagation(); openFitTestModal();">Repetir test</button>
       ${fitnessTestHistory.length>=2 ? `<button class="fit-retake-btn" style="margin-top:6px;" onclick="event.stopPropagation(); openFitHistoryModal();">📈 Ver evolución</button>` : ''}
+    </div>`;
+}
+
+function renderWaterWidget(){
+  const el = document.getElementById('water-wrap');
+  if(!el) return;
+  const water = physicalTest ? computeWaterIntake(physicalTest.weight) : null;
+  if(!water){ el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="water-card water-card-main" onclick="showFitResult()">
+      <div class="water-card-top">
+        <span class="water-ico">💧</span>
+        <div>
+          <div class="water-title">Te recomiendo tomar hoy</div>
+          <div class="water-range">${water.min.toFixed(1)} – ${water.max.toFixed(1)} L</div>
+        </div>
+      </div>
+      <div class="water-note">Según tu peso (30–35 ml/kg). Sumá más si entrenás fuerte o hace calor.</div>
     </div>`;
 }
 
