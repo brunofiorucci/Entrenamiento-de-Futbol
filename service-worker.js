@@ -150,9 +150,38 @@
    "NaN min" en vez del tiempo estimado real. Se renombró la función
    de conteo a estimateWorkoutMinutesByCount para que no choquen.
    Bump obligatorio para que los dispositivos ya instalados bajen el
-   HTML corregido. */
+   HTML corregido.
 
-const CACHE_NAME = 'arqueroplus-v46';
+   v47: se le mete la misma profundidad que tenía Arquero a la posición
+   Defensor — pasa de 4 a 8 categorías (se suman Cobertura y
+   Posicionamiento, Velocidad y Recuperación, Desborde y Centros, y
+   Preparación Física) y de 12 a 64 ejercicios en total. Se agrega un
+   arquetipo nuevo (lateral ofensivo) y un filtro de "perfil" (Central
+   / Lateral) para los ejercicios que sirven más para un rol que para
+   el otro, sin necesidad de crear posiciones nuevas separadas.
+   Mediocampista y Delantero quedan pendientes para una próxima vuelta.
+   Bump obligatorio para bajar el HTML nuevo.
+
+   v48: se suman 32 ejercicios más a Defensor (4 por categoría), la
+   mayoría orientados a Velocidad y Centros para el perfil Lateral, y
+   Preparación Física con más variantes de explosividad (pliometría
+   lateral, salida con resistencia, bounds a una pierna) en la misma
+   línea que ya usaba Arquero. Queda en 96 ejercicios, igualando la
+   profundidad de Arquero. Bump obligatorio para bajar el HTML nuevo.
+
+   v49: el calentamiento previo y el chequeo rápido de molestias, que
+   estaban limitados a Arquero por una condición de código (aunque el
+   contenido ya era genérico), ahora están disponibles también en
+   Defensor: se agrega un calentamiento propio de 6 movimientos para
+   defensor (activación de cadera, desplazamientos laterales,
+   arrancadas progresivas) y se generalizan un puñado de consejos del
+   chequeo de molestias que estaban redactados solo pensando en el
+   arquero (atajadas/blocajes) para que valgan para cualquier posición.
+   Elongación y Movilidad ya eran genéricas de antes, no se tocaron.
+   El minijuego de reflejos y el seguimiento de atajadas siguen siendo
+   exclusivos de Arquero, a propósito. Bump obligatorio. */
+
+const CACHE_NAME = 'arqueroplus-v49';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

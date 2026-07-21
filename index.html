@@ -1593,6 +1593,7 @@
       <h2 style="font-size:22px; margin-bottom:16px;" id="ejercicios-title">Biblioteca de ejercicios</h2>
       <div class="filter-row" id="filter-row"></div>
       <div class="filter-row" id="mode-filter-row" style="margin-top:-4px;"></div>
+      <div class="filter-row" id="profile-filter-row" style="margin-top:-4px;"></div>
       <input type="text" id="drill-search-input" class="field-input" placeholder="🔎 Buscar ejercicio por nombre…" style="margin-bottom:12px;" oninput="onDrillSearchInput(this.value)">
       <div id="cat-error-tip"></div>
       <div id="drill-list"></div>
@@ -2237,14 +2238,14 @@ const POSITION_ICON = {ARQ:'glove', DEF:'shield', MED:'gear', DEL:'target'};
 // ícono por categoría (id de categoría -> ícono representativo)
 const CATEGORY_ICON = {
   REF:'bolt', BLQ:'fall', ACH:'run', PIE:'boot', SAQ:'pass', '1v1':'duel',
-  MAR:'duel', AER:'header', SAL:'pass', LEC:'eye',
+  MAR:'duel', AER:'header', SAL:'pass', LEC:'eye', POS:'compass', VEL:'bolt', CRU:'arrows',
   CTP:'boot', VIS:'pass', REC:'magnet', LLE:'arrows',
   FIN:'target', MSB:'run', ESP:'backturn', REG:'zigzag',
   FIS:'strength',
   MAN:'grip',
 };
 /* ============================================================
-   CALENTAMIENTO PREVIO (por ahora, específico de Arquero)
+   CALENTAMIENTO PREVIO (por posición)
 ============================================================ */
 const WARMUP_DRILLS = {
   ARQ: [
@@ -2254,6 +2255,14 @@ const WARMUP_DRILLS = {
     {id:'wu_4', name:'Sentadillas dinámicas', dur:40, desc:'Sentadillas suaves con ritmo, sin peso ni salto exigido, para activar piernas y glúteos.'},
     {id:'wu_5', name:'Caídas laterales sin balón', dur:45, desc:'4-5 caídas laterales técnicas de baja intensidad, solo para activar el patrón de movimiento del blocaje.'},
     {id:'wu_6', name:'Elongación dinámica de piernas', dur:40, desc:'Zancadas o balanceos de pierna controlados, sin forzar, para terminar de activar el tren inferior.'},
+  ],
+  DEF: [
+    {id:'wu_def_1', name:'Movilidad de tobillos y cadera', dur:45, desc:'Círculos suaves de tobillo y rotaciones de cadera hacia los dos lados, para activar las articulaciones que más se usan en los duelos y cambios de dirección.'},
+    {id:'wu_def_2', name:'Skipping suave', dur:40, desc:'Trote suave en el lugar, alternando talones a la cola y rodillas al pecho, sin exigir.'},
+    {id:'wu_def_3', name:'Desplazamientos laterales activadores', dur:45, desc:'Pasos laterales cortos tipo "defensive shuffle" de un lado al otro, de baja intensidad, para activar el patrón de marca antes de exigirlo de verdad.'},
+    {id:'wu_def_4', name:'Sentadillas dinámicas', dur:40, desc:'Sentadillas suaves con ritmo, sin peso ni salto exigido, para activar piernas y glúteos antes de los saltos y duelos.'},
+    {id:'wu_def_5', name:'Zancadas con rotación de tronco', dur:40, desc:'Zancadas alternadas hacia adelante, girando el torso hacia la pierna que queda adelante en cada paso, para ganar amplitud antes de los duelos cuerpo a cuerpo.'},
+    {id:'wu_def_6', name:'Arrancadas cortas progresivas', dur:45, desc:'3-4 arrancadas de 5-8m a intensidad creciente (del 60% al 90%), para activar el sistema de sprint sin llegar todavía al esfuerzo máximo.'},
   ],
 };
 function totalWarmupSeconds(pos){ return (WARMUP_DRILLS[pos]||[]).reduce((a,w)=>a+w.dur,0); }
@@ -2350,21 +2359,21 @@ const DISCOMFORT_ZONES = [
   {key:'isquio',    label:'los isquiotibiales',       keywords:['isquio','isquiotibial','atras del muslo'],   cooldownIds:['cd_2'],
     tip:'Evitá arrancadas explosivas o elongación forzada en frío. Calentá progresivo, sin tirones bruscos, y si aparece un tirón agudo parás enseguida.'},
   {key:'rodilla',   label:'la rodilla',               keywords:['rodilla'],                                   cooldownIds:['cd_3','cd_2'],
-    tip:'Si tenés hinchazón o inestabilidad, una rodillera o vendaje te puede dar sostén extra. En caídas y blocajes, priorizá la técnica por sobre la velocidad hoy, y si el dolor no es solo muscular, mejor consultá a un profesional antes de forzar.'},
+    tip:'Si tenés hinchazón o inestabilidad, una rodillera o vendaje te puede dar sostén extra. En saltos, marcas y cambios de dirección, priorizá la técnica por sobre la velocidad hoy, y si el dolor no es solo muscular, mejor consultá a un profesional antes de forzar.'},
   {key:'cuadriceps',label:'el cuádriceps',            keywords:['cuadricep','muslo delantero'],               cooldownIds:['cd_3'],
     tip:'Calentá bien antes de cualquier sentadilla o salto, y evitá cargar de más ese lado. Si notás que tira al estirar la pierna, bajá la intensidad.'},
   {key:'aductor',   label:'el aductor/ingle',         keywords:['aductor','ingle'],                           cooldownIds:['cd_4'],
     tip:'Los aductores no perdonan si los fuerzas en frío: dedicale más tiempo a la movilidad de cadera antes de arrancar y evitá aperturas o cambios de dirección bruscos hoy.'},
   {key:'cadera',    label:'la cadera',                keywords:['cadera'],                                    cooldownIds:['cd_4','cd_5','cd_11','cd_12'],
-    tip:'Sumá rotaciones suaves de cadera al calentamiento antes de cualquier caída o salida. Si el dolor es agudo (no solo rigidez), mejor no fuerces y consultá a un profesional.'},
+    tip:'Sumá rotaciones suaves de cadera al calentamiento antes de cualquier salto, duelo o cambio de dirección brusco. Si el dolor es agudo (no solo rigidez), mejor no fuerces y consultá a un profesional.'},
   {key:'espalda',   label:'la espalda baja',          keywords:['espalda','lumbar'],                          cooldownIds:['cd_5'],
     tip:'Evitá cargar peso o forzar la zona lumbar hoy. Priorizá técnica de caída controlada por sobre el impacto, y si el dolor baja por la pierna o es intenso, no entrenes: consultá a un profesional.'},
   {key:'hombro',    label:'el hombro',                keywords:['hombro'],                                    cooldownIds:['cd_7','cd_8','cd_14'],
-    tip:'Movilizá el hombro suave antes de cualquier despeje o achique con los brazos arriba. Si algo se traba o duele al levantar el brazo, evitá forzar esa posición hoy.'},
+    tip:'Movilizá el hombro suave antes de cualquier salto, remate de cabeza o disputa con los brazos arriba. Si algo se traba o duele al levantar el brazo, evitá forzar esa posición hoy.'},
   {key:'muneca',    label:'la muñeca',                keywords:['muñeca','muneca'],                           cooldownIds:['cd_1','cd_10'],
-    tip:'Una muñequera o vendaje te puede dar sostén extra para las atajadas. Evitá caídas apoyando todo el peso en esa mano y priorizá el blocaje con antebrazos hoy si podés.'},
+    tip:'Una muñequera o vendaje te puede dar sostén extra. Evitá apoyar todo el peso en esa mano al caer, y si tenés que amortiguar un golpe o una caída, priorizá el antebrazo antes que la muñeca hoy si podés.'},
   {key:'dedo',      label:'el dedo (mano)',           keywords:['dedo','dedos'],                              cooldownIds:['cd_10'],
-    tip:'Si podés, vendalo junto al dedo de al lado (buddy tape) para darle sostén. Evitá atajar de puntas de dedos hoy y priorizá el blocaje con palmas/antebrazos. Si está muy hinchado o no podés doblarlo, mejor consultá a un profesional antes de seguir.'},
+    tip:'Si podés, vendalo junto al dedo de al lado (buddy tape) para darle sostén. Evitá golpes o rechazos directos con la punta del dedo hoy y priorizá el contacto con la palma o el antebrazo si podés. Si está muy hinchado o no podés doblarlo, mejor consultá a un profesional antes de seguir.'},
   {key:'pie',       label:'el pie / planta',          keywords:['pie','planta del pie','empeine'],            cooldownIds:['cd_1'],
     tip:'Fijate que el botín no te apriete esa zona y sumá algo de movilidad de tobillo/pie al calentamiento. Evitá saltos repetidos o apoyos bruscos hoy si te molesta al pisar.'},
   {key:'cabeza',    label:'la cabeza',                keywords:['cabeza','jaqueca'],                          cooldownIds:[],
@@ -2450,7 +2459,7 @@ function togglePrecheckZone(key){
   renderEntrenar();
 }
 function maybeStartPrecheck(){
-  if(activePosition==='ARQ' && isPrecheckEnabled()){
+  if(isPrecheckEnabled()){
     precheckSelected = {};
     precheckActive = true;
     renderEntrenar();
@@ -2565,6 +2574,10 @@ const CATEGORIES = {
     {id:'AER', name:'Juego Aéreo'},
     {id:'SAL', name:'Salida de Balón'},
     {id:'LEC', name:'Anticipación y Lectura'},
+    {id:'POS', name:'Cobertura y Posicionamiento'},
+    {id:'VEL', name:'Velocidad y Recuperación'},
+    {id:'CRU', name:'Desborde y Centros'},
+    {id:'FIS', name:'Preparación Física'},
   ],
   MED: [
     {id:'CTP', name:'Control y Primer Toque'},
@@ -2601,6 +2614,9 @@ const CATEGORY_COMMON_ERRORS = {
   AER: {error:'Saltar sin tomar impulso, solo desde parado.', fix:'Calculá el punto de caída del balón y tomá un pequeño impulso antes de saltar para ganar altura.'},
   SAL: {error:'Apurar el pase largo bajo presión en vez de buscar primero una salida corta y segura.', fix:'Mirá primero las opciones cortas; el pase largo se usa cuando de verdad no hay otra salida.'},
   LEC: {error:'Reaccionar recién cuando el rival ya tiene el balón, en vez de anticipar el movimiento.', fix:'Leé el lenguaje corporal del rival y de tu compañero antes del pase, así te adelantás a la jugada.'},
+  POS: {error:'Quedarte fijo mirando el balón en vez de reacomodar la posición según se mueve el juego.', fix:'Movete en bloque con la línea: cada pase rival tiene que hacerte ajustar un par de pasos, no quedarte estático.'},
+  VEL: {error:'Frenar la carrera de vuelta apenas perdés el balón, dando por hecho que no vas a llegar.', fix:'Sostené el sprint de recuperación hasta estar seguro de tu posición: muchos goles se evitan en esos últimos metros.'},
+  CRU: {error:'Centrar siempre fuerte y al bulto sin mirar dónde están parados los compañeros.', fix:'Levantá la cabeza antes de centrar y elegí entre centro raso, atrás o al primer palo según cómo esté armado el área.'},
   // Mediocampista
   CTP: {error:'Controlar el balón pegado al cuerpo, sin orientarlo hacia adelante.', fix:'El primer toque siempre tiene que orientarte hacia donde querés ir, no solo "frenar" el balón.'},
   VIS: {error:'Mirar el balón al momento de pasar, en vez de haber mirado el campo antes de recibirlo.', fix:'Chequeá tus opciones antes de que te llegue el balón, así ya sabés a quién le vas a pasar.'},
@@ -2618,6 +2634,14 @@ const DRILL_MODE_LABEL = {
   solo:   {short:'Solo',              full:'Se hace solo',                icon:'🧍'},
   pareja: {short:'Con compañero',     full:'Necesita un compañero',       icon:'👥'},
   ambos:  {short:'Solo o en pareja',  full:'Se puede hacer solo o con compañero', icon:'🧍👥'},
+};
+
+// perfil del ejercicio (por ahora solo cargado en Defensor): pensado para un
+// central, para un lateral, o útil para cualquiera de los dos
+const DRILL_PROFILE_LABEL = {
+  central: {short:'Central', full:'Pensado para central', icon:'🛡️'},
+  lateral: {short:'Lateral', full:'Pensado para lateral',  icon:'⚡'},
+  ambos:   {short:'Central o lateral', full:'Útil para central o lateral', icon:'🛡️⚡'},
 };
 
 /* ============================================================
@@ -2723,18 +2747,102 @@ const DRILLS = {
     {id:'arq_man11', cat:'MAN', mode:'solo', name:'Sostén isométrico de balón en extensión', dose:'3 series x 20s', desc:'Sostené el balón con ambas manos, brazos extendidos al frente a la altura del pecho, sin dejarlo caer ni acercarlo al cuerpo. Resistencia isométrica de brazos y muñecas para no perder firmeza en los últimos minutos de un partido exigente.'},
   ],
   DEF: [
-    {id:'def_mar1', cat:'MAR', name:'Marcación al hombre en carrera', dose:'6 carreras de 15m', desc:'Trabajar la distancia óptima de marca, no dejar girar al rival y achicar en el momento justo de la recepción.'},
-    {id:'def_mar2', cat:'MAR', name:'Duelo cuerpo a cuerpo', dose:'5 series x 30s', desc:'Proteger la posición usando el cuerpo de forma legal, sin usar los brazos, ganando la posición antes del contacto.'},
-    {id:'def_mar3', cat:'MAR', name:'Desdoblamiento tras pérdida', dose:'6 repeticiones', desc:'Tras perder el balón, recuperar la posición defensiva a máxima velocidad y frenar el contragolpe rival.'},
-    {id:'def_aer1', cat:'AER', name:'Despeje de cabeza bajo presión', dose:'8 centros', desc:'Anticipar el salto ante un rival y despejar con la frente hacia el lateral, evitando el rebote al medio.'},
-    {id:'def_aer2', cat:'AER', name:'Duelo aéreo con timing de salto', dose:'6 duelos', desc:'Calcular la trayectoria del balón y saltar en el momento justo para ganar la posición en el aire.'},
-    {id:'def_aer3', cat:'AER', name:'Marca en pelota parada', dose:'5 córners simulados', desc:'Repartir marcas y bloquear la carrera del rival en córners y tiros libres.'},
-    {id:'def_sal1', cat:'SAL', name:'Salida limpia bajo presión', dose:'8 repeticiones', desc:'Recibir de costado y resolver con el primer toque orientado, evitando el pase hacia atrás como única salida.'},
-    {id:'def_sal2', cat:'SAL', name:'Pase largo diagonal', dose:'10 pases', desc:'Cambio de orientación con precisión hacia la banda contraria para romper líneas de presión rival.'},
-    {id:'def_sal3', cat:'SAL', name:'Conducción progresiva', dose:'6 repeticiones', desc:'Avanzar con el balón controlado desde el fondo hasta mitad de cancha antes de decidir el pase.'},
-    {id:'def_lec1', cat:'LEC', name:'Anticipación de pase filtrado', dose:'6 repeticiones', desc:'Leer la intención del pase rival y cortar la trayectoria antes de que llegue al delantero.'},
-    {id:'def_lec2', cat:'LEC', name:'Achique de línea coordinado', dose:'5 series', desc:'Practicar subir la línea defensiva al unísono con los compañeros para dejar en offside al delantero.'},
-    {id:'def_lec3', cat:'LEC', name:'Cobertura al compañero adelantado', dose:'6 repeticiones', desc:'Cuando un compañero sale al duelo, ocupar su espacio y cubrir la profundidad detrás suyo.'},
+    {id:'def_mar1', cat:'MAR', mode:'pareja', profile:'ambos', name:'Marcación al hombre en carrera', dose:'6 carreras de 15m', desc:'Trabajar la distancia óptima de marca, no dejar girar al rival y achicar en el momento justo de la recepción.'},
+    {id:'def_mar2', cat:'MAR', mode:'pareja', profile:'ambos', name:'Duelo cuerpo a cuerpo', dose:'5 series x 30s', desc:'Proteger la posición usando el cuerpo de forma legal, sin usar los brazos, ganando la posición antes del contacto.'},
+    {id:'def_mar3', cat:'MAR', mode:'solo', profile:'ambos', name:'Desdoblamiento tras pérdida', dose:'6 repeticiones', desc:'Tras perder el balón, recuperar la posición defensiva a máxima velocidad y frenar el contragolpe rival.'},
+    {id:'def_mar4', cat:'MAR', mode:'pareja', profile:'central', name:'Marcación al hombre en el área chica', dose:'8 córners simulados', desc:'Pegarte a tu marca en cada centro, sin perderla de vista ni un segundo, y anticipar el salto antes que el remate de cabeza.'},
+    {id:'def_mar5', cat:'MAR', mode:'pareja', profile:'ambos', name:'Presión y achique al portador', dose:'6 series x 20s', desc:'Salir a presionar al rival que recibe de espaldas, cerrando la salida más cómoda y forzando el error o el pase atrás.'},
+    {id:'def_mar6', cat:'MAR', mode:'pareja', profile:'ambos', name:'Duelo de espaldas al arco propio', dose:'5 series x 20s', desc:'Defender con el rival de espaldas a tu arco, sin dejarlo girar ni sacar ventaja con el cuerpo.'},
+    {id:'def_mar7', cat:'MAR', mode:'pareja', profile:'ambos', name:'Cambio de marca en bloque', dose:'6 repeticiones', desc:'Ante un cruce de rivales, comunicarte con tu compañero y cambiar de marca sin dejar a nadie libre ni un instante.'},
+    {id:'def_mar8', cat:'MAR', mode:'pareja', profile:'lateral', name:'1v1 defensivo en la banda', dose:'6 duelos', desc:'Un extremo encara por afuera en el costado: achicar el espacio hacia la línea de touch, sin dejarlo cortar hacia adentro.'},
+    {id:'def_mar9', cat:'MAR', mode:'pareja', profile:'ambos', name:'Defensa en inferioridad numérica', dose:'6 series', desc:'Dos atacantes contra un defensor: retrasar la jugada, achicar espacios y demorar la definición hasta que llegue una cobertura.'},
+    {id:'def_mar10', cat:'MAR', mode:'pareja', profile:'ambos', name:'Cambio de marca por comunicación', dose:'6 repeticiones', desc:'Ante un cruce de rivales, avisarle en voz alta a tu compañero antes de intercambiar la marca, sin dejar a nadie libre en el traspaso.'},
+    {id:'def_mar11', cat:'MAR', mode:'pareja', profile:'ambos', name:'Duelo tras rebote suelto', dose:'6 repeticiones', desc:'El balón queda picando entre vos y un rival: ganar la posición y el primer contacto antes de que el rival se anticipe.'},
+    {id:'def_mar12', cat:'MAR', mode:'pareja', profile:'lateral', name:'Marca de seguimiento en profundidad', dose:'6 carreras de 20m', desc:'Seguir al rival en su carrera hacia el fondo sin perder la distancia de marca ni permitir que se despegue en los últimos metros.'},
+    {id:'def_aer1', cat:'AER', mode:'pareja', profile:'central', name:'Despeje de cabeza bajo presión', dose:'8 centros', desc:'Anticipar el salto ante un rival y despejar con la frente hacia el lateral, evitando el rebote al medio.'},
+    {id:'def_aer2', cat:'AER', mode:'pareja', profile:'central', name:'Duelo aéreo con timing de salto', dose:'6 duelos', desc:'Calcular la trayectoria del balón y saltar en el momento justo para ganar la posición en el aire.'},
+    {id:'def_aer3', cat:'AER', mode:'pareja', profile:'ambos', name:'Marca en pelota parada', dose:'5 córners simulados', desc:'Repartir marcas y bloquear la carrera del rival en córners y tiros libres.'},
+    {id:'def_aer4', cat:'AER', mode:'solo', profile:'central', name:'Despeje con salto a una pierna', dose:'4 series x 6 reps', desc:'Sin tiempo de acomodar las dos piernas, despejar de cabeza impulsándote solo con una: lo que pasa la mayoría de las veces en un córner disputado.'},
+    {id:'def_aer5', cat:'AER', mode:'pareja', profile:'central', name:'Cabezazo ofensivo en córner', dose:'6 córners', desc:'Subir al área rival en pelota parada y buscar el remate de cabeza al arco, ganando la posición antes del salto.'},
+    {id:'def_aer6', cat:'AER', mode:'pareja', profile:'ambos', name:'Duelo aéreo con contacto legal', dose:'5 series x 30s', desc:'Disputar el salto usando el hombro y el cuerpo de forma legal para ganar la posición, sin usar los brazos.'},
+    {id:'def_aer7', cat:'AER', mode:'pareja', profile:'central', name:'Rechazo aéreo bajo lluvia de centros', dose:'10 centros seguidos', desc:'Recibir centros de forma continua, sin pausa entre uno y otro, para sostener la concentración y el timing de salto con el partido ya cansado.'},
+    {id:'def_aer8', cat:'AER', mode:'solo', profile:'ambos', name:'Salto vertical con toque de cabeza', dose:'4 series x 8 reps', desc:'Autolanzarte el balón y saltar a cabecearlo en el punto más alto posible, buscando potencia y precisión en el golpe.'},
+    {id:'def_aer9', cat:'AER', mode:'pareja', profile:'central', name:'Anticipación al primer palo', dose:'6 centros', desc:'Adelantarte al punto de caída antes que el rival, ganando el primer palo con un despeje corto y seguro hacia afuera.'},
+    {id:'def_aer10', cat:'AER', mode:'pareja', profile:'central', name:'Salto reactivo tras rebote aéreo', dose:'5 series x 5 reps', desc:'Tras un primer despeje que queda picando en el área, volver a saltar de inmediato para el segundo rechazo, sin bajar la guardia.'},
+    {id:'def_aer11', cat:'AER', mode:'solo', profile:'ambos', name:'Cabeceo defensivo lejos del área', dose:'4 series x 8 reps', desc:'Practicar el golpe de cabeza priorizando distancia y altura por sobre precisión, ideal para sacar peligro de encima en zonas de riesgo.'},
+    {id:'def_aer12', cat:'AER', mode:'pareja', profile:'ambos', name:'Doble estímulo aéreo', dose:'5 series x 6 reps', desc:'Un centro llega y, apenas lo despejás, otro balón se lanza de inmediato hacia el otro lado: entrena la recuperación de foco entre un salto y el siguiente.'},
+    {id:'def_sal1', cat:'SAL', mode:'pareja', profile:'ambos', name:'Salida limpia bajo presión', dose:'8 repeticiones', desc:'Recibir de costado y resolver con el primer toque orientado, evitando el pase hacia atrás como única salida.'},
+    {id:'def_sal2', cat:'SAL', mode:'ambos', profile:'ambos', name:'Pase largo diagonal', dose:'10 pases', desc:'Cambio de orientación con precisión hacia la banda contraria para romper líneas de presión rival. Solo: contra una pared marcando el blanco con conos. Con compañero: a distancia real.'},
+    {id:'def_sal3', cat:'SAL', mode:'solo', profile:'ambos', name:'Conducción progresiva', dose:'6 repeticiones', desc:'Avanzar con el balón controlado desde el fondo hasta mitad de cancha antes de decidir el pase.'},
+    {id:'def_sal4', cat:'SAL', mode:'pareja', profile:'ambos', name:'Pase entre líneas al mediocampista', dose:'10 pases', desc:'Meter el pase filtrado entre dos rivales hacia el pie del volante, sin que la trayectoria se pueda interceptar.'},
+    {id:'def_sal5', cat:'SAL', mode:'pareja', profile:'central', name:'Salida en rombo con el arquero', dose:'8 secuencias', desc:'Armar una salida jugada de tres o cuatro toques junto al arquero y otro defensor, buscando siempre la opción más segura ante la presión rival.'},
+    {id:'def_sal6', cat:'SAL', mode:'ambos', profile:'ambos', name:'Cambio de frente en un toque', dose:'8 pases', desc:'Recibir de un lado y resolver con un solo toque hacia el lado contrario, sin frenar el balón. Solo: contra una pared. Con compañero: pases cruzados.'},
+    {id:'def_sal7', cat:'SAL', mode:'solo', profile:'ambos', name:'Conducción para atraer presión', dose:'6 repeticiones', desc:'Avanzar con el balón atrayendo a un rival imaginario y liberar el pase justo antes de que llegue el achique.'},
+    {id:'def_sal8', cat:'SAL', mode:'pareja', profile:'ambos', name:'Pase filtrado a la espalda de la línea', dose:'8 pases', desc:'Sorprender con un pase largo por encima o entre la línea defensiva rival, buscando el desmarque de un delantero.'},
+    {id:'def_sal9', cat:'SAL', mode:'pareja', profile:'central', name:'Pase seguro al arquero bajo presión', dose:'8 repeticiones', desc:'Ante presión alta rival, retroceder el balón al arquero con un pase preciso y con el ritmo justo, ni tan flojo ni tan fuerte.'},
+    {id:'def_sal10', cat:'SAL', mode:'pareja', profile:'ambos', name:'Triangulación de salida con el volante', dose:'8 secuencias', desc:'Combinar de dos o tres toques con un mediocampista que baja a buscar el balón para romper la primera línea de presión rival.'},
+    {id:'def_sal11', cat:'SAL', mode:'solo', profile:'ambos', name:'Conducción bajo presión alta', dose:'6 repeticiones', desc:'Recibir con un rival encima presionando fuerte y resolver con un control orientado hacia el espacio libre antes de que llegue el achique.'},
+    {id:'def_sal12', cat:'SAL', mode:'pareja', profile:'lateral', name:'Pase de ruptura al espacio del delantero', dose:'8 pases', desc:'Meter un pase al espacio por encima de la línea rival para que el delantero encare de frente al arco, sin necesidad de que baje a buscarla.'},
+    {id:'def_lec1', cat:'LEC', mode:'pareja', profile:'ambos', name:'Anticipación de pase filtrado', dose:'6 repeticiones', desc:'Leer la intención del pase rival y cortar la trayectoria antes de que llegue al delantero.'},
+    {id:'def_lec2', cat:'LEC', mode:'pareja', profile:'ambos', name:'Achique de línea coordinado', dose:'5 series', desc:'Practicar subir la línea defensiva al unísono con los compañeros para dejar en offside al delantero.'},
+    {id:'def_lec3', cat:'LEC', mode:'pareja', profile:'ambos', name:'Cobertura al compañero adelantado', dose:'6 repeticiones', desc:'Cuando un compañero sale al duelo, ocupar su espacio y cubrir la profundidad detrás suyo.'},
+    {id:'def_lec4', cat:'LEC', mode:'pareja', profile:'ambos', name:'Lectura de pase entre líneas', dose:'6 repeticiones', desc:'Detectar el pase que busca romper tu línea antes de que salga y adelantarte para interceptarlo.'},
+    {id:'def_lec5', cat:'LEC', mode:'pareja', profile:'central', name:'Vigilancia del segundo delantero', dose:'5 series', desc:'No perder de vista al atacante que se mueve lejos del balón: suele ser el que aparece libre para definir si te concentrás solo en el que la tiene.'},
+    {id:'def_lec6', cat:'LEC', mode:'pareja', profile:'ambos', name:'Anticipación al pase al espacio', dose:'6 repeticiones', desc:'Leer el pase que busca la carrera de un delantero al espacio y recorrer la distancia justa para cortarlo antes de que llegue.'},
+    {id:'def_lec7', cat:'LEC', mode:'pareja', profile:'ambos', name:'Lectura corporal antes del pase', dose:'6 repeticiones', desc:'Observar la postura y la carrera previa del rival con el balón para anticipar hacia dónde va a jugar, en vez de reaccionar recién cuando pasa.'},
+    {id:'def_lec8', cat:'LEC', mode:'pareja', profile:'ambos', name:'Transición defensa-ataque', dose:'6 repeticiones', desc:'Apenas recuperás el balón, levantar la cabeza y decidir en menos de un segundo si conducir, pasar rápido o buscar profundidad.'},
+    {id:'def_lec9', cat:'LEC', mode:'pareja', profile:'ambos', name:'Lectura de superioridad numérica rival', dose:'6 series', desc:'Reconocer cuándo el rival ataca con más jugadores de los que hay para defender, y elegir replegar en vez de intentar un duelo perdido de antemano.'},
+    {id:'def_lec10', cat:'LEC', mode:'pareja', profile:'ambos', name:'Anticipación en pelota dividida', dose:'6 repeticiones', desc:'Calcular quién llega primero a un balón que se disputa entre dos jugadores, y decidir en una fracción de segundo si ir con todo o cubrir el rebote.'},
+    {id:'def_lec11', cat:'LEC', mode:'pareja', profile:'ambos', name:'Lectura del pase a la espalda de la línea', dose:'6 repeticiones', desc:'Detectar el momento exacto en que un rival va a filtrar el balón detrás tuyo para arrancar el recorrido antes de que salga el pase, no después.'},
+    {id:'def_lec12', cat:'LEC', mode:'pareja', profile:'lateral', name:'Vigilancia del carrilero contrario', dose:'5 series', desc:'No perder de vista al lateral o carrilero rival cuando se suma al ataque: suele quedar libre si toda la atención se va al balón.'},
+    {id:'def_pos1', cat:'POS', mode:'pareja', profile:'central', name:'Triángulo de cobertura en línea de tres', dose:'5 series', desc:'Mientras uno sale al duelo, los otros dos cierran los espacios formando un triángulo, sin dejar líneas de pase directas al arco.'},
+    {id:'def_pos2', cat:'POS', mode:'pareja', profile:'ambos', name:'Achique escalonado en bloque medio', dose:'6 repeticiones', desc:'Subir la línea junto a todo el bloque, un jugador un poco antes que el resto, para presionar sin dejar espacios sueltos entre líneas.'},
+    {id:'def_pos3', cat:'POS', mode:'pareja', profile:'central', name:'Cobertura al lateral cuando sube', dose:'6 repeticiones', desc:'Cuando el lateral avanza al ataque, desplazarte hacia esa banda para cubrir el espacio que deja atrás.'},
+    {id:'def_pos4', cat:'POS', mode:'pareja', profile:'ambos', name:'Cierre de espacios entre central y lateral', dose:'6 repeticiones', desc:'No dejar el pasillo interior abierto entre vos y tu compañero de línea: ajustar la distancia según por dónde ataca el rival.'},
+    {id:'def_pos5', cat:'POS', mode:'pareja', profile:'lateral', name:'Reposicionamiento tras centro lateral', dose:'6 repeticiones', desc:'Después de defender un centro por tu costado, volver rápido a una posición útil en vez de quedarte mirando la jugada.'},
+    {id:'def_pos6', cat:'POS', mode:'pareja', profile:'central', name:'Lectura de espacios en defensa de cuatro', dose:'8 minutos', desc:'Jugar una situación reducida con línea de cuatro defensores, ajustando la posición en bloque según se mueve el balón rival.'},
+    {id:'def_pos7', cat:'POS', mode:'pareja', profile:'central', name:'Vigilancia de la espalda en línea alta', dose:'6 repeticiones', desc:'Con la línea defensiva adelantada, controlar constantemente la profundidad para no quedar expuesto a un pase filtrado.'},
+    {id:'def_pos8', cat:'POS', mode:'pareja', profile:'ambos', name:'Comunicación y ajuste de línea', dose:'8 minutos', desc:'Jugar una situación de fútbol reducido dando indicaciones en voz alta a los compañeros de línea para achicar, cubrir o marcar.'},
+    {id:'def_pos9', cat:'POS', mode:'pareja', profile:'central', name:'Achique en bloque bajo', dose:'6 repeticiones', desc:'Con el equipo replegado cerca del área propia, achicar espacios en conjunto sin dejar líneas de pase entre las líneas.'},
+    {id:'def_pos10', cat:'POS', mode:'pareja', profile:'central', name:'Cobertura cruzada entre centrales', dose:'6 repeticiones', desc:'Cuando un central sale a un duelo, el compañero se corre hacia el medio para cubrir el espacio que queda libre en el centro del área.'},
+    {id:'def_pos11', cat:'POS', mode:'pareja', profile:'ambos', name:'Posicionamiento en línea de cinco', dose:'8 minutos', desc:'Jugar una situación reducida con línea de cinco defensores, ajustando distancias entre central, carrileros y el resto del bloque.'},
+    {id:'def_pos12', cat:'POS', mode:'pareja', profile:'ambos', name:'Ajuste de línea tras cambio de orientación', dose:'6 repeticiones', desc:'Cuando el rival cambia el juego de un lado al otro, desplazar toda la línea defensiva en bloque hacia el nuevo costado sin perder la forma.'},
+    {id:'def_vel1', cat:'VEL', mode:'solo', profile:'ambos', name:'Sprint de recuperación tras pérdida', dose:'6 series de 20m', desc:'Perder el balón a propósito y salir a fondo a recuperar la posición defensiva antes de que llegue el contragolpe.'},
+    {id:'def_vel2', cat:'VEL', mode:'solo', profile:'lateral', name:'Carrera de vuelta tras desborde', dose:'6 series de 30m', desc:'Subir a fondo por la banda y, apenas se pierde el balón, volver corriendo al costado defensivo sin cortar camino.'},
+    {id:'def_vel3', cat:'VEL', mode:'solo', profile:'lateral', name:'Velocidad lineal 20-30m', dose:'6 series', desc:'Sprints en línea recta a máxima velocidad con descanso completo entre repeticiones, la base de cualquier trabajo de velocidad pura.'},
+    {id:'def_vel4', cat:'VEL', mode:'solo', profile:'lateral', name:'Cambios de ritmo en banda', dose:'5 series de 25m', desc:'Trotar y acelerar a fondo de forma intercalada a lo largo de toda la banda, tal cual se mueve un lateral durante un partido real.'},
+    {id:'def_vel5', cat:'VEL', mode:'solo', profile:'lateral', name:'Sprint con giro y regreso a posición', dose:'5 series', desc:'Sprint corto, giro de 180° y sprint de vuelta al punto de partida, simulando el vaivén constante entre subir y bajar por el costado.'},
+    {id:'def_vel6', cat:'VEL', mode:'solo', profile:'ambos', name:'Resistencia a la repetición de sprints', dose:'8 series de 15m', desc:'Sprints cortos con muy poco descanso entre uno y otro, para entrenar la capacidad de repetir esfuerzos explosivos sin bajar el rendimiento.'},
+    {id:'def_vel7', cat:'VEL', mode:'pareja', profile:'ambos', name:'Velocidad de reacción al primer paso', dose:'6 series', desc:'Parado de espaldas, arrancar a fondo apenas un compañero da la señal, buscando el primer paso más explosivo posible.'},
+    {id:'def_vel8', cat:'VEL', mode:'pareja', profile:'ambos', name:'Recuperación defensiva tras contragolpe', dose:'5 repeticiones', desc:'Un rival arranca con ventaja tras una pérdida: perseguir sin fundirte de entrada, calculando el ritmo justo para llegar a tiempo a la disputa.'},
+    {id:'def_vel9', cat:'VEL', mode:'solo', profile:'lateral', name:'Sprint completo de ida y vuelta de banda', dose:'5 series de 40m', desc:'Recorrer toda la banda a fondo hasta el fondo rival y volver corriendo hasta tu posición, el gesto que más se repite en un lateral durante 90 minutos.'},
+    {id:'def_vel10', cat:'VEL', mode:'solo', profile:'ambos', name:'Aceleración explosiva desde parado', dose:'6 series de 10m', desc:'Arrancar desde completamente quieto y acelerar al máximo en los primeros metros, buscando el mejor tiempo de reacción y el primer paso más corto y potente posible.'},
+    {id:'def_vel11', cat:'VEL', mode:'solo', profile:'ambos', name:'Cambios de dirección a máxima velocidad', dose:'6 series', desc:'Sprint corto, frenada controlada y cambio de dirección de 90° a toda velocidad entre conos, sin perder equilibrio en el apoyo.'},
+    {id:'def_vel12', cat:'VEL', mode:'solo', profile:'lateral', name:'Sprint resistido con banda elástica', dose:'5 series de 15m', desc:'Con una banda elástica sostenida por un compañero (o atada a un punto fijo) que ofrece resistencia, sprintar contra esa fuerza para ganar potencia de zancada. Si no tenés banda, un compañero puede sostenerte suavemente de la cintura con una soga.'},
+    {id:'def_cru1', cat:'CRU', mode:'pareja', profile:'lateral', name:'Centro raso al primer palo', dose:'8 centros', desc:'Desde el fondo de la banda, centrar raso y fuerte buscando que un compañero llegue de frente al primer palo.'},
+    {id:'def_cru2', cat:'CRU', mode:'pareja', profile:'lateral', name:'Centro atrás al borde del área', dose:'8 centros', desc:'Centrar hacia atrás, a la altura del punto penal, para que un compañero remate de primera sin marcar de frente al arco.'},
+    {id:'def_cru3', cat:'CRU', mode:'pareja', profile:'lateral', name:'Desborde por afuera y centro', dose:'6 repeticiones', desc:'Encarar al marcador por afuera, ganar la línea de fondo y centrar antes de que se cierre el ángulo.'},
+    {id:'def_cru4', cat:'CRU', mode:'pareja', profile:'lateral', name:'Combinación de pared con el extremo', dose:'8 repeticiones', desc:'Jugar una pared rápida con el volante o extremo de tu banda para superar la marca antes de proyectarte al ataque.'},
+    {id:'def_cru5', cat:'CRU', mode:'pareja', profile:'lateral', name:'Centro tras carrera interior', dose:'6 repeticiones', desc:'Meterte por dentro como si fueras un volante y sorprender con un centro o pase desde una posición más interior de lo habitual.'},
+    {id:'def_cru6', cat:'CRU', mode:'pareja', profile:'lateral', name:'Cruce de posiciones con el volante ofensivo', dose:'6 repeticiones', desc:'Intercambiar de banda y de carril con el volante que baja a tu zona, para desorientar a la marca rival.'},
+    {id:'def_cru7', cat:'CRU', mode:'pareja', profile:'lateral', name:'Centro bajo presión de un defensor', dose:'8 centros', desc:'Con un rival cerrando el ángulo, resolver el centro rápido en un toque en vez de esperar a que se tape del todo.'},
+    {id:'def_cru8', cat:'CRU', mode:'solo', profile:'lateral', name:'Llegada al fondo y pase atrás', dose:'6 repeticiones', desc:'Conducir hasta la línea de fondo y resolver con un pase atrás preciso, sin apurar el centro si no hay opción clara.'},
+    {id:'def_cru9', cat:'CRU', mode:'pareja', profile:'lateral', name:'Centro en carrera a máxima velocidad', dose:'6 centros', desc:'Recibir el pase en carrera sin frenar y centrar de primera, tal cual sucede en un contragolpe real por la banda.'},
+    {id:'def_cru10', cat:'CRU', mode:'pareja', profile:'lateral', name:'Centro tras recibir de espaldas al arco rival', dose:'6 repeticiones', desc:'Controlar de espaldas al arco contrario, girar en un toque y centrar de inmediato antes de que se cierre la marca.'},
+    {id:'def_cru11', cat:'CRU', mode:'pareja', profile:'lateral', name:'Doble pared antes del centro', dose:'6 repeticiones', desc:'Combinar una pared con el extremo y otra con el mediocampista antes de llegar al fondo, para desarmar una defensa bien parada.'},
+    {id:'def_cru12', cat:'CRU', mode:'pareja', profile:'lateral', name:'Centro al espacio para remate de primera', dose:'8 centros', desc:'En vez de buscar la cabeza de un compañero, centrar al espacio vacío para que un delantero llegue de atrás y defina de primera sin marcar.'},
+    {id:'def_fis1', cat:'FIS', mode:'solo', profile:'ambos', name:'Sprints repetidos cortos', dose:'6 series de 15m', desc:'Series cortas a máxima intensidad con descanso breve, para desarrollar la explosividad que se usa en cada duelo y cada recuperación.'},
+    {id:'def_fis2', cat:'FIS', mode:'solo', profile:'ambos', name:'Saltos pliométricos', dose:'4 series x 8 reps', desc:'Saltos al cajón o en el lugar con la máxima potencia posible, clave para ganar los duelos aéreos y los primeros pasos.'},
+    {id:'def_fis3', cat:'FIS', mode:'solo', profile:'ambos', name:'Fuerza de tren inferior', dose:'4 series x 10 reps', desc:'Sentadillas explosivas con el propio peso del cuerpo, buscando velocidad de ejecución y no solo repeticiones.'},
+    {id:'def_fis4', cat:'FIS', mode:'solo', profile:'ambos', name:'Core y estabilidad de tronco', dose:'4 series x 30s', desc:'Plancha frontal y lateral para sostener el tronco firme durante los duelos de cuerpo a cuerpo y los saltos.'},
+    {id:'def_fis5', cat:'FIS', mode:'solo', profile:'ambos', name:'Resistencia aeróbica de base', dose:'20-25 min', desc:'Trote continuo a ritmo moderado, la base física que permite sostener la intensidad defensiva los 90 minutos.'},
+    {id:'def_fis6', cat:'FIS', mode:'solo', profile:'ambos', name:'Agilidad con escalera de coordinación', dose:'5 pasadas', desc:'Circuito de pasos rápidos y coordinados en la escalera, mejorando la velocidad de pies para los cambios de dirección.'},
+    {id:'def_fis7', cat:'FIS', mode:'solo', profile:'ambos', name:'Fuerza excéntrica de isquiotibiales', dose:'3 series x 6 reps', desc:'Ejercicio tipo nordic curl (con ayuda de un compañero sosteniendo los tobillos) para prevenir desgarros, muy comunes en sprints y frenadas bruscas.'},
+    {id:'def_fis8', cat:'FIS', mode:'solo', profile:'ambos', name:'Potencia de salto vertical', dose:'4 series x 6 reps', desc:'Saltos verticales máximos desde parado, buscando altura, para ganar más duelos aéreos con menos esfuerzo.'},
+    {id:'def_fis9', cat:'FIS', mode:'solo', profile:'ambos', name:'Saltos pliométricos laterales', dose:'4 series x 8 reps', desc:'Saltos de un lado al otro sobre un cono o línea imaginaria, aterrizando con control. Es la misma familia de ejercicio que el arquero usa para explosividad, pero acá suma potencia direccional para los cambios de ritmo defensivos.'},
+    {id:'def_fis10', cat:'FIS', mode:'pareja', profile:'ambos', name:'Salida explosiva con resistencia', dose:'5 series de 10m', desc:'Con una banda elástica o un compañero sosteniendo levemente desde atrás, arrancar contra esa resistencia y soltar de golpe para sentir la aceleración libre.'},
+    {id:'def_fis11', cat:'FIS', mode:'solo', profile:'ambos', name:'Pliometría a una pierna (bounds)', dose:'4 series x 6 reps por lado', desc:'Saltos hacia adelante impulsándote con una sola pierna, buscando distancia y una recepción estable, clave para la potencia de arrancada en carrera.'},
+    {id:'def_fis12', cat:'FIS', mode:'solo', profile:'ambos', name:'Potencia de arrancada 0 a 10m', dose:'6 series', desc:'Los primeros metros de un sprint, donde se define casi siempre el duelo de velocidad: foco en la inclinación del cuerpo y el primer apoyo bien explosivo.'},
   ],
   MED: [
     {id:'med_ctp1', cat:'CTP', name:'Control orientado en espacio reducido', dose:'10 repeticiones', desc:'Recibir de espaldas a la presión y resolver con un solo toque hacia el espacio libre.'},
@@ -2868,6 +2976,9 @@ const ARCHETYPES = {
     {id:'cannavaro', name:'Fabio Cannavaro',   tag:'El Muro Bajo',   color:'#C99BFF',
       desc:'Duelos ganados con timing e inteligencia posicional, más que con altura o fuerza bruta.',
       priority:['MAR','LEC']},
+    {id:'marcelo',   name:'Marcelo Vieira',    tag:'El Lateral Ofensivo', color:'#FF6BA6',
+      desc:'Velocidad para subir y bajar la banda sin cansarse, con calidad de centro y desborde propia de un extremo.',
+      priority:['VEL','CRU']},
   ],
   MED: [
     {id:'xavi',      name:'Xavi Hernández',    tag:'El Metrónomo',   color:'#FFD35B',
@@ -3343,6 +3454,7 @@ let cooldownChecked = {};
 let pendingFinishFn = null;
 let filterCat = 'ALL';
 let filterMode = 'ALL';
+let filterProfile = 'ALL';
 let drillSearchQuery = '';
 function normalizeSearch(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 function onDrillSearchInput(v){ drillSearchQuery = v; renderEjercicios(); }
@@ -3717,6 +3829,7 @@ function renderPlayerCard(container, posId, big){
       savePosition();
       filterCat='ALL';
       filterMode='ALL';
+      filterProfile='ALL';
       renderPositionBar();
       renderProgreso();
     };
@@ -4727,6 +4840,7 @@ function renderPositionBar(){
       savePosition();
       filterCat = 'ALL';
       filterMode = 'ALL';
+      filterProfile = 'ALL';
       renderPositionBar();
       refreshCurrentView();
     };
@@ -5228,7 +5342,7 @@ function renderEjercicios(){
     fr.appendChild(chip);
   });
 
-  // ---- Filtro Solo / Con compañero (por ahora, disponible en los ejercicios de arquero) ----
+  // ---- Filtro Solo / Con compañero (disponible donde haya ejercicios con "mode" cargado) ----
   const mfr = document.getElementById('mode-filter-row');
   const hasModeData = DRILLS[activePosition].some(d=>d.mode);
   mfr.style.display = hasModeData ? 'flex' : 'none';
@@ -5248,6 +5362,27 @@ function renderEjercicios(){
     });
   }
 
+  // ---- Filtro Central / Lateral (por ahora, disponible en Defensor: hay ejercicios
+  // que sirven para cualquier perfil y otros pensados específicamente para uno de los dos) ----
+  const pfr = document.getElementById('profile-filter-row');
+  const hasProfileData = DRILLS[activePosition].some(d=>d.profile);
+  pfr.style.display = hasProfileData ? 'flex' : 'none';
+  pfr.innerHTML = '';
+  if(hasProfileData){
+    const profileOptions = [
+      {id:'ALL', label:'Todos'},
+      {id:'central', label:'🛡️ Central'},
+      {id:'lateral', label:'⚡ Lateral'},
+    ];
+    profileOptions.forEach(p=>{
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (filterProfile===p.id ? ' active':'');
+      chip.textContent = p.label;
+      chip.onclick = ()=>{ filterProfile=p.id; renderEjercicios(); };
+      pfr.appendChild(chip);
+    });
+  }
+
   const list = document.getElementById('drill-list');
   list.innerHTML = '';
 
@@ -5264,6 +5399,7 @@ function renderEjercicios(){
   const items = DRILLS[activePosition].filter(d=>{
     if(filterCat!=='ALL' && d.cat!==filterCat) return false;
     if(filterMode!=='ALL' && d.mode && d.mode!=='ambos' && d.mode!==filterMode) return false;
+    if(filterProfile!=='ALL' && d.profile && d.profile!=='ambos' && d.profile!==filterProfile) return false;
     if(drillSearchQuery && !normalizeSearch(d.name).includes(normalizeSearch(drillSearchQuery))) return false;
     return true;
   });
@@ -5274,6 +5410,7 @@ function renderEjercicios(){
     const cat = catById(activePosition, d.cat);
     const inDraft = draft[activePosition].includes(d.id);
     const modeInfo = d.mode ? DRILL_MODE_LABEL[d.mode] : null;
+    const profileInfo = d.profile ? DRILL_PROFILE_LABEL[d.profile] : null;
     const mins = estimateDrillMinutes(d);
     const diff = estimateDrillDifficulty(d);
     const el = document.createElement('div');
@@ -5291,6 +5428,7 @@ function renderEjercicios(){
             <span class="drill-diff-pill diff-${diff.level}">${diff.label}</span>
             <span class="drill-duration">⏱ ${mins}'</span>
             ${modeInfo ? `<span title="${modeInfo.full}">${modeInfo.icon} ${modeInfo.short}</span>` : ''}
+            ${profileInfo && profileInfo.short!=='Central o lateral' ? `<span title="${profileInfo.full}">${profileInfo.icon} ${profileInfo.short}</span>` : ''}
           </div>
           <div class="drill-dose">${d.dose}</div>
         </div>
@@ -5376,7 +5514,7 @@ function renderEntrenar(){
     const items = WARMUP_DRILLS[activePosition] || [];
     let html = `<div class="coach-card" style="margin-bottom:14px;">
       <div class="coach-eyebrow">🔥 CALENTAMIENTO</div>
-      <div class="coach-text">Unos minutos de activación antes de arrancar bajan el riesgo de lesión, sobre todo en caídas y estiradas. Marcá cada movimiento a medida que lo hacés.</div>
+      <div class="coach-text">Unos minutos de activación antes de arrancar bajan el riesgo de lesión, sobre todo en saltos, duelos y cambios de dirección bruscos. Marcá cada movimiento a medida que lo hacés.</div>
     </div><div class="active-session">`;
     items.forEach(w=>{
       const done = !!warmupChecked[w.id];
@@ -5646,7 +5784,7 @@ function useTemplate(i){
 }
 
 function maybeStartWarmup(){
-  if(activePosition==='ARQ' && isWarmupEnabled() && (WARMUP_DRILLS[activePosition]||[]).length>0){
+  if(isWarmupEnabled() && (WARMUP_DRILLS[activePosition]||[]).length>0){
     warmupChecked = {};
     warmupActive = true;
     renderEntrenar();
